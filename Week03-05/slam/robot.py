@@ -90,7 +90,6 @@ class Robot:
         DFx[2,1] = 0
         DFx[2,2] = 1
 
-
         return DFx
 
     def derivative_measure(self, markers, idx_list):

@@ -91,7 +91,7 @@ class EKF:
         x = self.get_state_vector()
 
         # TODO: add your codes here to compute the predicted x
-        
+        self.P = F @ self.P @ np.transpose(F) + self.predict_covariance(self, raw_drive_meas)
 
     # the update step of EKF
     def update(self, measurements):
@@ -116,7 +116,7 @@ class EKF:
         x = self.get_state_vector()
 
         # TODO: add your codes here to compute the updated x
-        x = 
+        self.P = 
 
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3
