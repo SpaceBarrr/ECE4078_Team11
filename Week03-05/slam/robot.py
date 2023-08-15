@@ -67,9 +67,6 @@ class Robot:
     def derivative_drive(self, drive_meas):
         # Compute the differential of drive w.r.t. the robot state
         DFx = np.zeros((3,3))
-        DFx[0,0] = 1
-        DFx[1,1] = 1
-        DFx[2,2] = 1
 
         lin_vel, ang_vel = self.convert_wheel_speeds(drive_meas.left_speed, drive_meas.right_speed)
 
@@ -77,6 +74,21 @@ class Robot:
         th = self.state[2]
         
         # TODO: add your codes here to compute DFx using lin_vel, ang_vel, dt, and th
+        R = lin_vel / ang_vel
+        new_th = ang_vel * dt + th
+        x_vel = lin_vel * np.cos(th)
+        y_vel = lin_vel * np.sin(th)
+        
+        # x, y, theta
+        DFx[0,0] = 1 
+        DFx[0,1] = 0
+        DFx[0,2] = x_vel + R * -np.cos(th) + np.cos(new_th)
+        DFx[1,0] = 0
+        DFx[1,1] = 1
+        DFx[1,2] = y_vel + R * -np.sin(th) + np.sin(new_th)
+        DFx[2,0] = 0
+        DFx[2,1] = 0
+        DFx[2,2] = 1
 
         return DFx
 
