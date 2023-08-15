@@ -78,6 +78,7 @@ class Robot:
         
         # TODO: add your codes here to compute DFx using lin_vel, ang_vel, dt, and th
 
+
         return DFx
 
     def derivative_measure(self, markers, idx_list):
@@ -124,9 +125,14 @@ class Robot:
         # Derivative of x,y,theta w.r.t. lin_vel, ang_vel
         Jac2 = np.zeros((3,2))
         
-        # TODO: add your codes here to compute Jac2 using lin_vel, ang_vel, dt, th, and th2
+        # add your codes here to compute Jac2 using lin_vel, ang_vel, dt, th, and th2
+        Jac2[0,0] = 1/ang_vel * (-np.sin(th)+np.sin(th+th2)) # x w.r.t. v
+        Jac2[0,1] = -lin_vel/ang_vel**2 * (-np.sin(th)+np.sin(th+th2)) # x w.r.t. omega
+        Jac2[1,0] = 1/ang_vel * (np.cos(th)-np.cos(th+th2)) # y w.r.t. v
+        Jac2[1,1] = -lin_vel/ang_vel**2 * (np.cos(th)-np.cos(th+th2)) # y w.r.t. omega
+        Jac2[2,0] = 0 # theta w.r.t. v
+        Jac2[2,1] = dt # theta w.r.t. omega
 
-        # Derivative of x,y,theta w.r.t. left_speed, right_speed
         Jac = Jac2 @ Jac1
 
         # Compute covariance
