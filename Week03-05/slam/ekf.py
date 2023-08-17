@@ -116,8 +116,8 @@ class EKF:
         x = self.get_state_vector()
 
         # TODO: add your codes here to compute the updated x
-        K = self.P * np.transpose(H) * np.linalg.inv(H * self.P * np.transpose(H) + (z-z_hat))
-        self.P = (np.eye(np.shape(K)) - K * H) * self.P
+        K = self.P @ np.transpose(H) @ np.linalg.inv(H @ self.P @ np.transpose(H) + (z-z_hat))
+        self.P = (np.eye(np.shape(K)) - K @ H) @ self.P
 
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3
