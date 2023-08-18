@@ -116,8 +116,10 @@ class EKF:
         x = self.get_state_vector()
 
         # TODO: add your codes here to compute the updated x
-        K = self.P @ np.transpose(H) @ np.linalg.inv(H @ self.P @ np.transpose(H) + (z-z_hat)) # possible error in K contributing to error in P below # changed z-z_hat to R but didnt work
-        self.P = (np.eye(x.shape[0]) - K @ H) @ self.P # possible error here? # changed np.shape(K)[0] to self.P.shape[0] and x.shape[0] but neither worked
+        K = self.P @ np.transpose(H) @ np.linalg.inv(H @ self.P @ np.transpose(H) + R) 
+        corrected_x = x + K @ (z - z_hat)
+        self.set_state_vector(corrected_x)
+        self.P = (np.eye(self.P.shape[0]) - K @ H) @ self.P 
 
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3
