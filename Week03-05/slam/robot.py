@@ -82,10 +82,10 @@ class Robot:
         # x, y, theta
         DFx[0,0] = 1 
         DFx[0,1] = 0
-        DFx[0,2] = x_vel + R * -np.cos(th) + np.cos(new_th)
+        DFx[0,2] = x_vel + R * (-np.cos(th) + np.cos(new_th))
         DFx[1,0] = 0
         DFx[1,1] = 1
-        DFx[1,2] = y_vel + R * -np.sin(th) + np.sin(new_th)
+        DFx[1,2] = y_vel + R * (-np.sin(th) + np.sin(new_th))
         DFx[2,0] = 0
         DFx[2,1] = 0
         DFx[2,2] = 1
