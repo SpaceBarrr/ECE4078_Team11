@@ -92,6 +92,8 @@ class EKF:
 
         # TODO: add your codes here to compute the predicted x
         self.P = F @ self.P @ np.transpose(F) + self.predict_covariance(raw_drive_meas)
+        updated_x = F @ x
+        self.set_state_vector(updated_x)
 
     # the update step of EKF
     def update(self, measurements):
