@@ -91,8 +91,9 @@ class EKF:
         x = self.get_state_vector()
 
         # TODO: add your codes here to compute the predicted x
+        self.robot.drive(raw_drive_meas)
         self.P = F @ self.P @ np.transpose(F) + self.predict_covariance(raw_drive_meas)
-        updated_x = F @ x
+        # updated_x = F @ x
         # self.set_state_vector(updated_x)
         # print(f"Old x:     {np.round(x.T,2)}")
         # print(f"Updated x: {np.round(updated_x.T,2)}")
