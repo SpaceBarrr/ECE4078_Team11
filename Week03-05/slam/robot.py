@@ -74,18 +74,17 @@ class Robot:
         th = self.state[2]
         
         # TODO: add your codes here to compute DFx using lin_vel, ang_vel, dt, and th
-        x_vel = lin_vel * np.cos(th)
-        y_vel = lin_vel * np.sin(th)
-        
+        new_th = ang_vel * dt + th
+
         if ang_vel == 0:
-            DFx[0,2] = x_vel #+ (np.cos(th) * x_vel)
-            DFx[1,2] = y_vel #+ (np.sin(th) * y_vel)
+            DFx[0,2] = -np.sin(th) * lin_vel * dt
+            DFx[1,2] = np.cos(th) * lin_vel * dt
         else:
             R = lin_vel / ang_vel
-            new_th = ang_vel * dt + th
 
-            DFx[0,2] = x_vel + R * (-np.cos(th) + np.cos(new_th))
-            DFx[1,2] = y_vel + R * (-np.sin(th) + np.sin(new_th)) 
+            # NOTE CHECK THIS 
+            DFx[0,2] = R * (np.sin(th) - np.cos(new_th))
+            DFx[1,2] = -R * (-np.cos(th) + np.sin(new_th)) 
 
         return DFx
 
@@ -136,18 +135,14 @@ class Robot:
         # TODO: add your codes here to compute Jac2 using lin_vel, ang_vel, dt, th, and th2
         if ang_vel != 0:
             Jac2[0,0] = 1/ang_vel * (-np.sin(th)+np.sin(th2)) # x w.r.t. v
-            Jac2[0,1] = -lin_vel/ang_vel**2 * (-np.sin(th)+np.sin(th2)) # x w.r.t. omega
+            Jac2[0,1] = -lin_vel/ang_vel**2 * (-np.sin(th)+np.sin(th2)) + lin_vel/ang_vel * np.cos(th2) * - dt# check x w.r.t. omega
             Jac2[1,0] = 1/ang_vel * (np.cos(th)-np.cos(th2)) # y w.r.t. v
-            Jac2[1,1] = -lin_vel/ang_vel**2 * (np.cos(th)-np.cos(th2)) # y w.r.t. omega
+            Jac2[1,1] = -lin_vel/ang_vel**2 * (np.cos(th2)-np.cos(th)) - lin_vel/ang_vel * np.sin(th2) * - dt # check y w.r.t. omega
             Jac2[2,0] = 0 # theta w.r.t. v
             Jac2[2,1] = dt # theta w.r.t. omega
         else:
             Jac2[0,0] = np.cos(th) * dt
-            Jac2[0,1] = 0
             Jac2[1,0] = np.sin(th) * dt
-            Jac2[1,1] = 0
-            Jac2[2,0] = 0
-            Jac2[2,1] = 0
 
         Jac = Jac2 @ Jac1
 
