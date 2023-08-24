@@ -87,11 +87,12 @@ class EKF:
     # the prediction step of EKF
     def predict(self, raw_drive_meas):
 
+        self.robot.drive(raw_drive_meas) # added by us outside TODO
+
         F = self.state_transition(raw_drive_meas)
         x = self.get_state_vector()
 
         # TODO: add your codes here to compute the predicted x
-        self.robot.drive(raw_drive_meas)
         self.P = F @ self.P @ np.transpose(F) + self.predict_covariance(raw_drive_meas)
         # updated_x = F @ x
         # self.set_state_vector(updated_x)
@@ -125,6 +126,7 @@ class EKF:
         corrected_x = x + K @ (z - z_hat)
         self.set_state_vector(corrected_x)
         self.P = (np.eye(self.P.shape[0]) - K @ H) @ self.P 
+        print(self.P.shape[0]) #maybe divide me by 2
 
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3
