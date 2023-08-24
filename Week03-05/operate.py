@@ -75,7 +75,7 @@ class Operate:
             lv, rv = self.pibot.set_velocity()            
         else:
             lv, rv = self.pibot.set_velocity(
-                self.command['motion'],
+                self.command['motion'],tick=10,
                 turning_tick=5)
         if not self.data is None:
             self.data.write_keyboard(lv, rv)
