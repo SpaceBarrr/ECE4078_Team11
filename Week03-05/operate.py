@@ -97,7 +97,7 @@ class Operate:
 
     # SLAM with ARUCO markers       
     def update_slam(self, drive_meas):
-        print(f"Markers found: {sorted(self.taglist)}")
+        print(f"Markers found: {sorted(self.ekf.taglist)}")
         lms, self.aruco_img = self.aruco_det.detect_marker_positions(self.img)
         if self.request_recover_robot:
             is_success = self.ekf.recover_from_pause(lms)

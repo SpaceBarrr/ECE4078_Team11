@@ -133,9 +133,9 @@ class Robot:
         # TODO: add your codes here to compute Jac2 using lin_vel, ang_vel, dt, th, and th2
         if ang_vel != 0:
             Jac2[0,0] = 1/ang_vel * (-np.sin(th)+np.sin(th2)) # x w.r.t. v
-            Jac2[0,1] = -lin_vel/(ang_vel**2) * (-np.sin(th)+np.sin(th2)) + lin_vel/ang_vel * np.cos(th2) * dt # x w.r.t. omega
+            Jac2[0,1] = -lin_vel/(ang_vel**2) * (-np.sin(th)+np.sin(th2)) +  lin_vel/(ang_vel) *np.cos(th2) * dt # x w.r.t. omega
             Jac2[1,0] = -1/ang_vel * (np.cos(th2)-np.cos(th)) # y w.r.t. v
-            Jac2[1,1] = lin_vel/(ang_vel**2) * (np.cos(th2)-np.cos(th)) + lin_vel/ang_vel * np.sin(th2) * dt # y w.r.t. omega
+            Jac2[1,1] = lin_vel/(ang_vel**2) * (np.cos(th2)-np.cos(th)) + lin_vel/(ang_vel) * np.sin(th2) * dt # y w.r.t. omega
             Jac2[2,0] = 0 # theta w.r.t. v
             Jac2[2,1] = dt # theta w.r.t. omega
         else:
