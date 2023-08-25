@@ -6,6 +6,7 @@ import time
 import csv
 import os
 import json
+from datetime import datetime
 
 # save a keyboard control sequence and a list of images seen by the robot
 class DatasetWriter:
@@ -108,7 +109,7 @@ class OutputWriter:
             os.makedirs(self.folder)
         
         self.img_f = open(folder_name+"images.txt", 'w')   
-        self.map_f = folder_name+"slam.txt"
+        # self.map_f_path = folder_name+"slam.txt"
 
         self.image_count = 0
         
@@ -117,10 +118,12 @@ class OutputWriter:
     #     self.map_f.close()
     
     def write_map(self, slam):
+        now = datetime.now()
+
         map_dict = {"taglist":slam.taglist,
                     "map":slam.markers.tolist(),
                     "covariance":slam.P[3:,3:].tolist()}
-        with open(self.map_f, 'w') as map_f:
+        with open(f"{self.folder_name}{now.strftime(r'%H_%M_%S')}_slam.txt", 'w') as map_f:
             json.dump(map_dict, map_f, indent=2)
             
     def write_image(self, image, slam):

@@ -126,7 +126,7 @@ class EKF:
         corrected_x = x + K @ (z - z_hat)
         self.set_state_vector(corrected_x)
         self.P = (np.eye(self.P.shape[0]) - K @ H) @ self.P 
-        print(f"Markers found: {self.taglist}")
+        
 
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3
