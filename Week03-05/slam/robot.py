@@ -139,7 +139,6 @@ class Robot:
             Jac2[0,1] = -lin_vel/(ang_vel**2) * (-np.sin(th)+np.sin(th2)) +  lin_vel/(ang_vel) *np.cos(th2) * dt # x w.r.t. omega
             Jac2[1,0] = -1/ang_vel * (np.cos(th2)-np.cos(th)) # y w.r.t. v
             Jac2[1,1] = lin_vel/(ang_vel**2) * (np.cos(th2)-np.cos(th)) + lin_vel/(ang_vel) * np.sin(th2) * dt # y w.r.t. omega
-            Jac2[2,0] = 0 # theta w.r.t. v
             Jac2[2,1] = dt # theta w.r.t. omega
         else:
             Jac2[0,0] = np.cos(th) * dt
