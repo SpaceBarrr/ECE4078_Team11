@@ -93,7 +93,8 @@ class EKF:
         x = self.get_state_vector()
 
         # TODO: add your codes here to compute the predicted x
-        self.P = F @ self.P @ np.transpose(F) + self.predict_covariance(raw_drive_meas)
+        if not np.array_equal(self.robot.state, np.zeros((3,1))): # don't update P on the first iteration
+            self.P = F @ self.P @ np.transpose(F) + self.predict_covariance(raw_drive_meas)
 
     # the update step of EKF
     def update(self, measurements):
@@ -123,7 +124,6 @@ class EKF:
         self.set_state_vector(corrected_x)
         self.P = (np.eye(self.P.shape[0]) - K @ H) @ self.P 
         
-
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3
         F = np.eye(n)
