@@ -111,10 +111,6 @@ if __name__ == '__main__':
     print("The following parameters optimally transform the estimated points to the ground truth.")
     print("Rotation Angle: {}".format(theta))
     print("Translation Vector: ({}, {})".format(x[0,0], x[1,0]))
-
-    rmse = compute_rmse(us_vec_aligned, gt_vec)
-    print("The RMSE after alignment: {}".format(rmse))
-
     print()
     print("Pred Locations")
     print(taglist)
@@ -122,5 +118,17 @@ if __name__ == '__main__':
     print("np.array("+np.array2string(gt_vec, precision=4, separator=',')+')')
     print("Aligned Pred Locations")
     print("np.array("+np.array2string(us_vec_aligned, precision=4, separator=',')+')')
+    rmse = compute_rmse(us_vec_aligned, gt_vec)
+    print("\n*****")
+    print("The RMSE after alignment: {}".format(rmse))
+    slam_percent = (0.12-rmse)/(0.12-0.02) * 80
+    if slam_percent < 0:
+        slam_percent_final = 0 
+    elif slam_percent > 80:
+        slam_percent_final = 80
+    else:
+        slam_percent_final = slam_percent
+    print(f"SCORE PERCENTAGE: {slam_percent_final + 2 * len(taglist)} %")
+    print("*****")
 
 
