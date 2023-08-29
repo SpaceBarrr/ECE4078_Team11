@@ -98,10 +98,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     rmse_final = np.inf
+    taglist_final = list()
 
-    for file in os.listdir(args.estimate):
+    for file in os.listdir(args.estimates):
         gt_aruco = parse_groundtruth(args.groundtruth)
-        us_aruco = parse_user_map(file)
+        print(args.estimates + file)
+        us_aruco = parse_user_map(args.estimates + file)
 
         taglist, us_vec, gt_vec = match_aruco_points(us_aruco, gt_aruco)
 
@@ -126,17 +128,19 @@ if __name__ == '__main__':
 
         if rmse < rmse_final:
             rmse_final = rmse
+            taglist_final = taglist
+            print(f"RMSE improved to {rmse}!")
 
     print("\n*****")
-    print("The HIGHEST RMSE after alignment: {}".format(rmse_final))
-    slam_percent = (0.12-rmse)/(0.12-0.02) * 80
+    print("The LOWEST RMSE after alignment: {}".format(rmse_final))
+    slam_percent = (0.12-rmse_final)/(0.12-0.02) * 80
     if slam_percent < 0:
         slam_percent_final = 0 
     elif slam_percent > 80:
         slam_percent_final = 80
     else:
         slam_percent_final = slam_percent
-    print(f"SCORE PERCENTAGE: {slam_percent_final + 2 * len(taglist)} %")
+    print(f"SCORE PERCENTAGE: {slam_percent_final + 2 * len(taglist_final)} %")
     print("*****")
 
 
