@@ -129,7 +129,7 @@ if __name__ == '__main__':
         if rmse < rmse_final:
             rmse_final = rmse
             taglist_final = taglist
-            print(f"RMSE improved to {rmse}!")
+        print(f"{rmse}!")
 
     print("\n*****")
     print("The LOWEST RMSE after alignment: {}".format(rmse_final))
