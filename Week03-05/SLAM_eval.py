@@ -2,6 +2,7 @@
 import ast
 import numpy as np
 import json
+import os
 
 def parse_groundtruth(fname : str) -> dict:
     with open(fname,'r') as f:
@@ -93,42 +94,53 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser("Matching the estimated map and the true map")
     parser.add_argument("groundtruth", type=str, help="The ground truth file name.")
-    parser.add_argument("estimate", type=str, help="The estimate file name.")
+    parser.add_argument("estimates", type=str, help="The estimates folder path.")
     args = parser.parse_args()
 
-    gt_aruco = parse_groundtruth(args.groundtruth)
-    us_aruco = parse_user_map(args.estimate)
+    rmse_final = np.inf
+    taglist_final = list()
 
-    taglist, us_vec, gt_vec = match_aruco_points(us_aruco, gt_aruco)
+    for file in os.listdir(args.estimates):
+        gt_aruco = parse_groundtruth(args.groundtruth)
+        print(args.estimates + file)
+        us_aruco = parse_user_map(args.estimates + file)
+
+        taglist, us_vec, gt_vec = match_aruco_points(us_aruco, gt_aruco)
 
 
-    rmse = compute_rmse(us_vec, gt_vec)
-    print("The RMSE before alignment: {}".format(rmse))
+        rmse = compute_rmse(us_vec, gt_vec)
+        # print("The RMSE before alignment: {}".format(rmse))
 
-    theta, x = solve_umeyama2d(us_vec, gt_vec)
-    us_vec_aligned = apply_transform(theta, x, us_vec)
+        theta, x = solve_umeyama2d(us_vec, gt_vec)
+        us_vec_aligned = apply_transform(theta, x, us_vec)
 
-    print("The following parameters optimally transform the estimated points to the ground truth.")
-    print("Rotation Angle: {}".format(theta))
-    print("Translation Vector: ({}, {})".format(x[0,0], x[1,0]))
-    print()
-    print("Pred Locations")
-    print(taglist)
-    print("Real Locations")
-    print("np.array("+np.array2string(gt_vec, precision=4, separator=',')+')')
-    print("Aligned Pred Locations")
-    print("np.array("+np.array2string(us_vec_aligned, precision=4, separator=',')+')')
-    rmse = compute_rmse(us_vec_aligned, gt_vec)
+        # print("The following parameters optimally transform the estimated points to the ground truth.")
+        # print("Rotation Angle: {}".format(theta))
+        # print("Translation Vector: ({}, {})".format(x[0,0], x[1,0]))
+        # print()
+        # print("Pred Locations")
+        # print(taglist)
+        # print("Real Locations")
+        # print("np.array("+np.array2string(gt_vec, precision=4, separator=',')+')')
+        # print("Aligned Pred Locations")
+        # print("np.array("+np.array2string(us_vec_aligned, precision=4, separator=',')+')')
+        rmse = compute_rmse(us_vec_aligned, gt_vec)
+
+        if rmse < rmse_final:
+            rmse_final = rmse
+            taglist_final = taglist
+            print(f"RMSE improved to {rmse}!")
+
     print("\n*****")
-    print("The RMSE after alignment: {}".format(rmse))
-    slam_percent = (0.12-rmse)/(0.12-0.02) * 80
+    print("The LOWEST RMSE after alignment: {}".format(rmse_final))
+    slam_percent = (0.12-rmse_final)/(0.12-0.02) * 80
     if slam_percent < 0:
         slam_percent_final = 0 
     elif slam_percent > 80:
         slam_percent_final = 80
     else:
         slam_percent_final = slam_percent
-    print(f"SCORE PERCENTAGE: {slam_percent_final + 2 * len(taglist)} %")
+    print(f"SCORE PERCENTAGE: {slam_percent_final + 2 * len(taglist_final)} %")
     print("*****")
 
 
