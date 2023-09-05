@@ -35,10 +35,10 @@ def estimate_pose(camera_matrix, obj_info, robot_pose):
     # there are 8 possible types of fruits and vegs
     ######### Replace with your codes #########
     # TODO: measure actual sizes of targets [width, depth, height] and update the dictionary of true target dimensions
-    target_dimensions_dict = {'orange': [0.77,0.78,0.74], 'lemon': [0.70,0.51,0.53], 
-                              'lime': [0.73,0.53,0.51], 'tomato': [0.72,0.73,0.62], 
-                              'capsicum': [0.79,0.76,0.97], 'potato': [0.95,0.60,0.67], 
-                              'pumpkin': [0.87,0.85,0.75], 'garlic': [0.64,0.61,0.73]}
+    target_dimensions_dict = {'orange': [0.077,0.078,0.074], 'lemon': [0.070,0.051,0.053], 
+                              'lime': [0.073,0.053,0.051], 'tomato': [0.072,0.073,0.062], 
+                              'capsicum': [0.079,0.076,0.097], 'potato': [0.095,0.060,0.067], 
+                              'pumpkin': [0.087,0.085,0.075], 'garlic': [0.064,0.061,0.073]}
     #########
 
     # estimate target pose using bounding box and robot pose
