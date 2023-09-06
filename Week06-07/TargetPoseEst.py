@@ -105,7 +105,7 @@ def merge_estimations(target_pose_dict):
         # HAVE TO TEST VISION / KMEAN ALGORITHMS TO SEE IF THIS IS A VALID ASSUMPTION
         if fruit in target_est: # second 'discovery' of a fruit
             target_est[f"{fruit}_1"] = {
-                "y": centrepoints[cluster_prediction][1],
+                "y": centrepoints[cluster_prediction][1], # NOTE: MAY HAVE TO FLIP X AND Y INDEXING HERE !!!!
                 "x": centrepoints[cluster_prediction][0]
             }
         else:
