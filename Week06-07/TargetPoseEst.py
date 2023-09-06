@@ -4,8 +4,9 @@ import json
 import os
 import ast
 import cv2
+import re
 from YOLO.detector import Detector
-
+from sklearn.cluster import KMeans
 
 # list of target fruits and vegs types
 # Make sure the names are the same as the ones used in your YOLO model
@@ -35,10 +36,10 @@ def estimate_pose(camera_matrix, obj_info, robot_pose):
     # there are 8 possible types of fruits and vegs
     ######### Replace with your codes #########
     # TODO: measure actual sizes of targets [width, depth, height] and update the dictionary of true target dimensions
-    target_dimensions_dict = {'orange': [0.77,0.78,0.74], 'lemon': [0.70,0.51,0.53], 
-                              'lime': [0.73,0.53,0.51], 'tomato': [0.72,0.73,0.62], 
-                              'capsicum': [0.79,0.76,0.97], 'potato': [0.95,0.60,0.67], 
-                              'pumpkin': [0.87,0.85,0.75], 'garlic': [0.64,0.61,0.73]}
+    target_dimensions_dict = {'orange': [0.077,0.078,0.074], 'lemon': [0.070,0.051,0.053], 
+                              'lime': [0.073,0.053,0.051], 'tomato': [0.072,0.073,0.062], 
+                              'capsicum': [0.079,0.076,0.097], 'potato': [0.095,0.060,0.067], 
+                              'pumpkin': [0.087,0.085,0.075], 'garlic': [0.064,0.061,0.073]}
     #########
 
     # estimate target pose using bounding box and robot pose
@@ -50,8 +51,10 @@ def estimate_pose(camera_matrix, obj_info, robot_pose):
     pixel_height = target_box[3]
     pixel_center = target_box[0]
     distance = true_height/pixel_height * focal_length  # estimated distance between the object and the robot based on height
+    # FIXME ************ IF WE ARE USING A DIFFERENT RES, WE MUST UPDATE IT HERE *****************
     # image size 640x480 pixels, 640/2=320
     x_shift = 320/2 - pixel_center              # x distance between bounding box centre and centreline in camera view
+    # ENDFIXME ***********************************************************************************
     theta = np.arctan(x_shift/focal_length)     # angle of object relative to the robot
     horizontal_relative_distance = distance * np.sin(theta)     # relative distance between robot and object on x axis
     vertical_relative_distance = distance * np.cos(theta)       # relative distance between robot and object on y axis
@@ -79,7 +82,41 @@ def merge_estimations(target_pose_dict):
 
     ######### Replace with your codes #########
     # TODO: replace it with a solution to merge the multiple occurrences of the same class type (e.g., by a distance threshold)
-    target_est = target_pose_dict
+    coord_master = np.array()
+
+    # KMeans() wants a list of lists (not a dict of dicts), so we convert here
+    for key in target_pose_dict:
+        coords = np.array(target_pose_dict[key].values()) # extract the sub values from the array
+        coord_master.append(coords)
+
+    # need to import "scikit-learn" for this guy
+    # NOTE hardcoding 10 clusters - THIS MEANS WE MUST FIND EVERY FRUIT - CAN WE DO THIS?
+    kmeans = KMeans(n_clusters=10, random_state=0, n_init="auto").fit(coord_master)
+    centrepoints = kmeans.cluster_centers_
+    
+    # at this point we have a list of clusters (given by kmeans.labels_), but we don't know which cluster is which fruit
+    for fruit_predict in target_pose_dict:
+        cluster_prediction = kmeans.predict([target_pose_dict[fruit_predict]["y"], # find which fruit belongs to which cluster by backcalc
+                                             target_pose_dict[fruit_predict]["x"]])
+
+        fruit = re.match(r"^([\w]+)", fruit_predict).group() # extract the fruit name from the dict key
+
+        # NOTE: THE BELOW ASSUMES WE WILL ONLY FIND AT MOST 2 OF EACH FRUIT
+        # HAVE TO TEST VISION / KMEAN ALGORITHMS TO SEE IF THIS IS A VALID ASSUMPTION
+        if fruit in target_est: # second 'discovery' of a fruit
+            target_est[f"{fruit}_1"] = {
+                "y": centrepoints[cluster_prediction][1], # NOTE: MAY HAVE TO FLIP X AND Y INDEXING HERE !!!!
+                "x": centrepoints[cluster_prediction][0]
+            }
+        else:
+            target_est[f"{fruit}_0"] = {
+                "y": centrepoints[cluster_prediction][1],
+                "x": centrepoints[cluster_prediction][0]
+            }
+
+        if len(list(target_est.keys) >= 10): # once we find all 10 fruits and their centrepoints we don't need to keep searching
+            break
+    
     #########
    
     return target_est
