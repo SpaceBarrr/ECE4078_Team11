@@ -99,7 +99,7 @@ def merge_estimations(target_pose_dict):
         cluster_prediction = kmeans.predict([target_pose_dict[fruit_predict]["y"], # find which fruit belongs to which cluster by backcalc
                                              target_pose_dict[fruit_predict]["x"]])
 
-        fruit = re.match(r"^([\w\-]+)", fruit_predict).group() # extract the fruit name from the dict key
+        fruit = re.match(r"^([\w]+)", fruit_predict).group() # extract the fruit name from the dict key
 
         # NOTE: THE BELOW ASSUMES WE WILL ONLY FIND AT MOST 2 OF EACH FRUIT
         # HAVE TO TEST VISION / KMEAN ALGORITHMS TO SEE IF THIS IS A VALID ASSUMPTION
