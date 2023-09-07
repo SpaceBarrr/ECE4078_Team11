@@ -11,14 +11,14 @@ class Detector:
         self.model = YOLO(model_path)
 
         self.class_colour = {
-            'orange': (0, 165, 255),
-            'lemon': (0, 255, 255),
-            'lime': (0, 255, 0),
-            'tomato': (0, 0, 255),
-            'capsicum': (255, 0, 0),
-            'potato': (255, 255, 0),
-            'pumpkin': (255, 165, 0),
-            'garlic': (255, 0, 255)
+            'Orange': (0, 165, 255),
+            'Lemon': (0, 255, 255),
+            'Lime': (0, 255, 0),
+            'Tomato': (0, 0, 255),
+            'Capsicum': (255, 0, 0),
+            'Potato': (255, 255, 0),
+            'Pumpkin': (255, 165, 0),
+            'Garlic': (255, 0, 255)
         }
 
     def detect_single_image(self, img):
@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     yolo = Detector(f'{script_dir}/model/yolov8_model.pt')
 
-    img = cv2.imread(f'{script_dir}/test/test_image_1.png')
+    img = cv2.imread(f'{script_dir}/test/test_image_2.png')
 
     bboxes, img_out = yolo.detect_single_image(img)
 

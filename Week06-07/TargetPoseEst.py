@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 
 # list of target fruits and vegs types
 # Make sure the names are the same as the ones used in your YOLO model
-TARGET_TYPES = ['orange', 'lemon', 'lime', 'tomato', 'capsicum', 'potato', 'pumpkin', 'garlic']
+TARGET_TYPES = ['Orange', 'Lemon', 'Lime', 'Tomato', 'Capsicum', 'Potato', 'Pumpkin', 'Garlic']
 
 
 def estimate_pose(camera_matrix, obj_info, robot_pose):
@@ -36,10 +36,10 @@ def estimate_pose(camera_matrix, obj_info, robot_pose):
     # there are 8 possible types of fruits and vegs
     ######### Replace with your codes #########
     # TODO: measure actual sizes of targets [width, depth, height] and update the dictionary of true target dimensions
-    target_dimensions_dict = {'orange': [0.077,0.078,0.074], 'lemon': [0.070,0.051,0.053], 
-                              'lime': [0.073,0.053,0.051], 'tomato': [0.072,0.073,0.062], 
-                              'capsicum': [0.079,0.076,0.097], 'potato': [0.095,0.060,0.067], 
-                              'pumpkin': [0.087,0.085,0.075], 'garlic': [0.064,0.061,0.073]}
+    target_dimensions_dict = {'Orange': [0.077,0.078,0.074], 'Lemon': [0.070,0.051,0.053], 
+                              'Lime': [0.073,0.053,0.051], 'Tomato': [0.072,0.073,0.062], 
+                              'Capsicum': [0.079,0.076,0.097], 'Potato': [0.095,0.060,0.067], 
+                              'Pumpkin': [0.087,0.085,0.075], 'Garlic': [0.064,0.061,0.073]}
     #########
 
     # estimate target pose using bounding box and robot pose
@@ -82,13 +82,14 @@ def merge_estimations(target_pose_dict):
 
     ######### Replace with your codes #########
     # TODO: replace it with a solution to merge the multiple occurrences of the same class type (e.g., by a distance threshold)
-    coord_master = np.array()
+    coord_master = list()
 
     # KMeans() wants a list of lists (not a dict of dicts), so we convert here
     for key in target_pose_dict:
-        coords = np.array(target_pose_dict[key].values()) # extract the sub values from the array
+        coords = list(target_pose_dict[key].values()) # extract the sub values from the array
+        # print(coords)
         coord_master.append(coords)
-
+    # print(coord_master)
     # need to import "scikit-learn" for this guy
     # NOTE hardcoding 10 clusters - THIS MEANS WE MUST FIND EVERY FRUIT - CAN WE DO THIS?
     kmeans = KMeans(n_clusters=10, random_state=0, n_init="auto").fit(coord_master)
@@ -96,25 +97,30 @@ def merge_estimations(target_pose_dict):
     
     # at this point we have a list of clusters (given by kmeans.labels_), but we don't know which cluster is which fruit
     for fruit_predict in target_pose_dict:
-        cluster_prediction = kmeans.predict([target_pose_dict[fruit_predict]["y"], # find which fruit belongs to which cluster by backcalc
-                                             target_pose_dict[fruit_predict]["x"]])
+        # FIXME FIX THIS CLUSTERFUCK OF ARRAY NESTING
+        to_predict = []
+        to_predict.append(target_pose_dict[fruit_predict]["y"])
+        to_predict.append(target_pose_dict[fruit_predict]["x"])
+        to_predict_final = []
+        to_predict_final.append(to_predict)
+        cluster_prediction = kmeans.predict(np.array(to_predict_final))
 
-        fruit = re.match(r"^([\w]+)", fruit_predict).group() # extract the fruit name from the dict key
+        fruit = fruit_predict.split("_")[0] # extract the fruit name from the dict key
 
         # NOTE: THE BELOW ASSUMES WE WILL ONLY FIND AT MOST 2 OF EACH FRUIT
         # HAVE TO TEST VISION / KMEAN ALGORITHMS TO SEE IF THIS IS A VALID ASSUMPTION
         if fruit in target_est: # second 'discovery' of a fruit
-            target_est[f"{fruit}_1"] = {
-                "y": centrepoints[cluster_prediction][1], # NOTE: MAY HAVE TO FLIP X AND Y INDEXING HERE !!!!
-                "x": centrepoints[cluster_prediction][0]
+            target_est[f"{fruit.lower()}_1"] = {
+                "y": centrepoints[cluster_prediction][0][1], # NOTE: MAY HAVE TO FLIP X AND Y INDEXING HERE !!!!
+                "x": centrepoints[cluster_prediction][0][0]
             }
         else:
-            target_est[f"{fruit}_0"] = {
-                "y": centrepoints[cluster_prediction][1],
-                "x": centrepoints[cluster_prediction][0]
+            target_est[f"{fruit.lower()}_0"] = {
+                "y": centrepoints[cluster_prediction][0][1],
+                "x": centrepoints[cluster_prediction][0][0]
             }
 
-        if len(list(target_est.keys) >= 10): # once we find all 10 fruits and their centrepoints we don't need to keep searching
+        if len(list(target_est.keys())) >= 10: # once we find all 10 fruits and their centrepoints we don't need to keep searching
             break
     
     #########
@@ -145,7 +151,7 @@ if __name__ == "__main__":
     target_pose_dict = {}
     detected_type_list = []
     for image_path in image_poses.keys():
-        input_image = cv2.imread(image_path)
+        input_image = cv2.imread(f"{script_dir}/{image_path}")
         bounding_boxes, bbox_img = yolo.detect_single_image(input_image)
         # cv2.imshow('bbox', bbox_img)
         # cv2.waitKey(0)

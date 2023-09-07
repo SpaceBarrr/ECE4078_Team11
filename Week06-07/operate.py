@@ -85,7 +85,8 @@ class Operate:
             lv, rv = self.pibot.set_velocity()
         else:
             lv, rv = self.pibot.set_velocity(
-                self.command['motion'])
+                self.command['motion'],tick=10,
+                turning_tick=5) # slow down the robot
         if self.data is not None:
             self.data.write_keyboard(lv, rv)
         dt = time.time() - self.control_clock
@@ -314,8 +315,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", metavar='', type=str, default='192.168.50.1')
-    parser.add_argument("--port", metavar='', type=int, default=8080)
+    parser.add_argument("--ip", metavar='', type=str, default='192.168.50.1') # localhost
+    parser.add_argument("--port", metavar='', type=int, default=8080) # 40000
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
