@@ -83,6 +83,7 @@ def merge_estimations(target_pose_dict):
     ######### Replace with your codes #########
     # TODO: replace it with a solution to merge the multiple occurrences of the same class type (e.g., by a distance threshold)
     coord_master = list()
+    number_cluster = 2
 
     # KMeans() wants a list of lists (not a dict of dicts), so we convert here
     for key in target_pose_dict:
@@ -92,7 +93,7 @@ def merge_estimations(target_pose_dict):
     # print(coord_master)
     # need to import "scikit-learn" for this guy
     # NOTE hardcoding 10 clusters - THIS MEANS WE MUST FIND EVERY FRUIT - CAN WE DO THIS?
-    kmeans = KMeans(n_clusters=10, random_state=0, n_init="auto").fit(coord_master)
+    kmeans = KMeans(n_clusters=number_cluster, random_state=0, n_init="auto").fit(coord_master)      
     centrepoints = kmeans.cluster_centers_
     
     # at this point we have a list of clusters (given by kmeans.labels_), but we don't know which cluster is which fruit
