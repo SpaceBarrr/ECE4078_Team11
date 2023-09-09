@@ -26,6 +26,8 @@ from YOLO.detector import Detector
 
 class Operate:
     def __init__(self, args):
+        self.modifier = 1
+        
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
@@ -241,22 +243,31 @@ class Operate:
     # keyboard teleoperation, replace with your M1 codes if preferred        
     def update_keyboard(self):
         for event in pygame.event.get():
-            # drive forward
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                self.command['motion'] = [3, 0]
-                #pass # TODO: replace with your code to make the robot drive forward
-            # drive backward
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                self.command['motion'] = [-3, 0]
-                #pass # TODO: replace with your code to make the robot drive backward
-            # turn left
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                self.command['motion'] = [0, 2]
-                #pass # TODO: replace with your code to make the robot turn left
-            # drive right
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                self.command['motion'] = [0, -2]
-                #pass # TODO: replace with your code to make the robot turn right
+            print(self.command['motion'])
+            if event.type == pygame.KEYDOWN:
+                # drive forward
+                if event.key == pygame.K_UP:
+                    self.command['motion'] = [3, 0]
+                # drive backward
+                elif event.key == pygame.K_DOWN:
+                    self.command['motion'] = [-3, 0]
+                # turn left
+                elif event.key == pygame.K_LEFT:
+                    self.command['motion'] = [0, 2]
+                # drive right
+                elif event.key == pygame.K_RIGHT:
+                    self.command['motion'] = [0, -2]
+                # boost key
+                if event.key == pygame.K_x:
+                    self.command['motion'] = [x * 3 for x in self.command['motion']]
+                    self.notification = 'Boost ACTIVATED!'
+            if event.type == pygame.KEYUP:
+                # stop driving on key release
+                if event.key == pygame.K_UP or event.key == pygame.K_DOWN or event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    self.command['motion'] = [0, 0]
+                elif event.key == pygame.K_x:
+                    self.command['motion'] = [int(x * 1/3) for x in self.command['motion']]
+                    self.notification = 'Boost DEACTIVATED!'
             ####################################################
             # stop
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
