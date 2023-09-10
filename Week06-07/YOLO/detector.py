@@ -90,12 +90,13 @@ if __name__ == '__main__':
 
     yolo = Detector(f'{script_dir}/model/yolov8_model.pt')
 
-    img = cv2.imread(f'{script_dir}/test/test_image_2.png')
+    for img_file in os.listdir(f"{script_dir}/test/"):
+        img = cv2.imread(f"{script_dir}/test/{img_file}")
 
-    bboxes, img_out = yolo.detect_single_image(img)
+        bboxes, img_out = yolo.detect_single_image(img)
 
-    print(bboxes)
-    print(len(bboxes))
+        print(bboxes)
+        print(len(bboxes))
 
-    cv2.imshow('yolo detect', img_out)
-    cv2.waitKey(0)
+        cv2.imshow('yolo detect', img_out)
+        cv2.waitKey(0)
