@@ -112,13 +112,13 @@ def merge_estimations(target_pose_dict):
         # HAVE TO TEST VISION / KMEAN ALGORITHMS TO SEE IF THIS IS A VALID ASSUMPTION
         if fruit in target_est: # second 'discovery' of a fruit
             target_est[f"{fruit.lower()}_1"] = {
-                "y": centrepoints[cluster_prediction][1], # NOTE: MAY HAVE TO FLIP X AND Y INDEXING HERE !!!!
-                "x": centrepoints[cluster_prediction][0]
+                "y": centrepoints[cluster_prediction][0],
+                "x": centrepoints[cluster_prediction][1]
             }
         else:
             target_est[f"{fruit.lower()}_0"] = {
-                "y": centrepoints[cluster_prediction][1],
-                "x": centrepoints[cluster_prediction][0]
+                "y": centrepoints[cluster_prediction][0],
+                "x": centrepoints[cluster_prediction][1]
             }
 
         if len(list(target_est.keys())) >= NUMBER_OF_CLUSTERS: # once we find all 10 fruits and their centrepoints we don't need to keep searching
