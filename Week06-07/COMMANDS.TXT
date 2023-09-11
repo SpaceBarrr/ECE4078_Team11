@@ -8,7 +8,7 @@ python detector.py
 cd ..
 python operate.py
 (press enter to start slam, P to start predictions, s to save slam, n to save predictions)
-(control c or hit x once the run is finished, DONT FORGET TO SAVE SLAM)
+(control c or hit the x to close pygame once the run is finished, DONT FORGET TO SAVE SLAM)
 
 (ONCE THE RUN ENDS, BEFORE STARTING NEXT RUN)
 python TargetPoseEst.py --run N (WHERE N IS THE RUN NUMBER)
