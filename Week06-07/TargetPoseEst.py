@@ -142,7 +142,7 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     if args.run == "NOT SUPPLIED":
-        raise ValueError("YOU HAVE NOT SUPPLIED A RUN NUMBER. Please use --run N")
+        raise ValueError("YOU HAVE NOT SUPPLIED A RUN NUMBER. Please use --run N\nDONT PANIC THIS IS NOT A CODE ISSUE!!!")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))     # get current script directory (TargetPoseEst.py)
 
