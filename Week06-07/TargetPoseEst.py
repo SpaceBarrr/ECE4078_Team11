@@ -121,7 +121,7 @@ def merge_estimations(target_pose_dict):
                 "x": centrepoints[cluster_prediction][0]
             }
 
-        if len(list(target_est.keys())) >= 10: # once we find all 10 fruits and their centrepoints we don't need to keep searching
+        if len(list(target_est.keys())) >= NUMBER_OF_CLUSTERS: # once we find all 10 fruits and their centrepoints we don't need to keep searching
             break
     
     #########
@@ -172,5 +172,6 @@ if __name__ == "__main__":
     # save target pose estimations
     with open(f'{script_dir}/lab_output/targets.txt', 'w') as fo:
         json.dump(target_est, fo, indent=4)
+        json.dump(target_pose_dict, f'{script_dir}/lab_output/targets.txt', indent=4)   # To change
 
     print('Estimations saved!')

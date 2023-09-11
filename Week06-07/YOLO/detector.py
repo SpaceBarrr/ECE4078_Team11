@@ -16,7 +16,7 @@ class Detector:
             'Lime': (0, 255, 0),
             'Tomato': (0, 0, 255),
             'Capsicum': (255, 0, 0),
-            'Potato': (255, 255, 0),
+            'potato': (255, 255, 0),
             'Pumpkin': (255, 165, 0),
             'Garlic': (255, 0, 255)
         }
