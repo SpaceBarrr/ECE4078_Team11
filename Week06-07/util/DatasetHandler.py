@@ -123,7 +123,8 @@ class OutputWriter:
         map_dict = {"taglist":slam.taglist,
                     "map":slam.markers.tolist(),
                     "covariance":slam.P[3:,3:].tolist()}
-        with open(f"{self.folder}{now.strftime(r'%H_%M_%S')}_slam.txt", 'w') as map_f:
+        # with open(f"{self.folder}{now.strftime(r'%H_%M_%S')}_slam.txt", 'w') as map_f:
+        with open(f"{self.folder}slam.txt", 'w') as map_f:
             json.dump(map_dict, map_f, indent=2)
             
     def write_image(self, image, slam):
