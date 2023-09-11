@@ -36,12 +36,11 @@ def estimate_pose(camera_matrix, obj_info, robot_pose):
     # there are 8 possible types of fruits and vegs
     ######### Replace with your codes #########
     # TODO: measure actual sizes of targets [width, depth, height] and update the dictionary of true target dimensions
-    target_dimensions_dict = {'Orange': [0.0963,0.0892,0.0871], 'Lemon': [0.0651,0.091,0.0642], # SWAP BACK FOR FAKE FRUIT 'Orange': [0.077,0.078,0.074], 'Lemon': [0.070,0.051,0.053]
+    target_dimensions_dict = {'Orange': [0.077,0.078,0.074], 'Lemon': [0.070,0.051,0.053], # SWAP BACK FOR FAKE FRUIT 'Orange': [0.077,0.078,0.074], 'Lemon': [0.070,0.051,0.053], REAL Fruit : 'Orange': [0.0963,0.0892,0.0871], 'Lemon': [0.0651,0.091,0.0642]
                               'Lime': [0.073,0.053,0.051], 'Tomato': [0.072,0.073,0.062], 
                               'Capsicum': [0.079,0.076,0.097], 'Potato': [0.095,0.060,0.067], 
-                              'Pumpkin': [0.087,0.085,0.075], 'Garlic': [0.057,0.056,0.052]} # SWAP BACK FOR FAKE FRUIT 'Garlic': [0.064,0.061,0.073]
+                              'Pumpkin': [0.087,0.085,0.075],  'Garlic': [0.064,0.061,0.073]} # SWAP BACK FOR FAKE FRUIT 'Garlic': [0.064,0.061,0.073], real fruit : 'Garlic': [0.057,0.056,0.052]
     #########
-
     # estimate target pose using bounding box and robot pose
     target_class = obj_info[0]     # get predicted target label of the box
     target_box = obj_info[1]       # get bounding box measures: [x,y,width,height]
@@ -50,24 +49,29 @@ def estimate_pose(camera_matrix, obj_info, robot_pose):
     # compute pose of the target based on bounding box info, true object height, and robot's pose
     pixel_height = target_box[3]
     pixel_center = target_box[0]
-    distance = true_height/pixel_height * focal_length  # estimated distance between the object and the robot based on height
-    # FIXME ************ IF WE ARE USING A DIFFERENT RES, WE MUST UPDATE IT HERE *****************
+    distance = true_height/pixel_height * focal_length  # estimated distance between the robot and the centre of the image plane based on height
     # image size 640x480 pixels, 640/2=320
     x_shift = 320/2 - pixel_center              # x distance between bounding box centre and centreline in camera view
-    # ENDFIXME ***********************************************************************************
     theta = np.arctan(x_shift/focal_length)     # angle of object relative to the robot
-    horizontal_relative_distance = distance * np.sin(theta)     # relative distance between robot and object on x axis
-    vertical_relative_distance = distance * np.cos(theta)       # relative distance between robot and object on y axis
-    relative_pose = {'y': vertical_relative_distance, 'x': horizontal_relative_distance}    # relative object location
-
     ang = theta + robot_pose[2]     # angle of object in the world frame
+    
+   # relative object location
+    distance_obj = distance/np.cos(theta) # relative distance between robot and object
+    x_relative = distance_obj * np.cos(theta) # relative x pose
+    y_relative = distance_obj * np.sin(theta) # relative y pose
+    relative_pose = {'x': x_relative, 'y': y_relative}
+    #print(f'relative_pose: {relative_pose}')
 
-    # location of object in the world frame
-    target_pose = {'y': (robot_pose[1]+relative_pose['y']*np.sin(ang))[0],
-                   'x': (robot_pose[0]+relative_pose['x']*np.cos(ang))[0]}
+    # location of object in the world frame using rotation matrix
+    delta_x_world = x_relative * np.cos(ang) - y_relative * np.sin(ang)
+    delta_y_world = x_relative * np.sin(ang) + y_relative * np.cos(ang)
+    # add robot pose with delta target pose
+    target_pose = {'y': (robot_pose[1]+delta_y_world)[0],
+                   'x': (robot_pose[0]+delta_x_world)[0]}
+    #print(f'delta_x_world: {delta_x_world}, delta_y_world: {delta_y_world}')
+    #print(f'target_pose: {target_pose}')
 
     return target_pose
-
 
 def merge_estimations(target_pose_dict):
     """
@@ -82,7 +86,7 @@ def merge_estimations(target_pose_dict):
 
     ######### Replace with your codes #########
     # TODO: replace it with a solution to merge the multiple occurrences of the same class type (e.g., by a distance threshold)
-    NUMBER_OF_CLUSTERS = 2
+    NUMBER_OF_CLUSTERS = 10
     coord_master = list()
 
     # KMeans() wants a list of lists (not a dict of dicts), so we convert here
