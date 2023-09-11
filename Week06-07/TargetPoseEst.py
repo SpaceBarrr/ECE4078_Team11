@@ -170,7 +170,7 @@ if __name__ == "__main__":
     target_est = merge_estimations(target_pose_dict)
     print(target_est)
     # save target pose estimations
-    with open(f'{script_dir}/lab_output/targets.txt', 'w') as fo_1 :
+    with open(f'{script_dir}/lab_output/target_pose_dict.txt', 'w') as fo_1 :
         json.dump(target_pose_dict, fo_1, indent=4)   # To change
 
     with open(f'{script_dir}/lab_output/targets.txt', 'w') as fo:
