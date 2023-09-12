@@ -135,6 +135,15 @@ def merge_estimations(target_pose_dict):
 
 # main loop
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run", metavar='', type=str, default="NOT SUPPLIED") # localhost
+    args, _ = parser.parse_known_args()
+
+    if args.run == "NOT SUPPLIED":
+        raise ValueError("YOU HAVE NOT SUPPLIED A RUN NUMBER. Please use --run N\nDONT PANIC THIS IS NOT A CODE ISSUE!!!")
+
     script_dir = os.path.dirname(os.path.abspath(__file__))     # get current script directory (TargetPoseEst.py)
 
     # read in camera matrix
@@ -174,11 +183,12 @@ if __name__ == "__main__":
     target_est = merge_estimations(target_pose_dict)
     print(target_est)
     # save target pose estimations
-    with open(f'{script_dir}/lab_output/target_pose_dict.txt', 'w') as fo_1 :
-        json.dump(target_pose_dict, fo_1, indent=4)   # To change
+    # with open(f'{script_dir}/lab_output/target_pose_dict.txt', 'w') as fo_1 :
+    #     json.dump(target_pose_dict, fo_1, indent=4)   # To change
 
-    with open(f'{script_dir}/lab_output/targets.txt', 'w') as fo:
+    with open(f'{script_dir}/lab_output/targets_{args.run}.txt', 'w') as fo:
         json.dump(target_est, fo, indent=4)
         
+    os.rename(f'{script_dir}/lab_output/slam.txt', f'{script_dir}/lab_output/slam_{args.run}.txt')
 
     print('Estimations saved!')

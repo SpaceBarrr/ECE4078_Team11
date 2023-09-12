@@ -1,0 +1,16 @@
+(assuming we are in live demo folder with scripts downloaded)
+cd ./Week06-07/YOLO
+
+(copy images into folder "test")
+python detector.py
+(press any key to cycle through generated images; show demo the predictions)
+
+cd ..
+python operate.py
+(press enter to start slam, P to start predictions, s to save slam, n to save predictions)
+(control c or hit the x to close pygame once the run is finished, DONT FORGET TO SAVE SLAM)
+
+(ONCE THE RUN ENDS, BEFORE STARTING NEXT RUN)
+python TargetPoseEst.py --run N (WHERE N IS THE RUN NUMBER)
+
+(repeat running operate.py and TargetPoseEst.py as much as needed with the given time)
