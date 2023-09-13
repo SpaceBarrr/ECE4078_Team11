@@ -113,12 +113,18 @@ def drive_to_point(waypoint, robot_pose):
     wheel_vel = 30 # tick
     
     # turn towards the waypoint
-    turn_time = 0.0 # replace with your calculation
+    x_diff = waypoint[0] - robot_pose[0]
+    y_diff = waypoint[1] - robot_pose[1]
+
+    angle_to_turn = np.arctan2(y_diff, x_diff) - robot_pose[2]
+    turn_time = angle_to_turn / wheel_vel # replace with your calculation
+
     print("Turning for {:.2f} seconds".format(turn_time))
     ppi.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
     
     # after turning, drive straight to the waypoint
-    drive_time = 0.0 # replace with your calculation
+    distance = np.sqrt((waypoint[0]-robot_pose[0])^2-(waypoint[1]-robot_pose[1])^2)
+    drive_time = distance / wheel_vel # replace with your calculation
     print("Driving for {:.2f} seconds".format(drive_time))
     ppi.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
     ####################################################
