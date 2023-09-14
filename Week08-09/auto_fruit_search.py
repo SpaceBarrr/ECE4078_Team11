@@ -139,6 +139,9 @@ def get_robot_pose():
 
     # update the robot pose [x,y,theta]
     robot_pose = [0.0,0.0,0.0] # replace with your calculation
+
+    # From here onwards, I got this from week 6 prac
+     
     ####################################################
 
     return robot_pose
