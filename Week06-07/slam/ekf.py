@@ -117,6 +117,7 @@ class EKF:
         H = self.robot.derivative_measure(self.markers, idx_list)
 
         x = self.get_state_vector()
+        print(x)
 
         # TODO: add your codes here to compute the updated x
         K = self.P @ np.transpose(H) @ np.linalg.inv(H @ self.P @ np.transpose(H) + R) 
