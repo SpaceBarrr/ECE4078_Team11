@@ -138,7 +138,7 @@ def get_robot_pose():
     # We STRONGLY RECOMMEND you to use your SLAM code from M2 here
 
     # update the robot pose [x,y,theta]
-    robot_pose = [0.0,0.0,0.0] # replace with your calculation
+    robot_pose = [robot.get_state_vector()[0],0.0,0.0] # replace with your calculation
 
     # From here onwards, I got this from week 6 prac
      
