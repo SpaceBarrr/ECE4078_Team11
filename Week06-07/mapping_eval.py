@@ -1,6 +1,7 @@
 import json
 import numpy as np
 from copy import deepcopy
+import os
 
 # list of target fruit and veg types
 TARGET_TYPES = ['orange', 'lemon', 'lime', 'tomato', 'capsicum', 'potato', 'pumpkin', 'garlic']
@@ -204,9 +205,9 @@ if __name__ == '__main__':
     import argparse
     
     parser = argparse.ArgumentParser('Matching the estimated map and the true map')
-    parser.add_argument('--true-map', type=str, default='true_map.txt')
-    parser.add_argument('--slam-est', type=str, default='lab_output/slam.txt')
-    parser.add_argument('--target-est', type=str, default='lab_output/targets.txt')
+    parser.add_argument('--true-map', type=str, default='TrueMap.txt')
+    parser.add_argument('--slam-est', type=str, default='lab_output/slam_2.txt')
+    parser.add_argument('--target-est', type=str, default='lab_output/targets_2.txt')
     parser.add_argument('--slam-only', action='store_true')
     parser.add_argument('--target-only', action='store_true')
     args, _ = parser.parse_known_args()
@@ -218,13 +219,15 @@ if __name__ == '__main__':
         print('You cannot choose --slam-only and --target-only at the same time!')
         exit()
 
-    aruco_gt, objects_gt = parse_true_map(args.true_map)
+    script_dir = os.path.dirname(os.path.abspath(__file__))     # get current script directory
+
+    aruco_gt, objects_gt = parse_true_map(script_dir + "/" + args.true_map)
 
     slam_rmse = 99
 
-    if slam_only:
+    if slam_only: 
         # only evaluate SLAM
-        aruco_est = parse_slam_map(args.slam_est)
+        aruco_est = parse_slam_map(script_dir + "/" + args.slam_est)
         taglist, slam_est_vec, slam_gt_vec = match_aruco_points(aruco_est, aruco_gt)
         theta, x = solve_umeyama2d(slam_est_vec, slam_gt_vec)
         slam_est_vec_aligned = apply_transform(theta, x, slam_est_vec)
@@ -234,13 +237,13 @@ if __name__ == '__main__':
         print(f'The SLAM RMSE = {np.round(slam_rmse, 3)}')
 
     elif target_only:
-        objects_est = parse_object_map(args.target_est)
+        objects_est = parse_object_map(script_dir + "/" + args.target_est)
         object_est_errors = compute_object_est_error(objects_gt, objects_est)
         print('Object pose estimation errors:')
         print(json.dumps(object_est_errors, indent=4))
     else:
         # evaluate SLAM
-        aruco_est = parse_slam_map(args.slam_est)
+        aruco_est = parse_slam_map(script_dir + "/" + args.slam_est)
         taglist, slam_est_vec, slam_gt_vec = match_aruco_points(aruco_est, aruco_gt)
         theta, x = solve_umeyama2d(slam_est_vec, slam_gt_vec)
         slam_est_vec_aligned = apply_transform(theta, x, slam_est_vec)
@@ -253,7 +256,7 @@ if __name__ == '__main__':
 
         print('----------------------------------------------')
         # evaluate object pose estimation errors
-        objects_est = parse_object_map(args.target_est)
+        objects_est = parse_object_map(script_dir + "/" + args.target_est)
 
         # align the object poses using the transform computed from SLAM
         objects_est_aligned = align_object_poses(theta, x, objects_est)

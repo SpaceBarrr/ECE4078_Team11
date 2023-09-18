@@ -93,4 +93,3 @@ if __name__ == "__main__":
         pygame.display.update()
     print('Finished image collection.\n')
 
-
