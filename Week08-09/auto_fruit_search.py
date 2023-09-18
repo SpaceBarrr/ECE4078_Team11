@@ -358,7 +358,8 @@ class Operate:
     # keyboard teleoperation, replace with your M1 codes if preferred        
     def update_keyboard(self):
         for event in pygame.event.get():
-            # print(self.command['motion'])
+            if event.type == pygame.MOUSEBUTTONUP:
+                add_waypoint_from_click(pygame.mouse.get_pos())
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -436,6 +437,25 @@ class Operate:
             pygame.quit()
             sys.exit()
         
+def add_waypoint_from_click(mouse_pos: tuple):
+    # TODO replace with actual window offsets
+    x_offset = 0
+    y_offset = 0
+    
+    x = mouse_pos[0] - x_offset
+    y = mouse_pos[1] - y_offset
+
+    # estimate the robot's pose
+    robot_pose = operate.ekf.get_state_vector()[0:3]
+
+    # robot drives to the waypoint
+    waypoint = [x,y]
+    drive_to_point(waypoint,robot_pose)
+    print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
+
+    # exit
+    ppi.set_velocity([0, 0])
+        
 if __name__ == "__main__":
     import argparse
 
@@ -505,32 +525,3 @@ if __name__ == "__main__":
         operate.draw(canvas)
         pygame.display.update()
         
-        # enter the waypoints
-        # instead of manually enter waypoints, you can give coordinates by clicking on a map, see camera_calibration.py from M2
-        x,y = 0.0,0.0
-        x = input("X coordinate of the waypoint: ")
-        try:
-            x = float(x)
-        except ValueError:
-            print("Please enter a number.")
-            continue
-        y = input("Y coordinate of the waypoint: ")
-        try:
-            y = float(y)
-        except ValueError:
-            print("Please enter a number.")
-            continue
-
-        # estimate the robot's pose
-        robot_pose = operate.ekf.get_state_vector()[0:3]
-
-        # robot drives to the waypoint
-        waypoint = [x,y]
-        drive_to_point(waypoint,robot_pose)
-        print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
-
-        # exit
-        ppi.set_velocity([0, 0])
-        uInput = input("Add a new waypoint? [Y/N]")
-        if uInput == 'N':
-            break
