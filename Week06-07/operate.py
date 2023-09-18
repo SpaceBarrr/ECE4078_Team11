@@ -243,7 +243,8 @@ class Operate:
     # keyboard teleoperation, replace with your M1 codes if preferred        
     def update_keyboard(self):
         for event in pygame.event.get():
-            print(self.command['motion'])
+            if event.type == pygame.MOUSEBUTTONUP:
+                print(pygame.mouse.get_pos())
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
