@@ -492,8 +492,8 @@ if __name__ == "__main__":
     map_background_colour = (45,45,45)
     pygame.draw.rect(canvas,map_background_colour,map_background_rect)
 # resizing map_image and drawing on the canvas
-    map_image = pygame.image.load('Week08-09/map_image.png')
-    second_image = pygame.transform.scale(map_image, (400, 400))
+    map_image = pygame.image.load('map_image.png')
+    map_image = pygame.transform.scale(map_image, (400, 400))
     canvas.blit(map_image, (700, 0))
 
 
