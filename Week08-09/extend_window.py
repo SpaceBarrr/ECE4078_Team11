@@ -20,7 +20,6 @@ second_image = pygame.transform.scale(second_image, (400, 400))
 screen.blit(second_image, (700, 0))
 
 
-
 pygame.display.flip()
 
 running = True
