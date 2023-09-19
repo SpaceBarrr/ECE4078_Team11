@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-def visulise_map():
+def visualise_map():
     '''
     ArUco MArkers are blue squares
     Tomato is red

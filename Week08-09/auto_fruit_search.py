@@ -492,15 +492,18 @@ if __name__ == "__main__":
                      pygame.image.load('pics/8bit/pibot5.png')]
     pygame.display.update()
 
-# drawing map_image rectangle
+    # create map_image.png from text file
+    visualise_map()
+
+    # drawing map_image rectangle
     map_background_rect = pygame.Rect(700, 0, 400, 660) #
     map_background_colour = (45,45,45)
     pygame.draw.rect(canvas,map_background_colour,map_background_rect)
-# resizing map_image and drawing on the canvas
+    # resizing map_image and drawing on the canvas
     map_image = pygame.image.load('map_image.png')
     map_image = pygame.transform.scale(map_image, (400, 400))
     canvas.blit(map_image, (700, 0))
-# adding origin marker for original pibot pos
+    # adding origin marker for original pibot pos
     origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
     origin_colour = (165,42,42)
     pygame.draw.rect(canvas,origin_colour,origin_dot)
