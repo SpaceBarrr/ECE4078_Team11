@@ -87,7 +87,7 @@ def merge_estimations(target_pose_dict):
 
     ######### Replace with your codes #########
     # TODO: replace it with a solution to merge the multiple occurrences of the same class type (e.g., by a distance threshold)
-    NUMBER_OF_CLUSTERS = 8
+    NUMBER_OF_CLUSTERS = 10
     coord_master = list()
 
     # KMeans() wants a list of lists (not a dict of dicts), so we convert here
