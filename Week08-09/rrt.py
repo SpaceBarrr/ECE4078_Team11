@@ -71,9 +71,7 @@ class RRT:
             # to self.node_list
             if(self.is_collision_free(nearby_node)):
                 self.node_list.append(nearby_node)
-                    
-            # Please remove return None when you start coding
-            # return None
+
             #ENDTODO -----------------------------------------------------------------------
                 
             # If we are close to goal, stop expansion and generate path
