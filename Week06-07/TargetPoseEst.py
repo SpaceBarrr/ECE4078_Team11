@@ -87,7 +87,7 @@ def merge_estimations(target_pose_dict):
 
     ######### Replace with your codes #########
     # TODO: replace it with a solution to merge the multiple occurrences of the same class type (e.g., by a distance threshold)
-    NUMBER_OF_CLUSTERS = 8
+    NUMBER_OF_CLUSTERS = 10
     coord_master = list()
 
     # KMeans() wants a list of lists (not a dict of dicts), so we convert here
@@ -142,8 +142,8 @@ if __name__ == "__main__":
     parser.add_argument("--run", metavar='', type=str, default="NOT SUPPLIED") # localhost
     args, _ = parser.parse_known_args()
 
-    if args.run == "NOT SUPPLIED":
-        raise ValueError("YOU HAVE NOT SUPPLIED A RUN NUMBER. Please use --run N\nDONT PANIC THIS IS NOT A CODE ISSUE!!!")
+    # if args.run == "NOT SUPPLIED":
+    #     raise ValueError("YOU HAVE NOT SUPPLIED A RUN NUMBER. Please use --run N\nDONT PANIC THIS IS NOT A CODE ISSUE!!!")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))     # get current script directory (TargetPoseEst.py)
 
