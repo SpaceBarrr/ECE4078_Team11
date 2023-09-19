@@ -495,6 +495,10 @@ if __name__ == "__main__":
     map_image = pygame.image.load('map_image.png')
     map_image = pygame.transform.scale(map_image, (400, 400))
     canvas.blit(map_image, (700, 0))
+# adding origin marker for original pibot pos
+    origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
+    origin_colour = (50,205,50)
+    pygame.draw.rect(canvas,origin_colour,origin_dot)
 
 
     start = False
