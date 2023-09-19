@@ -129,7 +129,7 @@ def drive_to_point(waypoint, robot_pose):
     x_diff = waypoint[0] - robot_pose_x
     y_diff = waypoint[1] - robot_pose_y
 
-    angle_to_turn = np.arctan2(y_diff, x_diff) - robot_pose_theta
+    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - robot_pose_theta, 0, np.pi*2)
     turn_time = angle_to_turn / wheel_vel # replace with your calculation
 
     print("Turning for {:.2f} seconds".format(turn_time))
@@ -144,6 +144,21 @@ def drive_to_point(waypoint, robot_pose):
 
     print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
     
+def clamp_angle(rad_angle=0, min_value=-np.pi, max_value=np.pi):
+	"""
+	Restrict angle to the range [min, max]
+	:param rad_angle: angle in radians
+	:param min_value: min angle value
+	:param max_value: max angle value
+	"""
+
+	if min_value > 0:
+		min_value *= -1
+
+	angle = (rad_angle + max_value) % (2 * np.pi) + min_value
+
+	return angle
+
 class Operate:
     def __init__(self, args):
         self.modifier = 1
@@ -443,12 +458,15 @@ class Operate:
             sys.exit()
         
 def add_waypoint_from_click(mouse_pos: tuple):
-    # TODO replace with actual window offsets
-    x_offset = 0
-    y_offset = 0
+    x_offset = 751 + 310/2
+    y_offset = 48 + 310/2
+    x_scaling = 3/310
+    y_scaling = 3/310
     
-    x = mouse_pos[0] - x_offset
-    y = mouse_pos[1] - y_offset
+    x = (mouse_pos[0] - x_offset)  * x_scaling
+    y = (mouse_pos[1] - y_offset)  * y_scaling
+    
+    print(x,y)
 
     # estimate the robot's pose
     robot_pose = operate.ekf.get_state_vector()[0:3]
@@ -465,8 +483,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", metavar='', type=str, default='192.168.50.1') # localhost
-    parser.add_argument("--port", metavar='', type=int, default=8080) # 40000
+    parser.add_argument("--ip", metavar='', type=str, default='localhost') # localhost
+    parser.add_argument("--port", metavar='', type=int, default=40000) # 40000
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
