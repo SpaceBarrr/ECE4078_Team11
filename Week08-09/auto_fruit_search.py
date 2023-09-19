@@ -466,7 +466,7 @@ def add_waypoint_from_click(mouse_pos: tuple):
     x = (mouse_pos[0] - x_offset)  * x_scaling
     y = (mouse_pos[1] - y_offset)  * y_scaling
     
-    print(x,y)
+    # print(x,y)
 
     # estimate the robot's pose
     robot_pose = operate.ekf.get_state_vector()[0:3]
