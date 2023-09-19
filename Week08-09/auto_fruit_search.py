@@ -24,6 +24,11 @@ import slam.aruco_detector as aruco
 
 from YOLO.detector import Detector
 
+from rrt import RRT
+from Obstacle import *
+
+from txt_to_image import *
+
 def read_true_map(fname):
     """Read the ground truth map and output the pose of the ArUco markers and 5 target fruits&vegs to search for
 
@@ -124,7 +129,7 @@ def drive_to_point(waypoint, robot_pose):
     x_diff = waypoint[0] - robot_pose_x
     y_diff = waypoint[1] - robot_pose_y
 
-    angle_to_turn = np.arctan2(y_diff, x_diff) - robot_pose_theta
+    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - robot_pose_theta, 0, np.pi*2)
     turn_time = angle_to_turn / wheel_vel # replace with your calculation
 
     print("Turning for {:.2f} seconds".format(turn_time))
@@ -139,6 +144,21 @@ def drive_to_point(waypoint, robot_pose):
 
     print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
     
+def clamp_angle(rad_angle=0, min_value=-np.pi, max_value=np.pi):
+	"""
+	Restrict angle to the range [min, max]
+	:param rad_angle: angle in radians
+	:param min_value: min angle value
+	:param max_value: max angle value
+	"""
+
+	if min_value > 0:
+		min_value *= -1
+
+	angle = (rad_angle + max_value) % (2 * np.pi) + min_value
+
+	return angle
+
 class Operate:
     def __init__(self, args):
         self.modifier = 1
@@ -438,12 +458,15 @@ class Operate:
             sys.exit()
         
 def add_waypoint_from_click(mouse_pos: tuple):
-    # TODO replace with actual window offsets
-    x_offset = 0
-    y_offset = 0
+    x_offset = 751 + 310/2
+    y_offset = 48 + 310/2
+    x_scaling = 3/310
+    y_scaling = 3/310
     
-    x = mouse_pos[0] - x_offset
-    y = mouse_pos[1] - y_offset
+    x = (mouse_pos[0] - x_offset)  * x_scaling
+    y = (mouse_pos[1] - y_offset)  * y_scaling
+    
+    print(x,y)
 
     # estimate the robot's pose
     robot_pose = operate.ekf.get_state_vector()[0:3]
@@ -460,8 +483,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", metavar='', type=str, default='192.168.50.1') # localhost
-    parser.add_argument("--port", metavar='', type=int, default=8080) # 40000
+    parser.add_argument("--ip", metavar='', type=str, default='localhost') # localhost
+    parser.add_argument("--port", metavar='', type=int, default=40000) # 40000
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
@@ -487,14 +510,21 @@ if __name__ == "__main__":
                      pygame.image.load('pics/8bit/pibot5.png')]
     pygame.display.update()
 
-# drawing map_image rectangle
+    # create map_image.png from text file
+    visualise_map()
+
+    # drawing map_image rectangle
     map_background_rect = pygame.Rect(700, 0, 400, 660) #
     map_background_colour = (45,45,45)
     pygame.draw.rect(canvas,map_background_colour,map_background_rect)
-# resizing map_image and drawing on the canvas
-    map_image = pygame.image.load('Week08-09/map_image.png')
-    second_image = pygame.transform.scale(map_image, (400, 400))
+    # resizing map_image and drawing on the canvas
+    map_image = pygame.image.load('map_image.png')
+    map_image = pygame.transform.scale(map_image, (400, 400))
     canvas.blit(map_image, (700, 0))
+    # adding origin marker for original pibot pos
+    origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
+    origin_colour = (165,42,42)
+    pygame.draw.rect(canvas,origin_colour,origin_dot)
 
 
     start = False
