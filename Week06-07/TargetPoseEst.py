@@ -93,29 +93,23 @@ def merge_estimations(target_pose_dict):
     # KMeans() wants a list of lists (not a dict of dicts), so we convert here
     for key in target_pose_dict:
         coords = list(target_pose_dict[key].values()) # extract the sub values from the array
-        # print(coords)
         coord_master.append(coords)
-    # print(coord_master)
-    # need to import "scikit-learn" for this guy
-    # NOTE hardcoding 10 clusters - THIS MEANS WE MUST FIND EVERY FRUIT - CAN WE DO THIS?
+
+    # NOTE hardcoding 10 clusters
     kmeans = KMeans(n_clusters=NUMBER_OF_CLUSTERS, random_state=0, n_init="auto").fit(coord_master)      
     centrepoints = kmeans.cluster_centers_
     
     # at this point we have a list of clusters (given by kmeans.labels_), but we don't know which cluster is which fruit
     for fruit_predict in target_pose_dict:
-        # FIXME FIX THIS CLUSTERFUCK OF ARRAY NESTING
-        to_predict = []
-        to_predict.append(target_pose_dict[fruit_predict]["y"])
-        to_predict.append(target_pose_dict[fruit_predict]["x"])
-        to_predict_final = []
-        to_predict_final.append(to_predict)
-        cluster_prediction = kmeans.predict(np.array(to_predict_final))[0]
+        # ugly array nesting below bc kmeans expects an array in an array
+        to_predict_nested = [target_pose_dict[fruit_predict]["y"],
+                             target_pose_dict[fruit_predict]["x"]]
+        to_predict_final = [to_predict_nested]
+        cluster_prediction = kmeans.predict(np.array(to_predict_final))[0] # returns an array of an array, so have to dereference
 
         fruit = fruit_predict.split("_")[0] # extract the fruit name from the dict key
 
-        # NOTE: THE BELOW ASSUMES WE WILL ONLY FIND AT MOST 2 OF EACH FRUIT
-        # HAVE TO TEST VISION / KMEAN ALGORITHMS TO SEE IF THIS IS A VALID ASSUMPTION
-        if fruit in target_est: # second 'discovery' of a fruit
+        if f"{fruit}_0" in target_est: # second 'discovery' of a fruit
             target_est[f"{fruit.lower()}_1"] = {
                 "y": centrepoints[cluster_prediction][0],
                 "x": centrepoints[cluster_prediction][1]
@@ -139,11 +133,11 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run", metavar='', type=str, default="NOT SUPPLIED") # localhost
+    parser.add_argument("--run", metavar='', type=str, default="NOT SUPPLIED")
     args, _ = parser.parse_known_args()
 
-    # if args.run == "NOT SUPPLIED":
-    #     raise ValueError("YOU HAVE NOT SUPPLIED A RUN NUMBER. Please use --run N\nDONT PANIC THIS IS NOT A CODE ISSUE!!!")
+    if args.run == "NOT SUPPLIED":
+        raise ValueError("YOU HAVE NOT SUPPLIED A RUN NUMBER. Please use --run N\nDONT PANIC THIS IS NOT A CODE ISSUE!!!")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))     # get current script directory (TargetPoseEst.py)
 
