@@ -40,26 +40,26 @@ def visualise_map():
             ReferenceObjects_x.append(-ReferenceMap[Key]["x"])
             ReferenceObjects_y.append(-ReferenceMap[Key]["y"])
             Objects_names.append(Key)
+            if "tomato" in Key:
+                Objects_colours.append("red")
+            elif "potato" in Key: # TODO if we change this, we have to be consistent
+                Objects_colours.append("skyblue")
+            elif "orange" in Key: 
+                Objects_colours.append("orange")
+            elif "capsicum" in Key: 
+                Objects_colours.append("pink")
+            elif "lime" in Key: 
+                Objects_colours.append("green")
+            elif "lemon" in Key: 
+                Objects_colours.append("yellow")
+            elif "garlic" in Key: 
+                Objects_colours.append("white")
+            elif "pumpkin" in Key: 
+                Objects_colours.append("purple")
+
             j += 1
 
-    for object in Objects_names : 
-        if "Tomato" in object:
-            Objects_colours.append("red")
-        elif "potato" in object: # TODO if we change this, we have to be consistent
-            Objects_colours.append("skyblue")
-        elif "Orange" in object: 
-            Objects_colours.append("orange")
-        elif "Capsicum" in object: 
-            Objects_colours.append("pink")
-        elif "Lime" in object: 
-            Objects_colours.append("green")
-        elif "Lemon" in object: 
-            Objects_colours.append("yellow")
-        elif "Garlic" in object: 
-            Objects_colours.append("white")
-        elif "Pumpkin" in object: 
-            Objects_colours.append("purple")
-
+    
     fig,ax = plt.subplots(figsize = (5, 5))
     ax.set_xlim([-1.5, 1.5])
     ax.set_ylim([-1.5, 1.5])
