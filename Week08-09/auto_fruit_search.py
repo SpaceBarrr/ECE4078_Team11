@@ -466,7 +466,7 @@ def add_waypoint_from_click(mouse_pos: tuple):
     x = (mouse_pos[0] - x_offset)  * x_scaling
     y = (mouse_pos[1] - y_offset)  * y_scaling
     
-    print(x,y)
+    # print(x,y)
 
     # estimate the robot's pose
     robot_pose = operate.ekf.get_state_vector()[0:3]
@@ -483,8 +483,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", metavar='', type=str, default='localhost') # localhost
-    parser.add_argument("--port", metavar='', type=int, default=40000) # 40000
+    parser.add_argument("--ip", metavar='', type=str, default='192.168.50.1') # localhost
+    parser.add_argument("--port", metavar='', type=int, default=8080) # 40000
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
