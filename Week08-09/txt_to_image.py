@@ -32,8 +32,8 @@ def visualise_map():
     for Key in ReferenceMap:
         if j <= 10 :
             #Position = np.array([ReferenceMap[Key]["x"], ReferenceMap[Key]["y"]])
-            ReferenceArUcos_x.append(-ReferenceMap[Key]["x"])
-            ReferenceArUcos_y.append(-ReferenceMap[Key]["y"])
+            ReferenceArUcos_x.append(ReferenceMap[Key]["x"])
+            ReferenceArUcos_y.append(ReferenceMap[Key]["y"])
             j += 1
 
         elif j > 10 : 
