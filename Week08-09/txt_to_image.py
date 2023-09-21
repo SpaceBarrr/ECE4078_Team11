@@ -68,4 +68,3 @@ def visualise_map():
     ax.scatter(ReferenceObjects_x, ReferenceObjects_y, c = Objects_colours, marker = "o")
     fig.savefig("map_image.png")
 
-    print(Objects_colours)
