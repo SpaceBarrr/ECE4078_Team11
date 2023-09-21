@@ -37,8 +37,8 @@ def visualise_map():
             j += 1
 
         elif j > 10 : 
-            ReferenceObjects_x.append(-ReferenceMap[Key]["x"])
-            ReferenceObjects_y.append(-ReferenceMap[Key]["y"])
+            ReferenceObjects_x.append(ReferenceMap[Key]["x"])
+            ReferenceObjects_y.append(ReferenceMap[Key]["y"])
             Objects_names.append(Key)
             if "tomato" in Key:
                 Objects_colours.append("red")
