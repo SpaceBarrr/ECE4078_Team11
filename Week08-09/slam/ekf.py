@@ -13,10 +13,17 @@ class EKF:
     # Add outlier rejection here
     ##########################################
 
-    def __init__(self, robot):
+    def __init__(self, robot, aruco_true_pos):
+        self.aruco_true_pos = aruco_true_pos[1]
+        print("part 1")
+        print(self.aruco_true_pos)
+        self.markers = np.reshape(aruco_true_pos, (2,-1), order='F') # TODO Check this
+        print("part 2")
+        print(self.markers)
+        
         # State components
         self.robot = robot
-        self.markers = np.zeros((2,0))
+        # self.markers = np.zeros((2,0))
         self.taglist = []
 
         # Covariance matrix
@@ -50,7 +57,9 @@ class EKF:
     
     def set_state_vector(self, state):
         self.robot.state = state[0:3,:]
-        self.markers = np.reshape(state[3:,:], (2,-1), order='F')
+        
+        # NOTE Commented out to hardcord aruco markers for M4
+        # self.markers = np.reshape(state[3:,:], (2,-1), order='F')
     
     def save_map(self, fname="slam_map.txt"):
         if self.number_landmarks() > 0:
@@ -123,6 +132,8 @@ class EKF:
         corrected_x = x + K @ (z - z_hat)
         self.set_state_vector(corrected_x)
         self.P = (np.eye(self.P.shape[0]) - K @ H) @ self.P 
+        
+        print(self.get_state_vector())
         
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3

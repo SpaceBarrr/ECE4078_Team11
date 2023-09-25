@@ -16,6 +16,9 @@ fruits:
   Capsicum: [0, 255, 255]
   Tomato: [0, 0, 255]
   potato: [0, 63, 127]
+  Lime: [50, 205, 50]
+  Lemon: [255, 255, 153]
+  Orange: [255, 68, 51]
 
 # change this if the GUI is too big for your screen
 image_display_res:

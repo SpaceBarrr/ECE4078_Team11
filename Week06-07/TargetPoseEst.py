@@ -106,22 +106,100 @@ def merge_estimations(target_pose_dict):
                              target_pose_dict[fruit_predict]["x"]]
         to_predict_final = [to_predict_nested]
         cluster_prediction = kmeans.predict(np.array(to_predict_final))[0] # returns an array of an array, so have to dereference
-
+        target_pose_dict[fruit_predict]["cluster"] = cluster_prediction
+        
+    cluster0 = "" 
+    cluster1 = ""
+    cluster2 = ""
+    cluster3 = ""
+    cluster4 = ""
+    cluster5 = ""
+    cluster6 = ""   
+    cluster7 = ""
+    cluster8 = ""
+    cluster9 = ""
+        
+    for fruit_predict in target_pose_dict:
         fruit = fruit_predict.split("_")[0] # extract the fruit name from the dict key
+        
+        if target_pose_dict[fruit_predict]["cluster"] == 0:
+            if cluster0 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster0}")
+            cluster0 = fruit
+            # print(f"cluster 0: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 1:
+            cluster1 = fruit
+            if cluster1 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster1}")
+            # print(f"cluster 1: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 2:
+            cluster2 = fruit
+            if cluster2 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster2}")
+            # print(f"cluster 2: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 3:
+            cluster3 = fruit
+            if cluster3 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster3}")
+            # print(f"cluster 3: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 4:
+            cluster4 = fruit
+            if cluster4 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster4}")
+            # print(f"cluster 4: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 5:
+            cluster5 = fruit
+            if cluster5 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster5}")
+            # print(f"cluster 5: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 6:
+            cluster6 = fruit
+            if cluster6 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster6}")
+            # print(f"cluster 6: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 7:
+            cluster7 = fruit
+            if cluster7 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster7}")
+            # print(f"cluster 7: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 8:
+            cluster8 = fruit
+            if cluster8 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster8}")
+            # print(f"cluster 8: {fruit}")
+        elif target_pose_dict[fruit_predict]["cluster"] == 9:
+            cluster9 = fruit
+            if cluster9 != fruit and cluster0 != "":
+                print(f"conflict: {fruit}, {cluster9}")
+            # print(f"cluster 9: {fruit}")
+            
+    final_clusters = {
+        0: cluster0,
+        1: cluster1,
+        2: cluster2,
+        3: cluster3,
+        4: cluster4,
+        5: cluster5,
+        6: cluster6,
+        7: cluster7,
+        8: cluster8,
+        9: cluster9
+    }
+    print(final_clusters)
+        
+        # if f"{fruit}_0" in target_est: # second 'discovery' of a fruit
+        #     target_est[f"{fruit.lower()}_1"] = {
+        #         "y": centrepoints[cluster_prediction][0],
+        #         "x": centrepoints[cluster_prediction][1]
+        #     }
+        # else:
+        #     target_est[f"{fruit.lower()}_0"] = {
+        #         "y": centrepoints[cluster_prediction][0],
+        #         "x": centrepoints[cluster_prediction][1]
+        #     }
 
-        if f"{fruit}_0" in target_est: # second 'discovery' of a fruit
-            target_est[f"{fruit.lower()}_1"] = {
-                "y": centrepoints[cluster_prediction][0],
-                "x": centrepoints[cluster_prediction][1]
-            }
-        else:
-            target_est[f"{fruit.lower()}_0"] = {
-                "y": centrepoints[cluster_prediction][0],
-                "x": centrepoints[cluster_prediction][1]
-            }
-
-        if len(list(target_est.keys())) >= NUMBER_OF_CLUSTERS: # once we find all 10 fruits and their centrepoints we don't need to keep searching
-            break
+        # if len(list(target_est.keys())) > NUMBER_OF_CLUSTERS: # once we find all 10 fruits and their centrepoints we don't need to keep searching
+        #     break
     
     #########
    
@@ -133,7 +211,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run", metavar='', type=str, default="NOT SUPPLIED")
+    parser.add_argument("--run", metavar='', type=str, default="1")
     args, _ = parser.parse_known_args()
 
     if args.run == "NOT SUPPLIED":

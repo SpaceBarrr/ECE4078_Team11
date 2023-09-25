@@ -160,7 +160,9 @@ def clamp_angle(rad_angle=0, min_value=-np.pi, max_value=np.pi):
 	return angle
 
 class Operate:
-    def __init__(self, args):
+    def __init__(self, args, aruco_true_pos):
+        self.aruco_true_pos = aruco_true_pos
+        
         self.modifier = 1
         
         self.folder = 'pibot_dataset/'
@@ -177,7 +179,7 @@ class Operate:
             self.pibot = PenguinPi(args.ip, args.port)
 
         # initialise SLAM parameters
-        self.ekf = self.init_ekf(args.calib_dir, args.ip)
+        self.ekf = self.init_ekf(args.calib_dir, args.ip, self.aruco_true_pos)
         self.aruco_det = aruco.aruco_detector(
             self.ekf.robot, marker_length=0.07)  # size of the ARUCO markers
 
@@ -288,7 +290,7 @@ class Operate:
             self.notification = f'{f_} is saved'
 
     # wheel and camera calibration for SLAM
-    def init_ekf(self, datadir, ip):
+    def init_ekf(self, datadir, ip, aruco_true_pos):
         fileK = "{}intrinsic.txt".format(datadir)
         camera_matrix = np.loadtxt(fileK, delimiter=',')
         fileD = "{}distCoeffs.txt".format(datadir)
@@ -300,7 +302,7 @@ class Operate:
         fileB = "{}baseline.txt".format(datadir)
         baseline = np.loadtxt(fileB, delimiter=',')
         robot = Robot(baseline, scale, camera_matrix, dist_coeffs)
-        return EKF(robot)
+        return EKF(robot, aruco_true_pos)
 
     # save SLAM map
     def record_data(self):
@@ -541,12 +543,13 @@ if __name__ == "__main__":
             pygame.display.update()
             counter += 2
 
-    operate = Operate(args)
+    # read in the true map
+    fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
+
+    operate = Operate(args, aruco_true_pos)
 
     ppi = PenguinPi(args.ip,args.port)
 
-    # read in the true map
-    fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
     search_list = read_search_list(args.shopping_list)
     print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
 
