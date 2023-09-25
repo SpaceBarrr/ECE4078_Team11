@@ -90,8 +90,8 @@ def merge_estimations(target_pose_dict):
     # TODO: replace it with a solution to merge the multiple occurrences of the same class type (e.g., by a distance threshold)
     fruits_temp = {}
 
-    # create a new dict containing the points of each fruit, and their centroid
     for fruit in TARGET_TYPES:
+        # create a new dict containing the points of each fruit, and their centroid
         total = 0
         sum_x = 0
         sum_y = 0
@@ -108,9 +108,20 @@ def merge_estimations(target_pose_dict):
         fruits_temp[fruit]["centroid_x"] = sum_x / total
         fruits_temp[fruit]["centroid_y"] = sum_y / total
         
-    # determine if there is 1 or 2 fruits
-    # 10cm threshold
-    for fruit in fruits_temp:
+        # outlier rejection
+        clustering_x = DBSCAN(eps=0.3, min_samples=3).fit(fruits_temp[fruit]["points_x"])
+        clustering_y = DBSCAN(eps=0.3, min_samples=3).fit(fruits_temp[fruit]["points_y"])
+        for index, x in enumerate(clustering_x.labels_):
+            if x == -1:
+                fruits_temp[fruit]["points_x"].pop(index)
+                fruits_temp[fruit]["points_y"].pop(index)
+        for index, y in enumerate(clustering_y.labels_):
+            if y == -1:
+                fruits_temp[fruit]["points_x"].pop(index)
+                fruits_temp[fruit]["points_y"].pop(index)
+        
+        # determine if there is 1 or 2 fruits
+        # 10cm threshold
         fruits_temp[fruit]["all_points"] = np.vstack((fruits_temp[fruit]["points_x"], fruits_temp[fruit]["points_y"])).T
         fruits_temp[fruit]["average_dist"] = np.mean(pdist(fruits_temp[fruit]["all_points"]))
         fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.35 else 1
