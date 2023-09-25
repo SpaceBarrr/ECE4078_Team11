@@ -7,7 +7,7 @@ import cv2
 from scipy.spatial.distance import pdist
 import numpy as np
 from YOLO.detector import Detector
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN
 
 # list of target fruits and vegs types
 # Make sure the names are the same as the ones used in your YOLO model
@@ -113,7 +113,7 @@ def merge_estimations(target_pose_dict):
     for fruit in fruits_temp:
         fruits_temp[fruit]["all_points"] = np.vstack((fruits_temp[fruit]["points_x"], fruits_temp[fruit]["points_y"])).T
         fruits_temp[fruit]["average_dist"] = np.mean(pdist(fruits_temp[fruit]["all_points"]))
-        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.2 else 1
+        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.35 else 1
         
     # calculate kmeans
     for fruit in fruits_temp:
