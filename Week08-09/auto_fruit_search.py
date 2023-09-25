@@ -120,6 +120,8 @@ def drive_to_point(waypoint, robot_pose):
     # then drive straight to the way point
 
     wheel_vel = 30 # tick
+    lin_vel = 1/10.45
+    ang_vel = 2*np.pi / 5.7
     
     robot_pose_x = robot_pose[0][0]
     robot_pose_y = robot_pose[1][0]
@@ -129,17 +131,24 @@ def drive_to_point(waypoint, robot_pose):
     x_diff = waypoint[0] - robot_pose_x
     y_diff = waypoint[1] - robot_pose_y
 
-    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - robot_pose_theta, 0, np.pi*2)
-    turn_time = angle_to_turn / wheel_vel # replace with your calculation
+    angle_to_turn = np.arctan2(y_diff, x_diff) - robot_pose_theta
+
+    if angle_to_turn > 0 :              # Change thus
+        variable = -1
+    else : 
+        variable = 1 
+    #clamp_angle(, 0, np.pi*2)
+    turn_time = abs(angle_to_turn / ang_vel) # replace with your calculation
+
 
     print("Turning for {:.2f} seconds".format(turn_time))
-    lv, rv = ppi.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
+    lv, rv = ppi.set_velocity([0, variable], turning_tick=wheel_vel, time=turn_time)
     
     # after turning, drive straight to the waypoint
     distance = np.sqrt((waypoint[0]-robot_pose_x)**2+(waypoint[1]-robot_pose_y)**2)
-    drive_time = distance / (wheel_vel) # replace with your calculation
+    drive_time = distance / (lin_vel) # replace with your calculation
     print("Driving for {:.2f} seconds".format(drive_time))
-    lv, rv = ppi.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
+    lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=drive_time)
     ####################################################
 
     print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
@@ -474,6 +483,7 @@ def add_waypoint_from_click(mouse_pos: tuple):
     # robot drives to the waypoint
     waypoint = [x,y]
     drive_to_point(waypoint,robot_pose)
+    
     print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
 
     # exit
