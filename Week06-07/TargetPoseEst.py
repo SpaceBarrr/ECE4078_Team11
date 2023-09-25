@@ -109,16 +109,16 @@ def merge_estimations(target_pose_dict):
         fruits_temp[fruit]["centroid_y"] = sum_y / total
         
         # outlier rejection
-        clustering_x = DBSCAN(eps=0.3, min_samples=3).fit(fruits_temp[fruit]["points_x"])
-        clustering_y = DBSCAN(eps=0.3, min_samples=3).fit(fruits_temp[fruit]["points_y"])
-        for index, x in enumerate(clustering_x.labels_):
-            if x == -1:
-                fruits_temp[fruit]["points_x"].pop(index)
-                fruits_temp[fruit]["points_y"].pop(index)
-        for index, y in enumerate(clustering_y.labels_):
-            if y == -1:
-                fruits_temp[fruit]["points_x"].pop(index)
-                fruits_temp[fruit]["points_y"].pop(index)
+        # clustering_x = DBSCAN(eps=0.3, min_samples=3).fit(fruits_temp[fruit]["points_x"])
+        # clustering_y = DBSCAN(eps=0.3, min_samples=3).fit(fruits_temp[fruit]["points_y"])
+        # for index, x in enumerate(clustering_x.labels_):
+        #     if x == -1:
+        #         fruits_temp[fruit]["points_x"].pop(index)
+        #         fruits_temp[fruit]["points_y"].pop(index)
+        # for index, y in enumerate(clustering_y.labels_):
+        #     if y == -1:
+        #         fruits_temp[fruit]["points_x"].pop(index)
+        #         fruits_temp[fruit]["points_y"].pop(index)
         
         # determine if there is 1 or 2 fruits
         # 10cm threshold
