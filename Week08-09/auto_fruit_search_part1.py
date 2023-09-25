@@ -18,7 +18,7 @@ import shutil # python package for file operations
 
 # import SLAM components
 sys.path.insert(0, "{}/slam".format(os.getcwd()))
-from slam.ekf import EKF
+from slam.ekf_part1 import EKF
 from slam.robot import Robot
 import slam.aruco_detector as aruco
 
@@ -153,6 +153,11 @@ def drive_to_point(waypoint, robot_pose):
     ####################################################
 
     print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
+    robot_pose[0][0] = waypoint[0]
+    robot_pose[0][1] = waypoint[1]
+    robot_pose[0][1] = np.arctan2(y_diff, x_diff)
+    
+    return robot_pose 
     
 def clamp_angle(rad_angle=0, min_value=-np.pi, max_value=np.pi):
 	"""
@@ -227,6 +232,7 @@ class Operate:
             self.detector = Detector(args.yolo_model)
             self.yolo_vis = np.ones((240, 320, 3)) * 100
         self.bg = pygame.image.load('pics/gui_mask.jpg')
+        self.robot_pose = []
 
     # wheel control
     def control(self):
@@ -391,7 +397,8 @@ class Operate:
     def update_keyboard(self):
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONUP:
-                add_waypoint_from_click(pygame.mouse.get_pos())
+                self.robot_pose  = add_waypoint_from_click(pygame.mouse.get_pos(), self.robot_pose)
+
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -469,7 +476,7 @@ class Operate:
             pygame.quit()
             sys.exit()
         
-def add_waypoint_from_click(mouse_pos: tuple):
+def add_waypoint_from_click(mouse_pos: tuple, robot_pose):
     x_offset = 751 + 310/2
     y_offset = 48 + 310/2
     x_scaling = 3/310
@@ -481,16 +488,17 @@ def add_waypoint_from_click(mouse_pos: tuple):
     # print(x,y)
 
     # estimate the robot's pose
-    robot_pose = operate.ekf.get_state_vector()[0:3]
+    # robot_pose = operate.ekf.get_state_vector()[0:3]
 
     # robot drives to the waypoint
     waypoint = [x,y]
-    drive_to_point(waypoint,robot_pose)
+    new_robot_pose = drive_to_point(waypoint,robot_pose)
     
     print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
 
     # exit
     ppi.set_velocity([0, 0])
+    return new_robot_pose
         
 if __name__ == "__main__":
     import argparse
@@ -565,7 +573,7 @@ if __name__ == "__main__":
     print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
 
     waypoint = [0.0,0.0]
-    robot_pose = [0.0,0.0,0.0]
+    global robot_pose = [0.0,0.0,0.0]
 
     while start:
         operate.update_keyboard()
@@ -575,6 +583,7 @@ if __name__ == "__main__":
         operate.record_data()
         operate.save_image()
         operate.detect_target()
+        operate.ekf.get_state_vector()[0:3]         # Bryan Changed this
         # visualise
         operate.draw(canvas)
         pygame.display.update()

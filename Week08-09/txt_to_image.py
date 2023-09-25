@@ -40,21 +40,21 @@ def visualise_map():
             ReferenceObjects_x.append(ReferenceMap[Key]["x"])
             ReferenceObjects_y.append(ReferenceMap[Key]["y"])
             Objects_names.append(Key)
-            if "tomato" in Key:
+            if "Tomato" in Key:
                 Objects_colours.append("red")
             elif "potato" in Key: # TODO if we change this, we have to be consistent
                 Objects_colours.append("skyblue")
-            elif "orange" in Key: 
+            elif "Orange" in Key: 
                 Objects_colours.append("orange")
-            elif "capsicum" in Key: 
+            elif "Capsicum" in Key: 
                 Objects_colours.append("pink")
-            elif "lime" in Key: 
+            elif "Lime" in Key: 
                 Objects_colours.append("green")
-            elif "lemon" in Key: 
+            elif "Lemon" in Key: 
                 Objects_colours.append("yellow")
-            elif "garlic" in Key: 
+            elif "Garlic" in Key: 
                 Objects_colours.append("white")
-            elif "pumpkin" in Key: 
+            elif "Pumpkin" in Key: 
                 Objects_colours.append("purple")
 
             j += 1
