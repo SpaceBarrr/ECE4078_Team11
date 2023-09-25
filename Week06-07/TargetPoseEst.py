@@ -95,6 +95,7 @@ def merge_estimations(target_pose_dict):
         total = 0
         sum_x = 0
         sum_y = 0
+        fruits_temp[fruit] = {}
         fruits_temp[fruit]["points_x"] = []
         fruits_temp[fruit]["points_y"] = []
         for fruit_from_dict in target_pose_dict:
@@ -104,23 +105,23 @@ def merge_estimations(target_pose_dict):
                 total += 1
                 fruits_temp[fruit]["points_x"].append(target_pose_dict[fruit_from_dict]['x'])
                 fruits_temp[fruit]["points_y"].append(target_pose_dict[fruit_from_dict]['y'])
-        centroid_x = sum_x / total
-        centroid_y = sum_y / total
-        fruits_temp[fruit]["centroid_x"] = centroid_x 
-        fruits_temp[fruit]["centroid_y"] = centroid_y
+        fruits_temp[fruit]["centroid_x"] = sum_x / total
+        fruits_temp[fruit]["centroid_y"] = sum_y / total
         
     # determine if there is 1 or 2 fruits
     # 10cm threshold
     for fruit in fruits_temp:
-        fruits_temp[fruit]["all_points"] = np.concatenate((fruits_temp[fruit]["points_x"], fruits_temp[fruit]["points_y"]), axis=0)
+        fruits_temp[fruit]["all_points"] = np.vstack((fruits_temp[fruit]["points_x"], fruits_temp[fruit]["points_y"])).T
         fruits_temp[fruit]["average_dist"] = np.mean(pdist(fruits_temp[fruit]["all_points"]))
-        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.1 else 1
+        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.2 else 1
         
     # calculate kmeans
     for fruit in fruits_temp:
+        target_est[f"{fruit.lower()}_0"] = {}
         if fruits_temp[fruit]["clusters"] == 2:
             kmeans = KMeans(n_clusters=2, random_state=0, n_init="auto").fit(fruits_temp[fruit]["all_points"])      
             centrepoints = kmeans.cluster_centers_
+            target_est[f"{fruit.lower()}_1"] = {}
             target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][0]
             target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][1]
             target_est[f"{fruit.lower()}_1"]["y"] = centrepoints[1][0]
