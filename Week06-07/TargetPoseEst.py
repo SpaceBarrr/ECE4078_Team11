@@ -127,6 +127,8 @@ def merge_estimations(target_pose_dict):
             target_est[f"{fruit.lower()}_1"]["y"] = centrepoints[1][0]
             target_est[f"{fruit.lower()}_1"]["x"] = centrepoints[1][1]
         else:
+            kmeans = KMeans(n_clusters=1, random_state=0, n_init="auto").fit(fruits_temp[fruit]["all_points"]) 
+            centrepoints = kmeans.cluster_centers_
             target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][0]
             target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][1]
             
