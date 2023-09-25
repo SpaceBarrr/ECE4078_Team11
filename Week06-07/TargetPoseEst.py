@@ -4,7 +4,8 @@ import json
 import os
 import ast
 import cv2
-import re
+from scipy.spatial.distance import pdist
+import numpy as np
 from YOLO.detector import Detector
 from sklearn.cluster import KMeans
 
@@ -87,124 +88,48 @@ def merge_estimations(target_pose_dict):
 
     ######### Replace with your codes #########
     # TODO: replace it with a solution to merge the multiple occurrences of the same class type (e.g., by a distance threshold)
-    NUMBER_OF_CLUSTERS = 10
-    coord_master = list()
+    fruits_temp = {}
 
-    # KMeans() wants a list of lists (not a dict of dicts), so we convert here
-    for key in target_pose_dict:
-        coords = list(target_pose_dict[key].values()) # extract the sub values from the array
-        coord_master.append(coords)
-
-    # NOTE hardcoding 10 clusters
-    kmeans = KMeans(n_clusters=NUMBER_OF_CLUSTERS, random_state=0, n_init="auto").fit(coord_master)      
-    centrepoints = kmeans.cluster_centers_
-    
-    # at this point we have a list of clusters (given by kmeans.labels_), but we don't know which cluster is which fruit
-    for fruit_predict in target_pose_dict:
-        # ugly array nesting below bc kmeans expects an array in an array
-        to_predict_nested = [target_pose_dict[fruit_predict]["y"],
-                             target_pose_dict[fruit_predict]["x"]]
-        to_predict_final = [to_predict_nested]
-        cluster_prediction = kmeans.predict(np.array(to_predict_final))[0] # returns an array of an array, so have to dereference
-        target_pose_dict[fruit_predict]["cluster"] = cluster_prediction
+    # create a new dict containing the points of each fruit, and their centroid
+    for fruit in TARGET_TYPES:
+        total = 0
+        sum_x = 0
+        sum_y = 0
+        fruits_temp[fruit]["points_x"] = []
+        fruits_temp[fruit]["points_y"] = []
+        for fruit_from_dict in target_pose_dict:
+            if fruit_from_dict.split("_")[0].lower() == fruit.lower():
+                sum_x += target_pose_dict[fruit_from_dict]['x']
+                sum_y += target_pose_dict[fruit_from_dict]['y']
+                total += 1
+                fruits_temp[fruit]["points_x"].append(target_pose_dict[fruit_from_dict]['x'])
+                fruits_temp[fruit]["points_y"].append(target_pose_dict[fruit_from_dict]['y'])
+        centroid_x = sum_x / total
+        centroid_y = sum_y / total
+        fruits_temp[fruit]["centroid_x"] = centroid_x 
+        fruits_temp[fruit]["centroid_y"] = centroid_y
         
-    cluster0 = "" 
-    cluster1 = ""
-    cluster2 = ""
-    cluster3 = ""
-    cluster4 = ""
-    cluster5 = ""
-    cluster6 = ""   
-    cluster7 = ""
-    cluster8 = ""
-    cluster9 = ""
+    # determine if there is 1 or 2 fruits
+    # 10cm threshold
+    for fruit in fruits_temp:
+        fruits_temp[fruit]["all_points"] = np.concatenate((fruits_temp[fruit]["points_x"], fruits_temp[fruit]["points_y"]), axis=0)
+        fruits_temp[fruit]["average_dist"] = np.mean(pdist(fruits_temp[fruit]["all_points"]))
+        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.1 else 1
         
-    for fruit_predict in target_pose_dict:
-        fruit = fruit_predict.split("_")[0] # extract the fruit name from the dict key
-        
-        if target_pose_dict[fruit_predict]["cluster"] == 0:
-            if cluster0 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster0}")
-            cluster0 = fruit
-            # print(f"cluster 0: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 1:
-            cluster1 = fruit
-            if cluster1 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster1}")
-            # print(f"cluster 1: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 2:
-            cluster2 = fruit
-            if cluster2 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster2}")
-            # print(f"cluster 2: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 3:
-            cluster3 = fruit
-            if cluster3 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster3}")
-            # print(f"cluster 3: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 4:
-            cluster4 = fruit
-            if cluster4 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster4}")
-            # print(f"cluster 4: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 5:
-            cluster5 = fruit
-            if cluster5 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster5}")
-            # print(f"cluster 5: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 6:
-            cluster6 = fruit
-            if cluster6 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster6}")
-            # print(f"cluster 6: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 7:
-            cluster7 = fruit
-            if cluster7 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster7}")
-            # print(f"cluster 7: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 8:
-            cluster8 = fruit
-            if cluster8 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster8}")
-            # print(f"cluster 8: {fruit}")
-        elif target_pose_dict[fruit_predict]["cluster"] == 9:
-            cluster9 = fruit
-            if cluster9 != fruit and cluster0 != "":
-                print(f"conflict: {fruit}, {cluster9}")
-            # print(f"cluster 9: {fruit}")
+    # calculate kmeans
+    for fruit in fruits_temp:
+        if fruits_temp[fruit]["clusters"] == 2:
+            kmeans = KMeans(n_clusters=2, random_state=0, n_init="auto").fit(fruits_temp[fruit]["all_points"])      
+            centrepoints = kmeans.cluster_centers_
+            target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][0]
+            target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][1]
+            target_est[f"{fruit.lower()}_1"]["y"] = centrepoints[1][0]
+            target_est[f"{fruit.lower()}_1"]["x"] = centrepoints[1][1]
+        else:
+            target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][0]
+            target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][1]
             
-    final_clusters = {
-        0: cluster0,
-        1: cluster1,
-        2: cluster2,
-        3: cluster3,
-        4: cluster4,
-        5: cluster5,
-        6: cluster6,
-        7: cluster7,
-        8: cluster8,
-        9: cluster9
-    }
-    print(final_clusters)
-        
-        # if f"{fruit}_0" in target_est: # second 'discovery' of a fruit
-        #     target_est[f"{fruit.lower()}_1"] = {
-        #         "y": centrepoints[cluster_prediction][0],
-        #         "x": centrepoints[cluster_prediction][1]
-        #     }
-        # else:
-        #     target_est[f"{fruit.lower()}_0"] = {
-        #         "y": centrepoints[cluster_prediction][0],
-        #         "x": centrepoints[cluster_prediction][1]
-        #     }
-
-        # if len(list(target_est.keys())) > NUMBER_OF_CLUSTERS: # once we find all 10 fruits and their centrepoints we don't need to keep searching
-        #     break
-    
-    #########
-   
     return target_est
-
 
 # main loop
 if __name__ == "__main__":
