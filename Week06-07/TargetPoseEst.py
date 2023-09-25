@@ -133,15 +133,15 @@ def merge_estimations(target_pose_dict):
             kmeans = KMeans(n_clusters=2, random_state=0, n_init="auto").fit(fruits_temp[fruit]["all_points"])      
             centrepoints = kmeans.cluster_centers_
             target_est[f"{fruit.lower()}_1"] = {}
-            target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][0]
-            target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][1]
-            target_est[f"{fruit.lower()}_1"]["y"] = centrepoints[1][0]
-            target_est[f"{fruit.lower()}_1"]["x"] = centrepoints[1][1]
+            target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][1]
+            target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][0]
+            target_est[f"{fruit.lower()}_1"]["y"] = centrepoints[1][1]
+            target_est[f"{fruit.lower()}_1"]["x"] = centrepoints[1][0]
         else:
             kmeans = KMeans(n_clusters=1, random_state=0, n_init="auto").fit(fruits_temp[fruit]["all_points"]) 
             centrepoints = kmeans.cluster_centers_
-            target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][0]
-            target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][1]
+            target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][1]
+            target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][0]
             
     return target_est
 
@@ -201,6 +201,9 @@ if __name__ == "__main__":
     with open(f'{script_dir}/lab_output/targets_{args.run}.txt', 'w') as fo:
         json.dump(target_est, fo, indent=4)
         
-    os.rename(f'{script_dir}/lab_output/slam.txt', f'{script_dir}/lab_output/slam_{args.run}.txt')
+    try:
+        os.rename(f'{script_dir}/lab_output/slam.txt', f'{script_dir}/lab_output/slam_{args.run}.txt')
+    except FileNotFoundError:
+        print("WARNING: Could not rename SLAM.txt!")
 
     print('Estimations saved!')
