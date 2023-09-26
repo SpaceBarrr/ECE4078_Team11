@@ -18,7 +18,7 @@ import shutil # python package for file operations
 
 # import SLAM components
 sys.path.insert(0, "{}/slam".format(os.getcwd()))
-from slam.ekf import EKF
+from slam.ekf_part1 import EKF                                        # Bryan changed this
 from slam.robot import Robot
 import slam.aruco_detector as aruco
 
@@ -121,7 +121,7 @@ def drive_to_point(waypoint, robot_pose):
 
     wheel_vel = 30 # tick
     lin_vel = 1/10.45               # m/s
-    ang_vel = 2*np.pi / 5.7         # rad/s
+    ang_vel = 2*np.pi / 5.6         # rad/s
     
     robot_pose_x = robot_pose[0][0]
     robot_pose_y = robot_pose[1][0]
