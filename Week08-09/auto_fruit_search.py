@@ -89,7 +89,7 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
     @param fruit_list: list of target fruits
     @param fruit_true_pos: positions of the target fruits
     """
-
+    fruit_goal_list = []
     print("Search order:")
     n_fruit = 1
     for fruit in search_list:
@@ -99,8 +99,34 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
                                                   fruit,
                                                   np.round(fruit_true_pos[i][0], 1),
                                                   np.round(fruit_true_pos[i][1], 1)))
+                fruit_goal_list.append([fruit_true_pos[i][0],fruit_true_pos[i][1]])
         n_fruit += 1
+    return fruit_goal_list    
 
+def separate_obstacles():
+    '''
+    Separating obstacles from truemap
+    '''
+    
+    f = open("TrueMap.txt", "r")
+    txt = f.readline()
+
+    ReferenceMap = json.loads(txt)
+
+
+    all_obstacles = []
+    j = 1
+
+    for Key in ReferenceMap:
+        if j <= 10 :
+            all_obstacles.append(SquareCentroid(origin=[ReferenceMap[Key]["x"],ReferenceMap[Key]["y"]],length=0.1))
+            #all_obstacles.append(Circle(ReferenceMap[Key]["x"],ReferenceMap[Key]["y"],0.3)) #radius 0.3
+            j += 1
+
+        elif j > 10 : 
+            all_obstacles.append(Circle(ReferenceMap[Key]["x"],ReferenceMap[Key]["y"],0.3)) #radius 0.3
+
+    return all_obstacles
 
 # Waypoint navigation
 # the robot automatically drives to a given [x,y] coordinate
@@ -506,7 +532,7 @@ if __name__ == "__main__":
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
-    parser.add_argument("--map", type=str, default="M4_prac_map_full.txt")
+    parser.add_argument("--map", type=str, default="TrueMap.txt")
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
     parser.add_argument("--shopping_list", type=str, default="M4_prac_shopping_list.txt")
     args, _ = parser.parse_known_args()
@@ -567,10 +593,20 @@ if __name__ == "__main__":
     ppi = PenguinPi(args.ip,args.port)
 
     search_list = read_search_list(args.shopping_list)
-    print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
+    fruit_goal_list = print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
 
     waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
+
+    #RRT
+    
+    goal = #fruit_goal_list[i]
+    start = robot_pose
+
+    all_obstacles = separate_obstacles()
+
+    rrt = RRT(start=start, goal=goal, width=16, height=10, obstacle_list=all_obstacles,
+          expand_dis=1, path_resolution=0.5)
 
     while start:
         operate.update_keyboard()
