@@ -89,7 +89,7 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
     @param fruit_list: list of target fruits
     @param fruit_true_pos: positions of the target fruits
     """
-
+    fruit_goal_list = []
     print("Search order:")
     n_fruit = 1
     for fruit in search_list:
@@ -99,9 +99,11 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
                                                   fruit,
                                                   np.round(fruit_true_pos[i][0], 1),
                                                   np.round(fruit_true_pos[i][1], 1)))
+                fruit_goal_list.append([fruit_true_pos[i][0],fruit_true_pos[i][1]])
         n_fruit += 1
+    return fruit_goal_list    
 
-def separate_obstacle():
+def separate_obstacles():
     '''
     Separating obstacles from truemap
     '''
@@ -586,10 +588,20 @@ if __name__ == "__main__":
     ppi = PenguinPi(args.ip,args.port)
 
     search_list = read_search_list(args.shopping_list)
-    print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
+    fruit_goal_list = print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
 
     waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
+
+    #RRT
+    
+    goal = #fruit_goal_list[i]
+    start = robot_pose
+
+    all_obstacles = separate_obstacles()
+
+    rrt = RRT(start=start, goal=goal, width=16, height=10, obstacle_list=all_obstacles,
+          expand_dis=1, path_resolution=0.5)
 
     while start:
         operate.update_keyboard()
