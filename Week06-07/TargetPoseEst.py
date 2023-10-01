@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans, DBSCAN
 
 # list of target fruits and vegs types
 # Make sure the names are the same as the ones used in your YOLO model
-TARGET_TYPES = ['Orange', 'Lemon', 'Lime', 'Tomato', 'Capsicum', 'Potato', 'Pumpkin', 'Garlic']
+TARGET_TYPES = ['Orange', 'Lemon', 'Lime', 'Tomato', 'Capsicum', 'potato', 'Pumpkin', 'Garlic']
 
 
 def estimate_pose(camera_matrix, obj_info, robot_pose):
@@ -124,7 +124,7 @@ def merge_estimations(target_pose_dict):
         # 10cm threshold
         fruits_temp[fruit]["all_points"] = np.vstack((fruits_temp[fruit]["points_x"], fruits_temp[fruit]["points_y"])).T
         fruits_temp[fruit]["average_dist"] = np.mean(pdist(fruits_temp[fruit]["all_points"]))
-        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.35 else 1
+        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.25 else 1
         
     # calculate kmeans
     for fruit in fruits_temp:
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run", metavar='', type=str, default="1")
+    parser.add_argument("--run", metavar='', type=str, default="NOT SUPPLIED")
     args, _ = parser.parse_known_args()
 
     if args.run == "NOT SUPPLIED":
