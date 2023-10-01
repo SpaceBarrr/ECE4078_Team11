@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from Obstacle import *
 
 class RRT:
     """
@@ -52,6 +53,7 @@ class RRT:
         """
 
         self.node_list = [self.start]
+        self.no_nodes = 0
         while len(self.node_list) <= self.max_nodes:
             
             # 1. Generate a random node           
@@ -71,14 +73,17 @@ class RRT:
             # to self.node_list
             if(self.is_collision_free(nearby_node)):
                 self.node_list.append(nearby_node)
-
+                self.no_nodes += 1
             #ENDTODO -----------------------------------------------------------------------
                 
             # If we are close to goal, stop expansion and generate path
             if self.calc_dist_to_goal(self.node_list[-1].x, self.node_list[-1].y) <= self.expand_dis:
                 final_node = self.steer(self.node_list[-1], self.end, self.expand_dis)
+                self.no_nodes += 1
+                self.node_list.append(final_node)
                 if self.is_collision_free(final_node):
                     return self.generate_final_course(len(self.node_list) - 1)
+                    
 
         return None  # cannot find path
 
@@ -176,3 +181,35 @@ class RRT:
         d = math.hypot(dx, dy) #returns the Euclidean norm
         theta = math.atan2(dy, dx)
         return d, theta        
+    
+#Set parameters
+# goal = np.array([1.2, 0.5])
+# start = np.array([0.12, 0.5])
+
+# all_obstacles = [Circle(0.5, 0.5,0.1), Circle(0.5, 0.7, 0.1),
+#                  Circle(0.23, 0.23, 0.1)]
+
+# rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
+#           expand_dis=1, path_resolution=0.5)
+
+# rrt.planning()
+# print(rrt.node_list)
+
+#Set parameters
+goal = np.array([0, 0])
+start = np.array([3, 3])
+
+all_obstacles = [Circle(1.5, 2, 0.1), Circle(1.8, 0.2, 0.1),
+                 Circle(2.8, 1, 0.1)]
+
+rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
+          expand_dis=1, path_resolution=0.5)
+
+rrt.planning()
+
+waypoints = []
+for i in range(rrt.no_nodes+1) :
+    print( [rrt.node_list[i].x, rrt.node_list[i].y] )
+    waypoints.append([rrt.node_list[i].x, rrt.node_list[i].y])
+    
+print(goal)
