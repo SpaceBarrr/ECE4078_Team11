@@ -176,3 +176,4 @@ class RRT:
         d = math.hypot(dx, dy) #returns the Euclidean norm
         theta = math.atan2(dy, dx)
         return d, theta        
+    

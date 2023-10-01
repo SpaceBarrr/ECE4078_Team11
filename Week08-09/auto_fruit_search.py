@@ -101,6 +101,30 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
                                                   np.round(fruit_true_pos[i][1], 1)))
         n_fruit += 1
 
+def separate_obstacle():
+    '''
+    Separating obstacles from truemap
+    '''
+    
+    f = open("TrueMap.txt", "r")
+    txt = f.readline()
+
+    ReferenceMap = json.loads(txt)
+
+
+    all_obstacles = []
+    j = 1
+
+    for Key in ReferenceMap:
+        if j <= 10 :
+            all_obstacles.append(SquareCentroid(origin=[ReferenceMap[Key]["x"],ReferenceMap[Key]["y"]],length=0.1))
+            #all_obstacles.append(Circle(ReferenceMap[Key]["x"],ReferenceMap[Key]["y"],0.3)) #radius 0.3
+            j += 1
+
+        elif j > 10 : 
+            all_obstacles.append(Circle(ReferenceMap[Key]["x"],ReferenceMap[Key]["y"],0.3)) #radius 0.3
+
+    return all_obstacles
 
 # Waypoint navigation
 # the robot automatically drives to a given [x,y] coordinate
@@ -501,7 +525,7 @@ if __name__ == "__main__":
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
-    parser.add_argument("--map", type=str, default="M4_prac_map_full.txt")
+    parser.add_argument("--map", type=str, default="TrueMap.txt")
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
     parser.add_argument("--shopping_list", type=str, default="M4_prac_shopping_list.txt")
     args, _ = parser.parse_known_args()

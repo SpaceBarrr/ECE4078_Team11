@@ -178,6 +178,26 @@ class Rectangle(Polygon):
 
     def plot_obstacle(self):
         return super().plot_obstacle()
+    
+class SquareCentroid(Polygon):
+
+    def __init__(self, origin=np.zeros(2), length=100):
+        self.length = length
+        self.origin = origin
+
+        v1 = origin + np.array([-length/2,-length/2])
+        v2 = origin + np.array([length/2,-length/2])
+        v3 = origin + np.array([length/2,length/2])
+        v4 = origin + np.array([-length/2,length/2])
+
+        Polygon.__init__(self, vertices=np.array([v1, v2, v3, v4]))
+
+    def to_display_format(self, screen_height):
+        py_origin = coordinates_to_pygame(self.origin, screen_height)
+        return (py_origin[0], py_origin[1], self.length, self.length)
+
+    def plot_obstacle(self):
+        return super().plot_obstacle()
 
 
 class Circle:
@@ -199,3 +219,4 @@ class Circle:
             return True
 
         return False  # safe
+    
