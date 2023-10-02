@@ -1,7 +1,6 @@
 import numpy as np
 import math
 from Obstacle import *
-import json
 
 class RRT:
     """
@@ -197,47 +196,4 @@ class RRT:
 # print(rrt.node_list)
 
 #Set parameters
-
-def rrt_waypoints(goal, start) :
-    #goal_x = float(input("Add goal x : "))
-    #goal_y = float(input("Add goal y :"))
-    goal = np.array([goal[0]+1.5, goal[1]+1.5])
-    #start_x = float(input("Add start x : "))
-    #start_y = float(input("Add start  : "))
-    start = np.array([start[0]+1.5, start[1]+1.5])
-
-    f = open("TrueMap.txt", "r")
-    txt = f.readline()
-
-    ReferenceMap = json.loads(txt)
-
-    #print(ReferenceMap)
-    ReferenceObjects_x = []
-    ReferenceObjects_y = []
-    ReferenceArUcos_x = []
-    ReferenceArUcos_y = []
-    Objects_names = []
-    all_obstacles = []
-
-    for Key in ReferenceMap:
-            #Position = np.array([ReferenceMap[Key]["x"], ReferenceMap[Key]["y"]])
-            all_obstacles.append(Circle(ReferenceMap[Key]["x"]+1.5, ReferenceMap[Key]["y"]+1.5, 0.3))
-
-    rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
-          expand_dis=1, path_resolution=0.5)
-
-    path_rev = rrt.planning()
-
-
-    waypoints = []
-    i = rrt.no_nodes 
-    while i >= 0 :
-        waypoints.append([(path_rev[i][0]-1.5), (path_rev[i][1]-1.5)])
-        i -= 1
-    
-    for j in range(rrt.no_nodes+1) : 
-        print(waypoints[j])
-
-    return waypoints, all_obstacles
-
 

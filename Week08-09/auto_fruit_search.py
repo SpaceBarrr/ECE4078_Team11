@@ -522,6 +522,48 @@ def add_waypoint_from_click(mouse_pos: tuple):
 
     # exit
     ppi.set_velocity([0, 0])
+    
+def rrt_waypoints(goal, start) :
+    #goal_x = float(input("Add goal x : "))
+    #goal_y = float(input("Add goal y :"))
+    goal = np.array([goal[0]+1.5, goal[1]+1.5])
+    #start_x = float(input("Add start x : "))
+    #start_y = float(input("Add start  : "))
+    start = np.array([start[0]+1.5, start[1]+1.5])
+
+    f = open("TrueMap.txt", "r")
+    txt = f.readline()
+
+    ReferenceMap = json.loads(txt)
+
+    #print(ReferenceMap)
+    ReferenceObjects_x = []
+    ReferenceObjects_y = []
+    ReferenceArUcos_x = []
+    ReferenceArUcos_y = []
+    Objects_names = []
+    all_obstacles = []
+
+    for Key in ReferenceMap:
+            #Position = np.array([ReferenceMap[Key]["x"], ReferenceMap[Key]["y"]])
+            all_obstacles.append(Circle(ReferenceMap[Key]["x"]+1.5, ReferenceMap[Key]["y"]+1.5, 0.3))
+
+    rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
+          expand_dis=1, path_resolution=0.5)
+
+    path_rev = rrt.planning()
+
+
+    waypoints = []
+    i = rrt.no_nodes 
+    while i >= 0 :
+        waypoints.append([(path_rev[i][0]-1.5), (path_rev[i][1]-1.5)])
+        i -= 1
+    
+    for j in range(rrt.no_nodes+1) : 
+        print(waypoints[j])
+
+    return waypoints, all_obstacles
         
 if __name__ == "__main__":
     import argparse
@@ -555,7 +597,7 @@ if __name__ == "__main__":
     pygame.display.update()
 
     # create map_image.png from text file
-    visualise_map()
+    visualise_map(args.map)
 
     # drawing map_image rectangle
     map_background_rect = pygame.Rect(700, 0, 400, 660) #
@@ -588,12 +630,17 @@ if __name__ == "__main__":
     # read in the true map
     fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
 
+    # print(fruits_true_pos)
+    # print(aruco_true_pos)
+
     operate = Operate(args, aruco_true_pos)
 
     ppi = PenguinPi(args.ip,args.port)
 
     search_list = read_search_list(args.shopping_list)
     fruit_goal_list = print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
+    
+    obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
 
     waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
@@ -601,7 +648,7 @@ if __name__ == "__main__":
     #RRT stuff
     #=================
     # run this code inside main loop (start with a button press?)
-    for i in len(fruit_goal_list):
+    for i in range(len(fruit_goal_list)):
         #initialise map each loop to remove path drawings
         canvas.blit(map_image, (700, 0))
         origin_dot = pygame.Rect(904,201,4,4)
@@ -621,7 +668,6 @@ if __name__ == "__main__":
         start = robot_pose
         waypoints_rrt, obstacle_list = rrt_waypoints(goal, start) 
     
-
         #draw path as white line
         coordinates = [[scalefactor_x * x + 906, scalefactor_y * y + 203] for x, y in waypoints_rrt]
 

@@ -1,8 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-def visualise_map():
+def visualise_map(map):
     '''
     ArUco MArkers are blue squares
     Tomato is red
@@ -15,7 +14,7 @@ def visualise_map():
     Capsicum is pink
     '''
     
-    f = open("TrueMap.txt", "r")
+    f = open(map, "r")
     txt = f.readline()
 
     ReferenceMap = json.loads(txt)
@@ -42,7 +41,7 @@ def visualise_map():
             Objects_names.append(Key)
             if "Tomato" in Key:
                 Objects_colours.append("red")
-            elif "potato" in Key: # TODO if we change this, we have to be consistent
+            elif "Potato" in Key: # TODO if we change this, we have to be consistent
                 Objects_colours.append("skyblue")
             elif "Orange" in Key: 
                 Objects_colours.append("orange")
@@ -67,5 +66,3 @@ def visualise_map():
     ax.scatter(ReferenceArUcos_x, ReferenceArUcos_y, color = "blue", marker = "s")
     ax.scatter(ReferenceObjects_x, ReferenceObjects_y, c = Objects_colours, marker = "o")
     fig.savefig("map_image.png")
-
-visualise_map()
