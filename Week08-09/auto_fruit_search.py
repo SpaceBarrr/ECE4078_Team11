@@ -133,14 +133,17 @@ def drive_to_point(waypoint, robot_pose):
     x_diff = waypoint[0] - robot_pose_x
     y_diff = waypoint[1] - robot_pose_y
 
-    angle_to_turn = np.arctan2(y_diff, x_diff) - robot_pose_theta
+    angle_to_turn = min(np.arctan2(y_diff, x_diff) - robot_pose_theta)
 
     if angle_to_turn > 0 :              # Change thus
         variable = -1
-    else : 
+    elif angle_to_turn < 0 : 
         variable = 1 
+    elif angle_to_turn == 0 : 
+        variable = 0
     #clamp_angle(, 0, np.pi*2)
-    turn_time = abs(clamp_angle(angle_to_turn, -np.pi , np.pi) / ang_vel) # replace with your calculation
+    #turn_time = abs(clamp_angle(angle_to_turn, -np.pi , np.pi) / ang_vel) # replace with your calculation
+    turn_time = float(abs((baseline*np.pi)/(scale*wheel_vel))*angle_to_turn/(2*np.pi))
 
     print("Turning for {:.2f} seconds".format(turn_time))
     lv, rv = ppi.set_velocity([0, variable], turning_tick=wheel_vel, time=turn_time)
@@ -149,12 +152,14 @@ def drive_to_point(waypoint, robot_pose):
     
     # after turning, drive straight to the waypoint
     distance = np.sqrt((waypoint[0]-robot_pose_x)**2+(waypoint[1]-robot_pose_y)**2)
-    drive_time = distance / (lin_vel) # replace with your calculation
+    #drive_time = distance / (lin_vel) # replace with your calculation
+    drive_time = float(abs(distance/(scale*wheel_vel)))
     print("Driving for {:.2f} seconds".format(drive_time))
     
     lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=drive_time)
     drive_meas = measure.Drive(lv, -rv, drive_time)           # Changed
-    operate.update_slam(drive_meas=drive_meas)     
+    operate.update_slam(drive_meas=drive_meas)  
+    
 
     ####################################################
 
@@ -318,7 +323,7 @@ class Operate:
         fileB = "{}baseline.txt".format(datadir)
         baseline = np.loadtxt(fileB, delimiter=',')
         robot = Robot(baseline, scale, camera_matrix, dist_coeffs)
-        return EKF(robot, aruco_true_pos)
+        return EKF(robot, aruco_true_pos)           # Bryan changed this
 
     # save SLAM map
     def record_data(self):
@@ -527,7 +532,7 @@ def rrt_waypoints(goal, start, obstacle_list) :
     
     waypoints = []
     i = rrt.no_nodes 
-    while i >= 0 :
+    while i > 0 :
         waypoints.append([(path_rev[i][0]-1.5), (path_rev[i][1]-1.5)])
         i -= 1
     
