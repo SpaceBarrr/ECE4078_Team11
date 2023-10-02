@@ -125,9 +125,9 @@ def drive_to_point(waypoint, robot_pose):
     lin_vel = 1/12               # m/s -> 10.48
     ang_vel = 2*np.pi / 6         # rad/s
     
-    robot_pose_x = robot_pose[0][0]
-    robot_pose_y = robot_pose[1][0]
-    robot_pose_theta = robot_pose[2][0]
+    robot_pose_x = robot_pose[0]
+    robot_pose_y = robot_pose[1]
+    robot_pose_theta = robot_pose[2]
     
     # turn towards the waypoint
     x_diff = waypoint[0] - robot_pose_x
@@ -500,12 +500,12 @@ def add_waypoint_from_click(mouse_pos: tuple):
     # print(x,y)
 
     # estimate the robot's pose
-    robot_pose = operate.ekf.get_state_vector()[0:3]
+    robot_pose = operate.ekf.get_state_vector()[:3,0]
 
     # robot drives to the waypoint
     waypoint = [x,y]
     drive_to_point(waypoint,robot_pose)
-    robot_pose = operate.ekf.get_state_vector()[0:3]
+    robot_pose = operate.ekf.get_state_vector()[:3,0]
     
     print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
 
@@ -514,11 +514,11 @@ def add_waypoint_from_click(mouse_pos: tuple):
     
 def add_waypoint_from_rrt(waypoint):
     # estimate the robot's pose
-    robot_pose = operate.ekf.get_state_vector()[0:3]
+    robot_pose = operate.ekf.get_state_vector()[:3,0]
 
     # robot drives to the waypoint
     drive_to_point(waypoint,robot_pose)
-    robot_pose = operate.ekf.get_state_vector()[0:3]
+    robot_pose = operate.ekf.get_state_vector()[:3,0]
     
     print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
 
@@ -639,6 +639,8 @@ if __name__ == "__main__":
 
     waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
+
+    operate.ekf_on = True
 
     #RRT stuff
     #=================

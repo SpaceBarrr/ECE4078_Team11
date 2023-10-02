@@ -63,6 +63,6 @@ def visualise_map(map):
     ax.set_xlim([-1.5, 1.5])
     ax.set_ylim([-1.5, 1.5])
     ax.set_facecolor('xkcd:black')
-    ax.scatter(ReferenceArUcos_x, ReferenceArUcos_y, color = "blue", marker = "s")
-    ax.scatter(ReferenceObjects_x, ReferenceObjects_y, c = Objects_colours, marker = "o")
+    ax.scatter(ReferenceArUcos_y, ReferenceArUcos_x, color = "blue", marker = "s")
+    ax.scatter(ReferenceObjects_y, ReferenceObjects_x, c = Objects_colours, marker = "o")
     fig.savefig("map_image.png")
