@@ -76,12 +76,9 @@ class RRT:
             #ENDTODO -----------------------------------------------------------------------
                 
             # If we are close to goal, stop expansion and generate path
-            if self.calc_dist_to_goal(self.node_list[-1].x, self.node_list[-1].y) <= self.expand_dis:
-                final_node = self.steer(self.node_list[-1], self.end, self.expand_dis)
-                self.no_nodes += 1
-                self.node_list.append(final_node)
-                # if self.is_collision_free(final_node):
-                return self.generate_final_course(len(self.node_list) - 1)
+            THRESHOLD = 0.5
+            if self.calc_dist_to_goal(self.node_list[-1].x, self.node_list[-1].y) <= THRESHOLD:
+                return self.generate_final_course(len(self.node_list)-1)
 
         print("ERROR: Could not generate path!")
         return None  # cannot find path
