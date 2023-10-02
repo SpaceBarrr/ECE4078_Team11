@@ -238,6 +238,6 @@ def rrt_waypoints(goal, start) :
     for j in range(rrt.no_nodes+1) : 
         print(waypoints[j])
 
-    return waypoints
+    return waypoints, all_obstacles
 
 

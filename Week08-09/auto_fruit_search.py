@@ -24,7 +24,7 @@ import slam.aruco_detector as aruco
 
 from YOLO.detector import Detector
 
-from rrt import RRT
+from rrt import *
 from Obstacle import *
 
 from txt_to_image import *
@@ -103,7 +103,7 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
         n_fruit += 1
     return fruit_goal_list    
 
-def separate_obstacles():
+def separate_obstacles(): # not using this ATM just treating all obstacles as circles and getting from rrt_waypoints
     '''
     Separating obstacles from truemap
     '''
@@ -606,19 +606,28 @@ if __name__ == "__main__":
         canvas.blit(map_image, (700, 0))
         origin_dot = pygame.Rect(904,201,4,4)
         origin_colour = (165,42,42)
+        white = (255, 255, 255)
+        red = (255, 0, 0)
         pygame.draw.rect(canvas,origin_colour,origin_dot)
+        #draw obstacles
+        scalefactor_x = 155/1.5
+        scalefactor_y = -155/1.5
+        for circle in obstacle_list:
+            pygame.draw.circle(canvas, red, (int(circle.center[0] * scalefactor_x+906), int(circle.center[1] * scalefactor_y+203)), circle.radius * scalefactor_x)
+        pygame.display.flip()
 
+        # run rrt
         goal = fruit_goal_list[i]
         start = robot_pose
+        waypoints_rrt, obstacle_list = rrt_waypoints(goal, start) 
+    
 
-        all_obstacles = separate_obstacles()
+        #draw path as white line
+        coordinates = [[scalefactor_x * x + 906, scalefactor_y * y + 203] for x, y in waypoints_rrt]
 
-        rrt = RRT(start=start, goal=goal, width=16, height=10, obstacle_list=all_obstacles,
-            expand_dis=1, path_resolution=0.5)
-        
-        #draw rrt path
-        
-        
+        for i in range(len(coordinates) - 1):
+            pygame.draw.line(canvas, white, coordinates[i], coordinates[i + 1], 2)
+        pygame.display.flip()
 
 # END RRT stuff  
 # =============
