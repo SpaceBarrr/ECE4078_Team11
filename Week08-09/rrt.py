@@ -26,7 +26,7 @@ class RRT:
                  height=100,
                  expand_dis=1, 
                  path_resolution=0.5, 
-                 max_points=200):
+                 max_points=500):
         """
         Setting Parameter
         start:Start Position [x,y]
