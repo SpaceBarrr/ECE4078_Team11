@@ -65,6 +65,7 @@ def visualise_map(map):
     ax.set_facecolor('xkcd:black')
     ax.scatter(ReferenceArUcos_x, ReferenceArUcos_y, color = "blue", marker = "s")
     ax.scatter(ReferenceObjects_x, ReferenceObjects_y, c = Objects_colours, marker = "o")
+    ax.scatter(0,0, color = "red", marker = "s")
     fig.savefig("map_image.png")
 
 visualise_map('TrueMap.txt')
