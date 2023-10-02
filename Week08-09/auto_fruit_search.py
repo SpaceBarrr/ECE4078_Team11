@@ -523,37 +523,32 @@ def add_waypoint_from_click(mouse_pos: tuple):
     # exit
     ppi.set_velocity([0, 0])
     
-def rrt_waypoints(goal, start) :
-    #goal_x = float(input("Add goal x : "))
-    #goal_y = float(input("Add goal y :"))
+def add_waypoint_from_rrt(waypoint):
+    # estimate the robot's pose
+    robot_pose = operate.ekf.get_state_vector()[0:3]
+
+    # robot drives to the waypoint
+    drive_to_point(waypoint,robot_pose)
+    robot_pose = operate.ekf.get_state_vector()[0:3]
+    
+    print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
+
+    # exit
+    ppi.set_velocity([0, 0])
+    
+def rrt_waypoints(goal, start, obstacle_list) :
     goal = np.array([goal[0]+1.5, goal[1]+1.5])
-    #start_x = float(input("Add start x : "))
-    #start_y = float(input("Add start  : "))
     start = np.array([start[0]+1.5, start[1]+1.5])
 
-    f = open("TrueMap.txt", "r")
-    txt = f.readline()
-
-    ReferenceMap = json.loads(txt)
-
-    #print(ReferenceMap)
-    ReferenceObjects_x = []
-    ReferenceObjects_y = []
-    ReferenceArUcos_x = []
-    ReferenceArUcos_y = []
-    Objects_names = []
     all_obstacles = []
-
-    for Key in ReferenceMap:
-            #Position = np.array([ReferenceMap[Key]["x"], ReferenceMap[Key]["y"]])
-            all_obstacles.append(Circle(ReferenceMap[Key]["x"]+1.5, ReferenceMap[Key]["y"]+1.5, 0.3))
+    for i in range(len(obstacle_list)):
+        all_obstacles.append(Circle(obstacle_list[i][0]+1.5, obstacle_list[i][1]+1.5, 0.2))
 
     rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
           expand_dis=1, path_resolution=0.5)
 
     path_rev = rrt.planning()
-
-
+    
     waypoints = []
     i = rrt.no_nodes 
     while i >= 0 :
@@ -612,7 +607,6 @@ if __name__ == "__main__":
     origin_colour = (165,42,42)
     pygame.draw.rect(canvas,origin_colour,origin_dot)
 
-
     start = False
 
     counter = 40
@@ -663,9 +657,9 @@ if __name__ == "__main__":
         # run rrt
         goal = fruit_goal_list[i]
         start = robot_pose
-        waypoints_rrt, obstacle_list = rrt_waypoints(goal, start) 
+        waypoints_rrt, circles = rrt_waypoints(goal, start, obstacle_list) 
 
-        for circle in obstacle_list:
+        for circle in circles:
             pygame.draw.circle(canvas, red, (int(circle.center[0] * scalefactor_x+906), int(circle.center[1] * scalefactor_y+203)), circle.radius * scalefactor_x)
         pygame.display.flip()
 
@@ -675,19 +669,25 @@ if __name__ == "__main__":
         for i in range(len(coordinates) - 1):
             pygame.draw.line(canvas, white, coordinates[i], coordinates[i + 1], 2)
         pygame.display.flip()
-
-# END RRT stuff  
-# =============
-
-    while start:
-        operate.update_keyboard()
-        operate.take_pic()
-        drive_meas = operate.control()
-        operate.update_slam(drive_meas)
-        operate.record_data()
-        operate.save_image()
-        operate.detect_target()
-        # visualise
+        
+        for waypoint in waypoints_rrt:
+            add_waypoint_from_rrt(waypoint)
+        
         operate.draw(canvas)
         pygame.display.update()
+
+    # END RRT stuff  
+    # =============
+
+    # while start:
+    #     operate.update_keyboard()
+    #     operate.take_pic()
+    #     drive_meas = operate.control()
+    #     operate.update_slam(drive_meas)
+    #     operate.record_data()
+    #     operate.save_image()
+    #     operate.detect_target()
+    #     # visualise
+    #     operate.draw(canvas)
+    #     pygame.display.update()
         

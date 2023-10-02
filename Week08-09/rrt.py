@@ -80,9 +80,10 @@ class RRT:
                 final_node = self.steer(self.node_list[-1], self.end, self.expand_dis)
                 self.no_nodes += 1
                 self.node_list.append(final_node)
-                if self.is_collision_free(final_node):
-                    return self.generate_final_course(len(self.node_list) - 1)
+                # if self.is_collision_free(final_node):
+                return self.generate_final_course(len(self.node_list) - 1)
 
+        print("ERROR: Could not generate path!")
         return None  # cannot find path
 
     
