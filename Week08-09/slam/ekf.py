@@ -20,10 +20,11 @@ class EKF:
         # State components
         self.robot = robot
         # self.markers = np.zeros((2,0))
-        self.taglist = []
+        self.taglist = [x for x in range(10)]
 
         # Covariance matrix
-        self.P = np.zeros((3,3))
+        # self.P = np.zeros((3,3))
+        self.P = np.zeros((23,23))
         self.init_lm_cov = 1e3
         self.robot_init_state = None
         self.lm_pics = []

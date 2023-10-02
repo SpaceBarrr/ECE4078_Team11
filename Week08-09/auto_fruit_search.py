@@ -133,22 +133,16 @@ def drive_to_point(waypoint, robot_pose):
     x_diff = waypoint[0] - robot_pose_x
     y_diff = waypoint[1] - robot_pose_y
 
-    angle_to_turn = np.min(np.arctan2(y_diff, x_diff) - robot_pose_theta)
+    angle_to_turn = clamp_angle(np.min(np.arctan2(y_diff, x_diff) - robot_pose_theta),0,2*np.pi)
 
-    if angle_to_turn > 0 :              # Change thus
-        variable = -1
-    elif angle_to_turn < 0 : 
-        variable = 1 
-    elif angle_to_turn == 0 : 
-        variable = 0
-    #clamp_angle(, 0, np.pi*2)
-    #turn_time = abs(clamp_angle(angle_to_turn, -np.pi , np.pi) / ang_vel) # replace with your calculation
-    turn_time = float(abs((baseline*np.pi)/(scale*wheel_vel))*angle_to_turn/(2*np.pi))
+    variable = -1 if angle_to_turn > 0 else 1              
+    turn_time = scale*wheel_vel*angle_to_turn/(2*np.pi*baseline)
 
     print("Turning for {:.2f} seconds".format(turn_time))
-    lv, rv = ppi.set_velocity([0, variable], turning_tick=wheel_vel, time=turn_time)
-    drive_meas = measure.Drive(lv, -rv, turn_time)           # Changed
-    slam_tings(drive_meas)
+    if turn_time != 0:
+        lv, rv = ppi.set_velocity([0, variable], turning_tick=wheel_vel, time=turn_time)
+        drive_meas = measure.Drive(lv, -rv, turn_time)           # Changed
+        slam_tings(drive_meas)
     
     # after turning, drive straight to the waypoint
     distance = np.sqrt((waypoint[0]-robot_pose_x)**2+(waypoint[1]-robot_pose_y)**2)
@@ -661,6 +655,8 @@ if __name__ == "__main__":
         goal = fruit_goal_list[i]
         start = robot_pose
         waypoints_rrt, circles = rrt_waypoints(goal, start, obstacle_list) 
+        
+        waypoints_rrt = waypoints_rrt[-2:0:-1]
 
         for circle in circles:
             pygame.draw.circle(canvas, red, (int(circle.center[0] * scalefactor_x+906), int(circle.center[1] * scalefactor_y+203)), circle.radius * scalefactor_x)
