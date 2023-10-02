@@ -122,8 +122,6 @@ def drive_to_point(waypoint, robot_pose):
     # then drive straight to the way point
 
     wheel_vel = 30 # tick
-    lin_vel = 1/12               # m/s -> 10.48
-    ang_vel = 2*np.pi / 6         # rad/s
     
     robot_pose_x = robot_pose[0]
     robot_pose_y = robot_pose[1]
@@ -133,10 +131,10 @@ def drive_to_point(waypoint, robot_pose):
     x_diff = waypoint[0] - robot_pose_x
     y_diff = waypoint[1] - robot_pose_y
 
-    angle_to_turn = clamp_angle(np.min(np.arctan2(y_diff, x_diff) - robot_pose_theta),0,2*np.pi)
+    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - robot_pose_theta,-np.pi,np.pi)
 
     variable = -1 if angle_to_turn > 0 else 1              
-    turn_time = scale*wheel_vel*angle_to_turn/(2*np.pi*baseline)
+    turn_time = 10*scale*wheel_vel*angle_to_turn/(2*np.pi*baseline)
 
     print("Turning for {:.2f} seconds".format(turn_time))
     if turn_time != 0:
@@ -602,7 +600,7 @@ if __name__ == "__main__":
     origin_colour = (165,42,42)
     pygame.draw.rect(canvas,origin_colour,origin_dot)
 
-    start = False
+    start = True
 
     counter = 40
     while not start:

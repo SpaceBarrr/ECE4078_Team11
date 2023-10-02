@@ -119,96 +119,60 @@ def drive_to_point(waypoint, robot_pose):
     # One simple strategy is to first turn on the spot facing the waypoint,
     # then drive straight to the way point
 
-    wheel_vel = 30 # tick
-    lin_vel = 1/12               # m/s -> 10.48
-    ang_vel = 2*np.pi / 6         # rad/s
-    
-    robot_pose_x = robot_pose[0][0]
-    robot_pose_y = robot_pose[1][0]
-    robot_pose_theta = robot_pose[2][0]
-    
-    # turn towards the waypoint
-    x_diff = waypoint[0] - robot_pose_x
-    y_diff = waypoint[1] - robot_pose_y
+    wheel_vel = 30
 
-    # angle_to_turn = np.arctan2(y_diff, x_diff) - robot_pose_theta
+    x_pos = robot_pose[0]
+    y_pos = robot_pose[1]
+    theta = robot_pose[2]
+    waypoint_x = waypoint[0]
+    waypoint_y = waypoint[1]
+    
+    x_diff = waypoint_x - x_pos
+    y_diff = waypoint_y - y_pos
+    angle_to_goal = clamp_angle(np.arctan2(y_diff, x_diff) - theta)
+    distance_to_goal = np.hypot(x_diff, y_diff)
 
-    # if angle_to_turn > 0 :              # Change thus
-    #     variable = 1
-    # else : 
-    #     variable = -1 
-    #clamp_angle(, 0, np.pi*2)
-    # turn_time = abs(clamp_angle(angle_to_turn, -np.pi , np.pi) / ang_vel) # replace with your calculation
+    # turn to face robot
+    turn_time = abs(2.5*scale*wheel_vel*-angle_to_goal/(2*np.pi*baseline))
+    direction = -1 if angle_to_goal < 0 else 1 
+    lv, rv = ppi.set_velocity([0, direction], turning_tick=wheel_vel, time=turn_time)
+    print(f"Turning for {turn_time:.2f} seconds")
+    
+    # do a slam
+    drive_meas = measure.Drive(lv, -rv, turn_time)
+    slam_tings(drive_meas)
 
-    # print("Turning for {:.2f} seconds".format(turn_time))
-    # lv, rv = ppi.set_velocity([0, variable], turning_tick=wheel_vel, time=turn_time)
-    # drive_meas = measure.Drive(lv, rv, turn_time)           # Changed
-    # operate.update_slam(drive_meas)
-    
-    # # after turning, drive straight to the waypoint
-    # distance = np.sqrt((waypoint[0]-robot_pose_x)**2+(waypoint[1]-robot_pose_y)**2)
-    # drive_time = distance / (lin_vel) # replace with your calculation
-    # print("Driving for {:.2f} seconds".format(drive_time))
-    
-    # lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=drive_time)
-    # drive_meas = measure.Drive(lv, rv, drive_time)           # Changed
-    # operate.update_slam(drive_meas)
-    ################################################# Turning ###########################################
-    angle_to_turn = np.min(np.arctan2(y_diff, x_diff) - robot_pose_theta)
-
-    if angle_to_turn > 0 :              # Change thus
-        variable = -1
-    elif angle_to_turn < 0 : 
-        variable = 1 
-    elif angle_to_turn == 0 : 
-        variable = 0
-    
-    #clamp_angle(, 0, np.pi*2)
-    # turn_time = abs(clamp_angle(angle_to_turn, 0 , np.pi) / ang_vel) # replace with your calculation
-    turn_time = float(abs(((baseline*np.pi)/(scale*wheel_vel))*angle_to_turn/(2*np.pi)))
-
-    print("Turning for {:.2f} seconds".format(turn_time))
-    # lv, rv = ppi.set_velocity([0, variable], turning_tick=wheel_vel, time=turn_time)
-    # drive_meas = measure.Drive(lv, -rv, turn_time)           # Changed
-    
-    while turn_time > 0:
-        if turn_time >= 0.1:
-            lv, rv = ppi.set_velocity([0, variable], turning_tick = 0, tick=wheel_vel, time=0.1)
-            drive_meas = measure.Drive(lv, -rv, turn_time) 
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            turn_time -= 0.1
-        else:
-            lv, rv = ppi.set_velocity([0, variable], turning_tick = 0, tick=wheel_vel, time=turn_time)
-            drive_meas = measure.Drive(lv, -rv, turn_time)
-            operate.update_slam(drive_meas)
-            operate.record_data()
-    
-    ####################################### Drive forward ##############################################
     # after turning, drive straight to the waypoint
-    distance = np.sqrt((waypoint[0]-robot_pose_x)**2+(waypoint[1]-robot_pose_y)**2)
-    # drive_time = distance / (lin_vel) # replace with your calculation
-    drive_time = float(abs(distance/(scale*wheel_vel)))
-    print("Driving for {:.2f} seconds".format(drive_time))
-    
+    drive_time = distance_to_goal / (scale*wheel_vel)
+    print(f"Driving for {drive_time:.2f} seconds")
+
+    # check for slam each sec
     while drive_time > 0:
-        if drive_time >= 0.1:
-            lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=0.1)
+        print(drive_time)
+        if drive_time >= 1:
+            lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=1)
             drive_meas = measure.Drive(lv, -rv, drive_time) 
-            drive_meas = operate.control()
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            operate.detect_target()
-            drive_time -= 0.1
+            slam_tings(drive_meas) 
+            drive_time -= 1
         else:
             lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=drive_time)
-            drive_meas = measure.Drive(lv, -rv, drive_time)
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            operate.detect_target()
-    ####################################################
+            drive_meas = measure.Drive(lv, -rv, drive_time) 
+            slam_tings(drive_meas)
+            break
 
+    ####################################################
     print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
+    return (theta + angle_to_goal)
+    
+def slam_tings(drive_meas):
+    operate.take_pic()
+    # drive_meas = operate.control()
+    operate.update_slam(drive_meas)
+    operate.record_data()
+    operate.save_image()
+    # operate.detect_target()
+    operate.draw(canvas)
+    pygame.display.update()
     
 def clamp_angle(rad_angle=0, min_value=-np.pi, max_value=np.pi):
 	"""
@@ -272,6 +236,7 @@ class Operate:
         self.count_down = 300
         self.start_time = time.time()
         self.control_clock = time.time()
+        self.current_pos = [0,0,0]
         # initialise images
         self.img = np.zeros([240, 320, 3], dtype=np.uint8)
         self.aruco_img = np.zeros([240, 320, 3], dtype=np.uint8)
@@ -492,24 +457,24 @@ class Operate:
                     self.double_reset_comfirm = 0
                     self.ekf.reset()
             # run SLAM
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                n_observed_markers = len(self.ekf.taglist)
-                if n_observed_markers == 0:
-                    if not self.ekf_on:
-                        self.notification = 'SLAM is running'
-                        self.ekf_on = True
-                    else:
-                        self.notification = '> 2 landmarks is required for pausing'
-                elif n_observed_markers < 3:
-                    self.notification = '> 2 landmarks is required for pausing'
-                else:
-                    if not self.ekf_on:
-                        self.request_recover_robot = True
-                    self.ekf_on = not self.ekf_on
-                    if self.ekf_on:
-                        self.notification = 'SLAM is running'
-                    else:
-                        self.notification = 'SLAM is paused'
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            #     n_observed_markers = len(self.ekf.taglist)
+            #     if n_observed_markers == 0:
+            #         if not self.ekf_on:
+            #             self.notification = 'SLAM is running'
+            #             self.ekf_on = True
+            #         else:
+            #             self.notification = '> 2 landmarks is required for pausing'
+            #     elif n_observed_markers < 3:
+            #         self.notification = '> 2 landmarks is required for pausing'
+            #     else:
+            #         if not self.ekf_on:
+            #             self.request_recover_robot = True
+            #         self.ekf_on = not self.ekf_on
+            #         if self.ekf_on:
+            #             self.notification = 'SLAM is running'
+            #         else:
+            #             self.notification = 'SLAM is paused'
             # run object detector
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 self.command['inference'] = True
@@ -532,17 +497,17 @@ def add_waypoint_from_click(mouse_pos: tuple):
     y_scaling = 3/310
     
     x = (mouse_pos[0] - x_offset)  * x_scaling
-    y = (mouse_pos[1] - y_offset)  * y_scaling
+    y = (mouse_pos[1] - y_offset)  * y_scaling * -1
     
-    # print(x,y)
+    print(x,y)
 
     # estimate the robot's pose
-    robot_pose = operate.ekf.get_state_vector()[0:3]
+    robot_pose = operate.current_pos #operate.ekf.get_state_vector()[:3,0]
 
     # robot drives to the waypoint
     waypoint = [x,y]
-    drive_to_point(waypoint,robot_pose)
-    robot_pose = operate.ekf.get_state_vector()[0:3]
+    theta = drive_to_point(waypoint,robot_pose)
+    operate.current_pos = [x,y,theta]#operate.ekf.get_state_vector()[:3,0]
     
     print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
 
@@ -596,7 +561,6 @@ if __name__ == "__main__":
     origin_colour = (165,42,42)
     pygame.draw.rect(canvas,origin_colour,origin_dot)
 
-
     start = False
 
     counter = 40
@@ -615,6 +579,7 @@ if __name__ == "__main__":
     fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
 
     operate = Operate(args, aruco_true_pos)
+    operate.ekf_on = True
 
     ppi = PenguinPi(args.ip,args.port)
 

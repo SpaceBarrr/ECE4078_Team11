@@ -14,13 +14,12 @@ class EKF:
     ##########################################
 
     def __init__(self, robot, aruco_true_pos):
-        self.aruco_true_pos = aruco_true_pos[1]
-        self.markers = np.reshape(aruco_true_pos, (2,-1), order='F') # TODO Check this
+        self.markers = aruco_true_pos.T
         
         # State components
         self.robot = robot
         # self.markers = np.zeros((2,0))
-        self.taglist = [x for x in range(10)]
+        self.taglist = [x for x in range(1,11)]
 
         # Covariance matrix
         # self.P = np.zeros((3,3))
@@ -129,7 +128,7 @@ class EKF:
         self.set_state_vector(corrected_x)
         self.P = (np.eye(self.P.shape[0]) - K @ H) @ self.P 
         
-        print(self.get_state_vector())
+        # print(self.get_state_vector())
         
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3
