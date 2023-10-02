@@ -24,7 +24,7 @@ import slam.aruco_detector as aruco
 
 from YOLO.detector import Detector
 
-#from rrt import RRT
+from rrt import RRT
 from Obstacle import *
 
 from txt_to_image import *
@@ -453,7 +453,7 @@ class Operate:
             # save image
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_i:
                 self.command['save_image'] = True
-            # save SLAM map
+            # save SLAM mapƒ
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
                 self.command['output'] = True
             # reset SLAM map
@@ -598,15 +598,30 @@ if __name__ == "__main__":
     waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
 
-    #RRT
-    
-    #goal = #fruit_goal_list[i]
-    start = robot_pose
+    #RRT stuff
+    #=================
+    # run this code inside main loop (start with a button press?)
+    for i in len(fruit_goal_list):
+        #initialise map each loop to remove path drawings
+        canvas.blit(map_image, (700, 0))
+        origin_dot = pygame.Rect(904,201,4,4)
+        origin_colour = (165,42,42)
+        pygame.draw.rect(canvas,origin_colour,origin_dot)
 
-    all_obstacles = separate_obstacles()
+        goal = fruit_goal_list[i]
+        start = robot_pose
 
-    rrt = RRT(start=start, goal=goal, width=16, height=10, obstacle_list=all_obstacles,
-          expand_dis=1, path_resolution=0.5)
+        all_obstacles = separate_obstacles()
+
+        rrt = RRT(start=start, goal=goal, width=16, height=10, obstacle_list=all_obstacles,
+            expand_dis=1, path_resolution=0.5)
+        
+        #draw rrt path
+        
+        
+
+# END RRT stuff  
+# =============
 
     while start:
         operate.update_keyboard()
