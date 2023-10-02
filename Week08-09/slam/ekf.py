@@ -15,11 +15,7 @@ class EKF:
 
     def __init__(self, robot, aruco_true_pos):
         self.aruco_true_pos = aruco_true_pos[1]
-        print("part 1")
-        print(self.aruco_true_pos)
         self.markers = np.reshape(aruco_true_pos, (2,-1), order='F') # TODO Check this
-        print("part 2")
-        print(self.markers)
         
         # State components
         self.robot = robot

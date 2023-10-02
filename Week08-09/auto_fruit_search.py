@@ -7,6 +7,7 @@ import cv2
 import os, sys
 import time
 import json
+from time import sleep
 
 # import utility functions
 #sys.path.insert(0, "{}/util".format(os.getcwd()))
@@ -18,7 +19,7 @@ import shutil # python package for file operations
 
 # import SLAM components
 sys.path.insert(0, "{}/slam".format(os.getcwd()))
-from slam.ekf_part1 import EKF                                        # Bryan changed this
+from slam.ekf import EKF
 from slam.robot import Robot
 import slam.aruco_detector as aruco
 
@@ -102,31 +103,6 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
                 fruit_goal_list.append([fruit_true_pos[i][0],fruit_true_pos[i][1]])
         n_fruit += 1
     return fruit_goal_list    
-
-def separate_obstacles(): # not using this ATM just treating all obstacles as circles and getting from rrt_waypoints
-    '''
-    Separating obstacles from truemap
-    '''
-    
-    f = open("TrueMap.txt", "r")
-    txt = f.readline()
-
-    ReferenceMap = json.loads(txt)
-
-
-    all_obstacles = []
-    j = 1
-
-    for Key in ReferenceMap:
-        if j <= 10 :
-            all_obstacles.append(SquareCentroid(origin=[ReferenceMap[Key]["x"],ReferenceMap[Key]["y"]],length=0.1))
-            #all_obstacles.append(Circle(ReferenceMap[Key]["x"],ReferenceMap[Key]["y"],0.3)) #radius 0.3
-            j += 1
-
-        elif j > 10 : 
-            all_obstacles.append(Circle(ReferenceMap[Key]["x"],ReferenceMap[Key]["y"],0.3)) #radius 0.3
-
-    return all_obstacles
 
 # Waypoint navigation
 # the robot automatically drives to a given [x,y] coordinate
@@ -559,6 +535,14 @@ def rrt_waypoints(goal, start, obstacle_list) :
         print(waypoints[j])
 
     return waypoints, all_obstacles
+   
+def slam_tings():
+    operate.take_pic()
+    drive_meas = operate.control()
+    operate.update_slam(drive_meas)
+    operate.record_data()
+    operate.save_image()
+    operate.detect_target()
         
 if __name__ == "__main__":
     import argparse
@@ -671,10 +655,15 @@ if __name__ == "__main__":
         pygame.display.flip()
         
         for waypoint in waypoints_rrt:
+            slam_tings()
             add_waypoint_from_rrt(waypoint)
         
         operate.draw(canvas)
         pygame.display.update()
+        
+        print(f"(Hopefully) arrived at {search_list[i]}...")
+        
+        sleep(2)
 
     # END RRT stuff  
     # =============
