@@ -133,7 +133,7 @@ def drive_to_point(waypoint, robot_pose):
     x_diff = waypoint[0] - robot_pose_x
     y_diff = waypoint[1] - robot_pose_y
 
-    angle_to_turn = min(np.arctan2(y_diff, x_diff) - robot_pose_theta)
+    angle_to_turn = np.min(np.arctan2(y_diff, x_diff) - robot_pose_theta)
 
     if angle_to_turn > 0 :              # Change thus
         variable = -1
@@ -548,7 +548,7 @@ def rrt_waypoints(goal, start, obstacle_list):
         waypoints.append([(path_rev[i][0]-1.5), (path_rev[i][1]-1.5)])
         i -= 1
     
-    for j in range(rrt.no_nodes+1) : 
+    for j in range(rrt.no_nodes-1) : 
         print(waypoints[j])
         
     return waypoints, all_obstacles
