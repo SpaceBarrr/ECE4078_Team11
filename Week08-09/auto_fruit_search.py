@@ -516,11 +516,11 @@ def rrt_waypoints(goal, start, obstacle_list) :
     goal = np.array([goal[0]+1.5, goal[1]+1.5])
     start = np.array([start[0]+1.5, start[1]+1.5])
 
-    all_obstacles = []
+    all_obstacles_offset = []
     for i in range(len(obstacle_list)):
-        all_obstacles.append(Circle(obstacle_list[i][0]+1.5, obstacle_list[i][1]+1.5, 0.2))
+        all_obstacles_offset.append(Circle(obstacle_list[i][0]+1.5, obstacle_list[i][1]+1.5, 0.2))
 
-    rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
+    rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles_offset,
           expand_dis=1, path_resolution=0.5)
 
     path_rev = rrt.planning()
@@ -533,6 +533,11 @@ def rrt_waypoints(goal, start, obstacle_list) :
     
     for j in range(rrt.no_nodes+1) : 
         print(waypoints[j])
+
+    all_obstacles = []
+
+    for i in range(len(obstacle_list)):
+        all_obstacles_offset.append(Circle(obstacle_list[i][0], obstacle_list[i][1], 0.2))
 
     return waypoints, all_obstacles
    
