@@ -600,7 +600,7 @@ if __name__ == "__main__":
 
     #RRT
     
-    goal = #fruit_goal_list[i]
+    #goal = #fruit_goal_list[i]
     start = robot_pose
 
     all_obstacles = separate_obstacles()
