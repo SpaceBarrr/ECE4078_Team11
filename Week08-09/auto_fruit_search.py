@@ -94,7 +94,7 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
     n_fruit = 1
     for fruit in search_list:
         for i in range(len(fruit_list)): # there are 5 targets amongst 10 objects
-            if fruit == fruit_list[i]:
+            if fruit.lower() == fruit_list[i].lower():
                 print('{}) {} at [{}, {}]'.format(n_fruit,
                                                   fruit,
                                                   np.round(fruit_true_pos[i][0], 1),
@@ -160,16 +160,16 @@ def drive_to_point(waypoint, robot_pose):
     angle_to_turn = np.arctan2(y_diff, x_diff) - robot_pose_theta
 
     if angle_to_turn > 0 :              # Change thus
-        variable = 1
+        variable = -1
     else : 
-        variable = -1 
+        variable = 1 
     #clamp_angle(, 0, np.pi*2)
     turn_time = abs(clamp_angle(angle_to_turn, -np.pi , np.pi) / ang_vel) # replace with your calculation
 
     print("Turning for {:.2f} seconds".format(turn_time))
     lv, rv = ppi.set_velocity([0, variable], turning_tick=wheel_vel, time=turn_time)
-    drive_meas = measure.Drive(lv, rv, turn_time)           # Changed
-    operate.update_slam(drive_meas)
+    drive_meas = measure.Drive(lv, -rv, turn_time)           # Changed
+    operate.update_slam(drive_meas = drive_meas)
     
     # after turning, drive straight to the waypoint
     distance = np.sqrt((waypoint[0]-robot_pose_x)**2+(waypoint[1]-robot_pose_y)**2)
@@ -177,8 +177,8 @@ def drive_to_point(waypoint, robot_pose):
     print("Driving for {:.2f} seconds".format(drive_time))
     
     lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=drive_time)
-    drive_meas = measure.Drive(lv, rv, drive_time)           # Changed
-    operate.update_slam(drive_meas)
+    drive_meas = measure.Drive(lv, -rv, drive_time)           # Changed
+    operate.update_slam(drive_meas=drive_meas)     
 
     ####################################################
 
@@ -601,7 +601,7 @@ if __name__ == "__main__":
     #RRT stuff
     #=================
     # run this code inside main loop (start with a button press?)
-    for i in len(fruit_goal_list):
+    for i in range(len(search_list)):
         #initialise map each loop to remove path drawings
         canvas.blit(map_image, (700, 0))
         origin_dot = pygame.Rect(904,201,4,4)
@@ -612,15 +612,15 @@ if __name__ == "__main__":
         #draw obstacles
         scalefactor_x = 155/1.5
         scalefactor_y = -155/1.5
-        for circle in obstacle_list:
-            pygame.draw.circle(canvas, red, (int(circle.center[0] * scalefactor_x+906), int(circle.center[1] * scalefactor_y+203)), circle.radius * scalefactor_x)
-        pygame.display.flip()
 
         # run rrt
         goal = fruit_goal_list[i]
         start = robot_pose
         waypoints_rrt, obstacle_list = rrt_waypoints(goal, start) 
-    
+
+        for circle in obstacle_list:
+            pygame.draw.circle(canvas, red, (int(circle.center[0] * scalefactor_x+906), int(circle.center[1] * scalefactor_y+203)), circle.radius * scalefactor_x)
+        pygame.display.flip()
 
         #draw path as white line
         coordinates = [[scalefactor_x * x + 906, scalefactor_y * y + 203] for x, y in waypoints_rrt]

@@ -27,7 +27,7 @@ class RRT:
                  height=100,
                  expand_dis=1, 
                  path_resolution=0.5, 
-                 max_points=200):
+                 max_points=500):
         """
         Setting Parameter
         start:Start Position [x,y]
@@ -221,7 +221,7 @@ def rrt_waypoints(goal, start) :
 
     for Key in ReferenceMap:
             #Position = np.array([ReferenceMap[Key]["x"], ReferenceMap[Key]["y"]])
-            all_obstacles.append(Circle(ReferenceMap[Key]["x"]+1.5, ReferenceMap[Key]["y"]+1.5, 0.3))
+            all_obstacles.append(Circle(ReferenceMap[Key]["x"]+1.5, ReferenceMap[Key]["y"]+1.5, 0.1))
 
     rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
           expand_dis=1, path_resolution=0.5)

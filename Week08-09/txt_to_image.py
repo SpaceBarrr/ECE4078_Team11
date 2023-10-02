@@ -42,7 +42,7 @@ def visualise_map():
             Objects_names.append(Key)
             if "Tomato" in Key:
                 Objects_colours.append("red")
-            elif "potato" in Key: # TODO if we change this, we have to be consistent
+            elif "Potato" in Key: # TODO if we change this, we have to be consistent
                 Objects_colours.append("skyblue")
             elif "Orange" in Key: 
                 Objects_colours.append("orange")
