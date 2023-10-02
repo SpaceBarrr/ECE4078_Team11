@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from Obstacle import *
+import json
 
 class RRT:
     """
@@ -73,7 +74,6 @@ class RRT:
             # to self.node_list
             if(self.is_collision_free(nearby_node)):
                 self.node_list.append(nearby_node)
-                self.no_nodes += 1
             #ENDTODO -----------------------------------------------------------------------
                 
             # If we are close to goal, stop expansion and generate path
@@ -83,7 +83,6 @@ class RRT:
                 self.node_list.append(final_node)
                 if self.is_collision_free(final_node):
                     return self.generate_final_course(len(self.node_list) - 1)
-                    
 
         return None  # cannot find path
 
@@ -144,13 +143,15 @@ class RRT:
         """
         Reconstruct path from start to end node
         """
+        self.no_nodes = 0
         path = [[self.end.x, self.end.y]]
         node = self.node_list[goal_ind]
         while node.parent is not None:
+            self.no_nodes += 1
             path.append([node.x, node.y])
             node = node.parent
         path.append([node.x, node.y])
-
+        self.no_nodes += 1
         return path
 
     def calc_dist_to_goal(self, x, y):
@@ -196,20 +197,47 @@ class RRT:
 # print(rrt.node_list)
 
 #Set parameters
-goal = np.array([0, 0])
-start = np.array([3, 3])
 
-all_obstacles = [Circle(1.5, 2, 0.1), Circle(1.8, 0.2, 0.1),
-                 Circle(2.8, 1, 0.1)]
+def rrt_waypoints(goal, start) :
+    #goal_x = float(input("Add goal x : "))
+    #goal_y = float(input("Add goal y :"))
+    goal = np.array([goal[0]+1.5, goal[1]+1.5])
+    #start_x = float(input("Add start x : "))
+    #start_y = float(input("Add start  : "))
+    start = np.array([start[0]+1.5, start[1]+1.5])
 
-rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
+    f = open("TrueMap.txt", "r")
+    txt = f.readline()
+
+    ReferenceMap = json.loads(txt)
+
+    #print(ReferenceMap)
+    ReferenceObjects_x = []
+    ReferenceObjects_y = []
+    ReferenceArUcos_x = []
+    ReferenceArUcos_y = []
+    Objects_names = []
+    all_obstacles = []
+
+    for Key in ReferenceMap:
+            #Position = np.array([ReferenceMap[Key]["x"], ReferenceMap[Key]["y"]])
+            all_obstacles.append(Circle(ReferenceMap[Key]["x"]+1.5, ReferenceMap[Key]["y"]+1.5, 0.3))
+
+    rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles,
           expand_dis=1, path_resolution=0.5)
 
-rrt.planning()
+    path_rev = rrt.planning()
 
-waypoints = []
-for i in range(rrt.no_nodes+1) :
-    print( [rrt.node_list[i].x, rrt.node_list[i].y] )
-    waypoints.append([rrt.node_list[i].x, rrt.node_list[i].y])
+
+    waypoints = []
+    i = rrt.no_nodes 
+    while i >= 0 :
+        waypoints.append([(path_rev[i][0]-1.5), (path_rev[i][1]-1.5)])
+        i -= 1
     
-print(goal)
+    for j in range(rrt.no_nodes+1) : 
+        print(waypoints[j])
+
+    return waypoints
+
+
