@@ -39,21 +39,21 @@ def visualise_map(map):
             ReferenceObjects_x.append(ReferenceMap[Key]["x"])
             ReferenceObjects_y.append(ReferenceMap[Key]["y"])
             Objects_names.append(Key)
-            if "Tomato" in Key:
+            if "tomato" in Key:
                 Objects_colours.append("red")
-            elif "Potato" in Key: # TODO if we change this, we have to be consistent
+            elif "potato" in Key: # TODO if we change this, we have to be consistent
                 Objects_colours.append("skyblue")
-            elif "Orange" in Key: 
+            elif "orange" in Key: 
                 Objects_colours.append("orange")
-            elif "Capsicum" in Key: 
+            elif "capsicum" in Key: 
                 Objects_colours.append("pink")
-            elif "Lime" in Key: 
+            elif "lime" in Key: 
                 Objects_colours.append("green")
-            elif "Lemon" in Key: 
+            elif "lemon" in Key: 
                 Objects_colours.append("yellow")
-            elif "Garlic" in Key: 
+            elif "garlic" in Key: 
                 Objects_colours.append("white")
-            elif "Pumpkin" in Key: 
+            elif "pumpkin" in Key: 
                 Objects_colours.append("purple")
 
             j += 1
@@ -63,6 +63,8 @@ def visualise_map(map):
     ax.set_xlim([-1.5, 1.5])
     ax.set_ylim([-1.5, 1.5])
     ax.set_facecolor('xkcd:black')
-    ax.scatter(ReferenceArUcos_y, ReferenceArUcos_x, color = "blue", marker = "s")
-    ax.scatter(ReferenceObjects_y, ReferenceObjects_x, c = Objects_colours, marker = "o")
+    ax.scatter(ReferenceArUcos_x, ReferenceArUcos_y, color = "blue", marker = "s")
+    ax.scatter(ReferenceObjects_x, ReferenceObjects_y, c = Objects_colours, marker = "o")
     fig.savefig("map_image.png")
+
+visualise_map('TrueMap.txt')
