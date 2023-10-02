@@ -148,7 +148,7 @@ def drive_to_point(waypoint, robot_pose):
     print("Turning for {:.2f} seconds".format(turn_time))
     lv, rv = ppi.set_velocity([0, variable], turning_tick=wheel_vel, time=turn_time)
     drive_meas = measure.Drive(lv, -rv, turn_time)           # Changed
-    operate.update_slam(drive_meas = drive_meas)
+    slam_tings(drive_meas)
     
     # after turning, drive straight to the waypoint
     distance = np.sqrt((waypoint[0]-robot_pose_x)**2+(waypoint[1]-robot_pose_y)**2)
@@ -156,10 +156,18 @@ def drive_to_point(waypoint, robot_pose):
     drive_time = float(abs(distance/(scale*wheel_vel)))
     print("Driving for {:.2f} seconds".format(drive_time))
     
-    lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=drive_time)
-    drive_meas = measure.Drive(lv, -rv, drive_time)           # Changed
-    operate.update_slam(drive_meas=drive_meas)  
+    while drive_time > 0:
+        if drive_time >= 1:
+            lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=1)
+            drive_meas = measure.Drive(lv, -rv, drive_time) 
+            slam_tings(drive_meas) 
+            drive_time -= 1
+        else:
+            lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=drive_time)
+            drive_meas = measure.Drive(lv, -rv, drive_time) 
+            slam_tings(drive_meas) 
     
+              # Changed
 
     ####################################################
 
@@ -280,7 +288,7 @@ class Operate:
             self.request_recover_robot = False
         elif self.ekf_on:  # and not self.debug_flag:
             self.ekf.predict(drive_meas)
-            self.ekf.add_landmarks(lms)
+            # self.ekf.add_landmarks(lms)
             self.ekf.update(lms)
 
     # using computer vision to detect targets
@@ -517,13 +525,17 @@ def add_waypoint_from_rrt(waypoint):
     # exit
     ppi.set_velocity([0, 0])
     
-def rrt_waypoints(goal, start, obstacle_list) :
+def rrt_waypoints(goal, start, obstacle_list):
+    CIRCLE_RADIUS = 0.2
+    
     goal = np.array([goal[0]+1.5, goal[1]+1.5])
     start = np.array([start[0]+1.5, start[1]+1.5])
 
     all_obstacles_offset = []
+    all_obstacles = []
     for i in range(len(obstacle_list)):
-        all_obstacles_offset.append(Circle(obstacle_list[i][0]+1.5, obstacle_list[i][1]+1.5, 0.2))
+        all_obstacles_offset.append(Circle(obstacle_list[i][0]+1.5, obstacle_list[i][1]+1.5, CIRCLE_RADIUS))
+        all_obstacles.append(Circle(obstacle_list[i][0], obstacle_list[i][1], CIRCLE_RADIUS))
 
     rrt = RRT(start=start, goal=goal, width=3, height=3, obstacle_list=all_obstacles_offset,
           expand_dis=1, path_resolution=0.5)
@@ -538,21 +550,16 @@ def rrt_waypoints(goal, start, obstacle_list) :
     
     for j in range(rrt.no_nodes+1) : 
         print(waypoints[j])
-
-    all_obstacles = []
-
-    for i in range(len(obstacle_list)):
-        all_obstacles_offset.append(Circle(obstacle_list[i][0], obstacle_list[i][1], 0.2))
-
+        
     return waypoints, all_obstacles
    
-def slam_tings():
+def slam_tings(drive_meas):
     operate.take_pic()
-    drive_meas = operate.control()
+    # drive_meas = operate.control()
     operate.update_slam(drive_meas)
     operate.record_data()
     operate.save_image()
-    operate.detect_target()
+    # operate.detect_target()
         
 if __name__ == "__main__":
     import argparse
@@ -665,7 +672,6 @@ if __name__ == "__main__":
         pygame.display.flip()
         
         for waypoint in waypoints_rrt:
-            slam_tings()
             add_waypoint_from_rrt(waypoint)
         
         operate.draw(canvas)
