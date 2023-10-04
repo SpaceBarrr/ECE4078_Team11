@@ -596,9 +596,9 @@ if __name__ == "__main__":
     map_image = pygame.transform.scale(map_image, (400, 400))
     canvas.blit(map_image, (700, 0))
     # adding origin marker for original pibot pos
-    origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
-    origin_colour = (165,42,42)
-    pygame.draw.rect(canvas,origin_colour,origin_dot)
+    #origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
+    #origin_colour = (165,42,42)
+    #pygame.draw.rect(canvas,origin_colour,origin_dot)
 
     start = True
 
@@ -640,11 +640,11 @@ if __name__ == "__main__":
     for i in range(len(fruit_goal_list)):
         #initialise map each loop to remove path drawings
         canvas.blit(map_image, (700, 0))
-        origin_dot = pygame.Rect(904,201,4,4)
-        origin_colour = (165,42,42)
+        #origin_dot = pygame.Rect(904,201,4,4)
+        #origin_colour = (165,42,42)
+        #pygame.draw.rect(canvas,origin_colour,origin_dot)
         white = (255, 255, 255)
         red = (255, 0, 0)
-        pygame.draw.rect(canvas,origin_colour,origin_dot)
         #draw obstacles
         scalefactor_x = 155/1.5
         scalefactor_y = -155/1.5
