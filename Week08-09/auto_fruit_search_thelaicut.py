@@ -134,7 +134,7 @@ def drive_to_point(waypoint, robot_pose, aruco_true_pos):
     angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - robot_pose_theta,-np.pi,np.pi)
 
     variable = -1 if angle_to_turn > 0 else 1              
-    turn_time = 10*scale*wheel_vel*angle_to_turn/(2*np.pi*baseline)
+    turn_time = float(abs(10*scale*wheel_vel*angle_to_turn/(2*np.pi*baseline)))
 
     print("     Turning for {:.2f} seconds towards fruit".format(turn_time))
 
@@ -143,7 +143,7 @@ def drive_to_point(waypoint, robot_pose, aruco_true_pos):
         if turn_time > dt:
             operate.command['motion'] = [0, variable]
             # from Operate.py
-            operate.update_keyboard()
+            # operate.update_keyboard()
             operate.take_pic()
             drive_meas, dt = operate.control()
             operate.update_slam(drive_meas)
@@ -155,8 +155,8 @@ def drive_to_point(waypoint, robot_pose, aruco_true_pos):
             pygame.display.update()
             turn_time -= dt
         else : 
-            operate.command['motion'] = [0, variable]
-            operate.update_keyboard()
+            # operate.command['motion'] = [0, variable]
+            # operate.update_keyboard()
             operate.take_pic()
             drive_meas = operate.control()
             operate.update_slam(drive_meas)
@@ -180,7 +180,7 @@ def drive_to_point(waypoint, robot_pose, aruco_true_pos):
             operate.command['motion'] = [1, 0]
             
             # from Operate.py
-            operate.update_keyboard()
+            # operate.update_keyboard()
             operate.take_pic()
             drive_meas, dt = operate.control()
             operate.update_slam(drive_meas)
@@ -193,7 +193,7 @@ def drive_to_point(waypoint, robot_pose, aruco_true_pos):
             drive_time -= dt
         else:
             operate.command['motion'] = [1, 0]
-            operate.update_keyboard()
+            # operate.update_keyboard()
             operate.take_pic()
             drive_meas = operate.control()
             operate.update_slam(drive_meas)
@@ -219,7 +219,7 @@ def drive_to_point(waypoint, robot_pose, aruco_true_pos):
         if turn_time > dt:
             operate.command['motion'] = [0, variable]
             # from Operate.py
-            operate.update_keyboard()
+            # operate.update_keyboard()
             operate.take_pic()
             drive_meas, dt = operate.control()
             operate.update_slam(drive_meas)
@@ -232,7 +232,7 @@ def drive_to_point(waypoint, robot_pose, aruco_true_pos):
             turn_time -= dt
         else : 
             operate.command['motion'] = [0, variable]
-            operate.update_keyboard()
+            # operate.update_keyboard()
             operate.take_pic()
             drive_meas = operate.control()
             operate.update_slam(drive_meas)
@@ -347,12 +347,12 @@ class Operate:
         self.bg = pygame.image.load('pics/gui_mask.jpg')
 
     # wheel control
-    def control(self, near_the_point):
+    def control(self):
         if args.play_data:
             lv, rv = self.pibot.set_velocity()
         else:
             lv, rv = self.pibot.set_velocity(
-                self.command['motion'],tick=30,
+                self.command['motion'],tick=10,
                 turning_tick=5) # slow down the robot
         if self.data is not None:
             self.data.write_keyboard(lv, rv)
@@ -597,13 +597,14 @@ def add_waypoint_from_click(mouse_pos: tuple):
     y = (mouse_pos[1] - y_offset)  * y_scaling
     
     # print(x,y)
+    aruco_true_pos = 0,0
 
     # estimate the robot's pose
     robot_pose = operate.ekf.get_state_vector()[:3,0]
 
     # robot drives to the waypoint
     waypoint = [x,y]
-    drive_to_point(waypoint,robot_pose)
+    drive_to_point(waypoint,robot_pose, aruco_true_pos)
     robot_pose = operate.ekf.get_state_vector()[:3,0]
     
     print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))

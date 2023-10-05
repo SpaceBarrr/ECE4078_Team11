@@ -399,10 +399,10 @@ class Operate:
         canvas.blit(caption_surface, (position[0], position[1] - 25))
 
     # keyboard teleoperation, replace with your M1 codes if preferred        
-    def update_keyboard(self):
+    def update_keyboard(self,aruco_true_pos):
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONUP:
-                add_waypoint_from_click(pygame.mouse.get_pos())
+                add_waypoint_from_click(pygame.mouse.get_pos(), aruco_true_pos)
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -480,7 +480,7 @@ class Operate:
             pygame.quit()
             sys.exit()
         
-def add_waypoint_from_click(mouse_pos: tuple):
+def add_waypoint_from_click(mouse_pos: tuple, aruco_true_pos):
     x_offset = 751 + 310/2
     y_offset = 48 + 310/2
     x_scaling = 3/310
@@ -496,7 +496,7 @@ def add_waypoint_from_click(mouse_pos: tuple):
 
     # robot drives to the waypoint
     waypoint = [x,y]
-    drive_to_point(waypoint,robot_pose)
+    drive_to_point(waypoint,robot_pose, aruco_true_pos)
     robot_pose = operate.ekf.get_state_vector()[:3,0]
     
     print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
@@ -633,62 +633,63 @@ if __name__ == "__main__":
     robot_pose = [0.0,0.0,0.0]
 
     operate.ekf_on = True
+    sleep(1)
 
     #RRT stuff
     #=================
     # run this code inside main loop (start with a button press?)
-    for i in range(len(fruit_goal_list)):
-        #initialise map each loop to remove path drawings
-        canvas.blit(map_image, (700, 0))
-        #origin_dot = pygame.Rect(904,201,4,4)
-        #origin_colour = (165,42,42)
-        #pygame.draw.rect(canvas,origin_colour,origin_dot)
-        white = (255, 255, 255)
-        red = (255, 0, 0)
-        #draw obstacles
-        scalefactor_x = 155/1.5
-        scalefactor_y = -155/1.5
+    # for i in range(len(fruit_goal_list)):
+    #     #initialise map each loop to remove path drawings
+    #     canvas.blit(map_image, (700, 0))
+    #     #origin_dot = pygame.Rect(904,201,4,4)
+    #     #origin_colour = (165,42,42)
+    #     #pygame.draw.rect(canvas,origin_colour,origin_dot)
+    #     white = (255, 255, 255)
+    #     red = (255, 0, 0)
+    #     #draw obstacles
+    #     scalefactor_x = 155/1.5
+    #     scalefactor_y = -155/1.5
 
-        # run rrt
-        goal = fruit_goal_list[i]
-        start = robot_pose
-        waypoints_rrt, circles = rrt_waypoints(goal, start, obstacle_list) 
+    #     # run rrt
+    #     goal = fruit_goal_list[i]
+    #     start = robot_pose
+    #     waypoints_rrt, circles = rrt_waypoints(goal, start, obstacle_list) 
         
-        waypoints_rrt = waypoints_rrt[-2:0:-1]
+    #     waypoints_rrt = waypoints_rrt[-2:0:-1]
 
-        for circle in circles:
-            pygame.draw.circle(canvas, red, (int(circle.center[0] * scalefactor_x+906), int(circle.center[1] * scalefactor_y+203)), circle.radius * scalefactor_x)
-        pygame.display.flip()
+    #     for circle in circles:
+    #         pygame.draw.circle(canvas, red, (int(circle.center[0] * scalefactor_x+906), int(circle.center[1] * scalefactor_y+203)), circle.radius * scalefactor_x)
+    #     pygame.display.flip()
 
-        #draw path as white line
-        coordinates = [[scalefactor_x * x + 906, scalefactor_y * y + 203] for x, y in waypoints_rrt]
+    #     #draw path as white line
+    #     coordinates = [[scalefactor_x * x + 906, scalefactor_y * y + 203] for x, y in waypoints_rrt]
 
-        for i in range(len(coordinates) - 1):
-            pygame.draw.line(canvas, white, coordinates[i], coordinates[i + 1], 2)
-        pygame.display.flip()
+    #     for i in range(len(coordinates) - 1):
+    #         pygame.draw.line(canvas, white, coordinates[i], coordinates[i + 1], 2)
+    #     pygame.display.flip()
         
-        for waypoint in waypoints_rrt:
-            add_waypoint_from_rrt(waypoint)
+    #     for waypoint in waypoints_rrt:
+    #         add_waypoint_from_rrt(waypoint)
         
-        operate.draw(canvas)
-        pygame.display.update()
+    #     operate.draw(canvas)
+    #     pygame.display.update()
         
-        print(f"(Hopefully) arrived at {search_list[i]}...")
+    #     print(f"(Hopefully) arrived at {search_list[i]}...")
         
-        sleep(2)
+    #     sleep(2)
 
     # END RRT stuff  
     # =============
 
-    # while start:
-    #     operate.update_keyboard()
-    #     operate.take_pic()
-    #     drive_meas = operate.control()
-    #     operate.update_slam(drive_meas)
-    #     operate.record_data()
-    #     operate.save_image()
-    #     operate.detect_target()
-    #     # visualise
-    #     operate.draw(canvas)
-    #     pygame.display.update()
+    while start:
+        operate.update_keyboard(aruco_true_pos)
+        operate.take_pic()
+        drive_meas = operate.control()
+        operate.update_slam(drive_meas)
+        operate.record_data()
+        operate.save_image()
+        operate.detect_target()
+        # visualise
+        operate.draw(canvas)
+        pygame.display.update()
         
