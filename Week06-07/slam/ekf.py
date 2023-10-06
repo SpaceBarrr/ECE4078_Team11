@@ -117,13 +117,15 @@ class EKF:
         H = self.robot.derivative_measure(self.markers, idx_list)
 
         x = self.get_state_vector()
-        print(x)
+        # print(x)
 
         # TODO: add your codes here to compute the updated x
         K = self.P @ np.transpose(H) @ np.linalg.inv(H @ self.P @ np.transpose(H) + R) 
         corrected_x = x + K @ (z - z_hat)
         self.set_state_vector(corrected_x)
         self.P = (np.eye(self.P.shape[0]) - K @ H) @ self.P 
+
+        print(self.markers)
         
     def state_transition(self, raw_drive_meas):
         n = self.number_landmarks()*2 + 3

@@ -399,10 +399,10 @@ class Operate:
         canvas.blit(caption_surface, (position[0], position[1] - 25))
 
     # keyboard teleoperation, replace with your M1 codes if preferred        
-    def update_keyboard(self,aruco_true_pos):
+    def update_keyboard(self):
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONUP:
-                add_waypoint_from_click(pygame.mouse.get_pos(), aruco_true_pos)
+                add_waypoint_from_click(pygame.mouse.get_pos())
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -480,7 +480,7 @@ class Operate:
             pygame.quit()
             sys.exit()
         
-def add_waypoint_from_click(mouse_pos: tuple, aruco_true_pos):
+def add_waypoint_from_click(mouse_pos: tuple):
     x_offset = 751 + 310/2
     y_offset = 48 + 310/2
     x_scaling = 3/310
@@ -496,7 +496,7 @@ def add_waypoint_from_click(mouse_pos: tuple, aruco_true_pos):
 
     # robot drives to the waypoint
     waypoint = [x,y]
-    drive_to_point(waypoint,robot_pose, aruco_true_pos)
+    drive_to_point(waypoint,robot_pose)
     robot_pose = operate.ekf.get_state_vector()[:3,0]
     
     print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
@@ -682,7 +682,7 @@ if __name__ == "__main__":
     # =============
 
     while start:
-        operate.update_keyboard(aruco_true_pos)
+        operate.update_keyboard()
         operate.take_pic()
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
