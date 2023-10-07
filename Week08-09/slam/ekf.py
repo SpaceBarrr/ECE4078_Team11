@@ -22,10 +22,10 @@ class EKF:
         self.taglist = [x for x in range(1,11)]
 
         # Covariance matrix
-        # self.P = np.zeros((3,3))
-        self.P = np.eye(N=23) * 0.001
-        for i in range(3):
-            self.P[i][i] = 0 
+        self.P = np.zeros((23,23))
+        # self.P = np.eye(N=23) * 0.001
+        # for i in range(3):
+        #     self.P[i][i] = 0 
         # print(self.P)
         self.init_lm_cov = 20
         self.robot_init_state = None
