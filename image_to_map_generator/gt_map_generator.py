@@ -441,7 +441,7 @@ class MainView(QMainWindow):
             EstimateMap[f"aruco{ArUco[0]}_0"] = {"y": ArUco[1][1], "x": -ArUco[1][0]}
 
         for Object in self.EstimatedObjects:
-            EstimateMap[f"{self._params.Objects[Object[2]][0]}_{Object[0]}"] = {"y": Object[1][1], "x": -Object[1][0]}
+            EstimateMap[f"{self._params.Objects[Object[2]][0].lower()}_{Object[0]}"] = {"y": Object[1][1], "x": -Object[1][0]}
 
         with open(self._params.SaveImageName, "w") as file:
             json.dump(EstimateMap, file)
