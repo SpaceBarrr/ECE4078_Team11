@@ -24,7 +24,7 @@ import slam.aruco_detector as aruco
 
 from YOLO.detector import Detector
 
-#from rrt import RRT
+from rrt import RRT
 from Obstacle import *
 
 from txt_to_image import *
@@ -133,7 +133,7 @@ def drive_to_point(waypoint, robot_pose):
     distance_to_goal = np.hypot(x_diff, y_diff)
 
     # turn to face robot
-    turn_time = abs(2.5*scale*wheel_vel*-angle_to_goal/(2*np.pi*baseline))
+    turn_time = abs(10*scale*wheel_vel*-angle_to_goal/(2*np.pi*baseline))
     direction = -1 if angle_to_goal < 0 else 1 
     lv, rv = ppi.set_velocity([0, direction], turning_tick=wheel_vel, time=turn_time)
     print(f"Turning for {turn_time:.2f} seconds")
@@ -148,7 +148,7 @@ def drive_to_point(waypoint, robot_pose):
 
     # check for slam each sec
     while drive_time > 0:
-        print(drive_time)
+        # print(drive_time)
         if drive_time >= 1:
             lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=1)
             drive_meas = measure.Drive(lv, -rv, drive_time) 
@@ -236,7 +236,6 @@ class Operate:
         self.count_down = 300
         self.start_time = time.time()
         self.control_clock = time.time()
-        self.current_pos = [0,0,0]
         # initialise images
         self.img = np.zeros([240, 320, 3], dtype=np.uint8)
         self.aruco_img = np.zeros([240, 320, 3], dtype=np.uint8)
@@ -248,6 +247,7 @@ class Operate:
             self.detector = Detector(args.yolo_model)
             self.yolo_vis = np.ones((240, 320, 3)) * 100
         self.bg = pygame.image.load('pics/gui_mask.jpg')
+        self.robot_pose = []
 
     # wheel control
     def control(self):
@@ -290,7 +290,7 @@ class Operate:
             self.request_recover_robot = False
         elif self.ekf_on:  # and not self.debug_flag:
             self.ekf.predict(drive_meas)
-            self.ekf.add_landmarks(lms)
+            # self.ekf.add_landmarks(lms)
             self.ekf.update(lms)
 
     # using computer vision to detect targets
@@ -497,22 +497,26 @@ def add_waypoint_from_click(mouse_pos: tuple):
     y_scaling = 3/310
     
     x = (mouse_pos[0] - x_offset)  * x_scaling
-    y = (mouse_pos[1] - y_offset)  * y_scaling * -1
+    y = (mouse_pos[1] - y_offset)  * y_scaling
     
-    print(x,y)
+    # print(x,y)
 
     # estimate the robot's pose
-    robot_pose = operate.current_pos #operate.ekf.get_state_vector()[:3,0]
+    robot_pose = operate.ekf.get_state_vector()[:3,0]
+    print(f"Current pose: {robot_pose}")
 
     # robot drives to the waypoint
     waypoint = [x,y]
-    theta = drive_to_point(waypoint,robot_pose)
-    operate.current_pos = [x,y,theta]#operate.ekf.get_state_vector()[:3,0]
+    waypoint.append(drive_to_point(waypoint,robot_pose))
+    new_robot_pose_corrected = operate.ekf.get_state_vector()[:3,0]
     
-    print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
+    print(f"Finished driving to waypoint: {waypoint}; New robot pose: {new_robot_pose_corrected}")
+    difference = [new_robot_pose_corrected[ind] - waypoint[ind] for ind in range(len(new_robot_pose_corrected))]
+    print(f"Difference between estimated and actual points: {difference}")
 
     # exit
     ppi.set_velocity([0, 0])
+    return new_robot_pose_corrected
         
 if __name__ == "__main__":
     import argparse
@@ -546,7 +550,7 @@ if __name__ == "__main__":
     pygame.display.update()
 
     # create map_image.png from text file
-    visualise_map("TrueMap.txt")
+    visualise_map(args.map)
 
     # drawing map_image rectangle
     map_background_rect = pygame.Rect(700, 0, 400, 660) #
@@ -560,6 +564,7 @@ if __name__ == "__main__":
     origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
     origin_colour = (165,42,42)
     pygame.draw.rect(canvas,origin_colour,origin_dot)
+
 
     start = False
 
