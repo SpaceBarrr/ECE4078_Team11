@@ -480,23 +480,22 @@ def drive():
     
     # user either hasn't clicked or path planning returned nothing
     if len(operate.cur_waypoint) == 0:
-        return
+        return  
     
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
     LINEAR_THRESHOLD = 0.1
+    start = 0
     
     # grab pose data and calculate angles
     robot_x = operate.robot_pose[0]
     robot_y = operate.robot_pose[1]
-    robot_theta = operate.robot_pose[1]
+    robot_theta = -operate.robot_pose[2]
     waypoint_x = operate.cur_waypoint[0]
     waypoint_y = operate.cur_waypoint[1]
     
     waypoint_theta = np.arctan2((waypoint_y-robot_y),(waypoint_x-robot_x))
     theta_diff = clamp_angle(robot_theta - waypoint_theta, -2*np.pi, 2*np.pi)
-    
-    # print(theta_diff)
         
     # TURNING
     if not operate.driving_forward:
@@ -504,17 +503,29 @@ def drive():
             operate.command['motion'] = [0,-1]
         elif theta_diff < 0: # turn left
             operate.command['motion'] = [0,1]
+        elif theta_diff == 0 :
+            operate.command['motion'] = [0,0]
         
         if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
             print("Finished turning to waypoint...")
             operate.command['motion'] = [0,0]
+            operate.minimum_seen_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
             operate.driving_forward = True
     
     # DRIVING FORWARD
-    else: 
+    if operate.driving_forward: 
         new_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
+        print(operate.minimum_seen_distance)
+        print(new_distance)
+
+        print("Robot Pose X : " + str(robot_x))
+        print("Robot Pose Y : " + str(robot_y))
+        print("Robot Pose theta : " + str(robot_theta))
+        print("Waypoint x: " + str(waypoint_x))
+        print("Waypoint y : " + str(waypoint_y))
         
-        if new_distance > operate.minimum_seen_distance: # distance increasing scenario
+        if (new_distance > (operate.minimum_seen_distance)): # distance increasing scenario
+            print("Distance Increasing")
             operate.command['motion'] = [0,0]
             operate.minimum_seen_distance = np.inf
             operate.driving_forward = False
@@ -526,7 +537,9 @@ def drive():
                 operate.cur_waypoint = []
             print("Distance increasing, arriving at waypoint early...")
         else: # distance decreasing (good)
+            print("Distance decreasing (or not moving)")
             if new_distance < LINEAR_THRESHOLD: # arrived at waypoint
+                print("reached")
                 # reset for next run
                 operate.command['motion'] = [0,0]
                 operate.minimum_seen_distance = np.inf
@@ -539,7 +552,9 @@ def drive():
                     operate.cur_waypoint = []
                 print("Arrived at waypoint")
             else: # drive forward
+                print("Moving Foward")
                 operate.minimum_seen_distance = new_distance
+                print("distance left to move : " + str(new_distance))
                 operate.command['motion'] = [1,0]
                 
             # TODO: implement logic if angle error has increased too much
