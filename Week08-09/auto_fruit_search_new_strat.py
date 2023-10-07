@@ -104,174 +104,6 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
         n_fruit += 1
     return fruit_goal_list    
 
-# Waypoint navigation
-# the robot automatically drives to a given [x,y] coordinate
-# note that this function requires your camera and wheel calibration parameters from M2, and the "util" folder from M1
-# fully automatic navigation:
-# try developing a path-finding algorithm that produces the waypoints automatically
-def drive_to_point(waypoint, robot_pose, aruco_true_pos):
-    # imports camera / wheel calibration parameters 
-    fileS = "calibration/param/scale.txt"
-    scale = np.loadtxt(fileS, delimiter=',')
-    fileB = "calibration/param/baseline.txt"
-    baseline = np.loadtxt(fileB, delimiter=',')
-    
-    ####################################################
-    # TODO: replace with your codes to make the robot drive to the waypoint
-    # One simple strategy is to first turn on the spot facing the waypoint,
-    # then drive straight to the way point
-
-    wheel_vel = 30 # tick
-    
-    robot_pose_x = robot_pose[0]
-    robot_pose_y = robot_pose[1]
-    robot_pose_theta = robot_pose[2]
-    
-    # turn towards the waypoint
-    x_diff = waypoint[0] - robot_pose_x
-    y_diff = waypoint[1] - robot_pose_y
-
-    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - robot_pose_theta,-np.pi,np.pi)
-
-    variable = -1 if angle_to_turn > 0 else 1              
-    turn_time = float(abs(10*scale*wheel_vel*angle_to_turn/(2*np.pi*baseline)))
-
-    print("     Turning for {:.2f} seconds towards fruit".format(turn_time))
-
-    dt = 0.1
-    while turn_time > 0 :
-        if turn_time > dt:
-            operate.command['motion'] = [0, variable]
-            # from Operate.py
-            # operate.update_keyboard()
-            operate.take_pic()
-            drive_meas, dt = operate.control()
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
-            turn_time -= dt
-        else : 
-            # operate.command['motion'] = [0, variable]
-            # operate.update_keyboard()
-            operate.take_pic()
-            drive_meas = operate.control()
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
-            break
-    
-    # after turning, drive straight to the waypoint
-    distance = np.sqrt((waypoint[0]-robot_pose_x)**2+(waypoint[1]-robot_pose_y)**2)
-    #drive_time = distance / (lin_vel) # replace with your calculation
-    drive_time = float(abs(distance/(scale*wheel_vel)))
-    print("     Driving for {:.2f} seconds towards fruit".format(drive_time))
-    
-    dt = 0.1
-    while drive_time > 0:
-        if drive_time >= dt:
-            operate.command['motion'] = [1, 0]
-            
-            # from Operate.py
-            # operate.update_keyboard()
-            operate.take_pic()
-            drive_meas, dt = operate.control()
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
-            drive_time -= dt
-        else:
-            operate.command['motion'] = [1, 0]
-            # operate.update_keyboard()
-            operate.take_pic()
-            drive_meas = operate.control()
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
-            break
-            # Changed
-
-    robot_pose = operate.ekf.get_state_vector()[:3,0]
-
-    angle_to_aruco, index_aruco = angle_aruco(robot_pose, aruco_true_pos)
-    variable = -1 if angle_to_aruco > 0 else 1              
-    turn_time = 10*scale*wheel_vel*angle_to_aruco/(2*np.pi*baseline)
-
-    print("     Turning for {:.2f} seconds towards Aruco Marker ".format(turn_time) + str(index_aruco))
-
-    dt = 0.1
-    while turn_time > 0 :
-        if turn_time > dt:
-            operate.command['motion'] = [0, variable]
-            # from Operate.py
-            # operate.update_keyboard()
-            operate.take_pic()
-            drive_meas, dt = operate.control()
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
-            turn_time -= dt
-        else : 
-            operate.command['motion'] = [0, variable]
-            # operate.update_keyboard()
-            operate.take_pic()
-            drive_meas = operate.control()
-            operate.update_slam(drive_meas)
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
-            break
-
-    ####################################################
-
-    print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
-
-def angle_aruco(robot_pose, aruco_true_pos) : 
-    """
-    This finds the nearest aruco marker and helps angle towards it
-    This helps it slam
-    """
-    closest_aruco = aruco_true_pos[0]
-    distance_to_closest = np.sqrt((robot_pose[0]-closest_aruco[0])**2+(robot_pose[1]-closest_aruco[1])**2)
-    index_aruco = 1
-
-    for i in range(10) : 
-        distance_to_aruco = np.sqrt((robot_pose[0]-aruco_true_pos[i][0])**2+(robot_pose[1]-aruco_true_pos[i][1])**2)
-        if distance_to_aruco < distance_to_closest :
-            closest_aruco = aruco_true_pos[i]
-            distance_to_closest = distance_to_aruco
-            index_aruco = i + 1
-
-    y_diff = closest_aruco[1] - robot_pose[1]
-    x_diff = closest_aruco[0] - robot_pose[0]
-
-    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - robot_pose[2],-np.pi,np.pi)
-
-    return angle_to_turn, index_aruco
-
-    
 def clamp_angle(rad_angle=0, min_value=-np.pi, max_value=np.pi):
 	"""
 	Restrict angle to the range [min, max]
@@ -290,8 +122,12 @@ def clamp_angle(rad_angle=0, min_value=-np.pi, max_value=np.pi):
 class Operate:
     def __init__(self, args, aruco_true_pos):
         self.aruco_true_pos = aruco_true_pos
-        
-        self.modifier = 1
+                
+        self.robot_pose = list()
+        self.driving_forward = False
+        self.cur_waypoint = list()
+        self.all_waypoints = list()
+        self.minimum_seen_distance = np.inf
         
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
@@ -358,14 +194,13 @@ class Operate:
             self.data.write_keyboard(lv, rv)
         dt = time.time() - self.control_clock
         # running in sim
-        # if args.ip == 'localhost':
-        #     drive_meas = measure.Drive(lv, rv, dt)
-        # # running on physical robot (right wheel reversed)
-        # else:
-        #     drive_meas = measure.Drive(lv, -rv, dt)
-        drive_meas = measure.Drive(lv, -rv, dt)
+        if args.ip == 'localhost':
+            drive_meas = measure.Drive(lv, rv, dt)
+        # running on physical robot (right wheel reversed)
+        else:
+            drive_meas = measure.Drive(lv, -rv, dt)
         self.control_clock = time.time()
-        return drive_meas, dt
+        return drive_meas
 
     # camera control
     def take_pic(self):
@@ -388,7 +223,7 @@ class Operate:
             self.request_recover_robot = False
         elif self.ekf_on:  # and not self.debug_flag:
             self.ekf.predict(drive_meas)
-            # self.ekf.add_landmarks(lms)
+            self.ekf.add_landmarks(lms)
             self.ekf.update(lms)
 
     # using computer vision to detect targets
@@ -507,10 +342,11 @@ class Operate:
         canvas.blit(caption_surface, (position[0], position[1] - 25))
 
     # keyboard teleoperation, replace with your M1 codes if preferred        
-    def update_keyboard(self,aruco_true_pos=[]):
+    def update_keyboard(self):
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONUP:
-                add_waypoint_from_click(pygame.mouse.get_pos(), aruco_true_pos)
+                # continue
+                add_waypoint_from_click(pygame.mouse.get_pos())
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -587,43 +423,6 @@ class Operate:
         if self.quit:
             pygame.quit()
             sys.exit()
-        
-def add_waypoint_from_click(mouse_pos: tuple, aruco_true_pos):
-    x_offset = 751 + 310/2
-    y_offset = 48 + 310/2
-    x_scaling = 3/310
-    y_scaling = 3/310
-    
-    x = (mouse_pos[0] - x_offset)  * x_scaling
-    y = (mouse_pos[1] - y_offset)  * y_scaling
-    
-    # print(x,y)
-
-    # estimate the robot's pose
-    robot_pose = operate.ekf.get_state_vector()[:3,0]
-
-    # robot drives to the waypoint
-    waypoint = [x,y]
-    drive_to_point(waypoint,robot_pose, aruco_true_pos)
-    robot_pose = operate.ekf.get_state_vector()[:3,0]
-    
-    print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
-
-    # exit
-    ppi.set_velocity([0, 0])
-    
-def add_waypoint_from_rrt(waypoint, aruco_true_pos):
-    # estimate the robot's pose
-    robot_pose = operate.ekf.get_state_vector()[:3,0]
-
-    # robot drives to the waypoint
-    drive_to_point(waypoint,robot_pose, aruco_true_pos)
-    robot_pose = operate.ekf.get_state_vector()[:3,0]
-    
-    print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint, robot_pose))
-
-    # exit
-    ppi.set_velocity([0, 0])
     
 def rrt_waypoints(goal, start, obstacle_list):
     CIRCLE_RADIUS = 0.2
@@ -648,20 +447,103 @@ def rrt_waypoints(goal, start, obstacle_list):
         waypoints.append([(path_rev[i][0]-1.5), (path_rev[i][1]-1.5)])
         i -= 1
     
-    print("Here are the waypoints to the fruits : ")
     for j in range(rrt.no_nodes-1) : 
         print(waypoints[j])
         
     return waypoints, all_obstacles
-   
-def slam_tings(drive_meas):
-    operate.take_pic()
-    # drive_meas = operate.control()
-    operate.update_slam(drive_meas)
-    operate.record_data()
-    operate.save_image()
-    # operate.detect_target()
         
+def add_waypoint_from_click(mouse_pos: tuple):
+    x_offset = 751 + 310/2
+    y_offset = 48 + 310/2
+    x_scaling = 3/310
+    y_scaling = 3/310
+    
+    x = (mouse_pos[0] - x_offset)  * x_scaling
+    y = (mouse_pos[1] - y_offset)  * y_scaling
+    
+    print(x,y)
+
+    # robot drives to the waypoint
+    operate.cur_waypoint = [x, y]
+            
+def drive():
+    '''
+    Main logic for driving the robot
+    Runs in the main pygame loop each clock cycle
+    
+    State machine logic:
+    (1): Initially, turn to face the waypoint until the angle error is smaller than the threshold
+    (2): Then, drive straight to the waypoint
+    (3): NOT IMPLEMENTED: If the angle begins to increase, we can turn again to correct
+    (4): If the distance to the waypoint begins to increase, arrive early & go next
+    '''
+    
+    # user either hasn't clicked or path planning returned nothing
+    if len(operate.cur_waypoint) == 0:
+        return
+    
+    # TUNEABLE PARAMS:
+    ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
+    LINEAR_THRESHOLD = 0.1
+    
+    # grab pose data and calculate angles
+    robot_x = operate.robot_pose[0]
+    robot_y = operate.robot_pose[1]
+    robot_theta = operate.robot_pose[1]
+    waypoint_x = operate.cur_waypoint[0]
+    waypoint_y = operate.cur_waypoint[1]
+    
+    waypoint_theta = np.arctan2((waypoint_y-robot_y),(waypoint_x-robot_x))
+    theta_diff = clamp_angle(robot_theta - waypoint_theta, -2*np.pi, 2*np.pi)
+    
+    # print(theta_diff)
+        
+    # TURNING
+    if not operate.driving_forward:
+        if theta_diff > 0: # turn right
+            operate.command['motion'] = [0,-1]
+        elif theta_diff < 0: # turn left
+            operate.command['motion'] = [0,1]
+        
+        if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
+            print("Finished turning to waypoint...")
+            operate.command['motion'] = [0,0]
+            operate.driving_forward = True
+    
+    # DRIVING FORWARD
+    else: 
+        new_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
+        
+        if new_distance > operate.minimum_seen_distance: # distance increasing scenario
+            operate.command['motion'] = [0,0]
+            operate.minimum_seen_distance = np.inf
+            operate.driving_forward = False
+            try:
+                new_waypoint = operate.all_waypoints.pop()
+                operate.cur_waypoint = new_waypoint
+            except IndexError:
+                print("last waypoint")
+                operate.cur_waypoint = []
+            print("Distance increasing, arriving at waypoint early...")
+        else: # distance decreasing (good)
+            if new_distance < LINEAR_THRESHOLD: # arrived at waypoint
+                # reset for next run
+                operate.command['motion'] = [0,0]
+                operate.minimum_seen_distance = np.inf
+                operate.driving_forward = False
+                try:
+                    new_waypoint = operate.all_waypoints.pop()
+                    operate.cur_waypoint = new_waypoint
+                except IndexError:
+                    print("last waypoint")
+                    operate.cur_waypoint = []
+                print("Arrived at waypoint")
+            else: # drive forward
+                operate.minimum_seen_distance = new_distance
+                operate.command['motion'] = [1,0]
+                
+            # TODO: implement logic if angle error has increased too much
+                
 if __name__ == "__main__":
     import argparse
 
@@ -705,9 +587,9 @@ if __name__ == "__main__":
     map_image = pygame.transform.scale(map_image, (400, 400))
     canvas.blit(map_image, (700, 0))
     # adding origin marker for original pibot pos
-    origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
-    origin_colour = (165,42,42)
-    pygame.draw.rect(canvas,origin_colour,origin_dot)
+    #origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
+    #origin_colour = (165,42,42)
+    #pygame.draw.rect(canvas,origin_colour,origin_dot)
 
     start = True
 
@@ -738,10 +620,8 @@ if __name__ == "__main__":
     
     obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
 
-    waypoint = [0.0,0.0]
-    robot_pose = [0.0,0.0,0.0]
-
     operate.ekf_on = True
+    sleep(1)
 
     #RRT stuff
     #=================
@@ -749,11 +629,11 @@ if __name__ == "__main__":
     # for i in range(len(fruit_goal_list)):
     #     #initialise map each loop to remove path drawings
     #     canvas.blit(map_image, (700, 0))
-    #     origin_dot = pygame.Rect(904,201,4,4)
-    #     origin_colour = (165,42,42)
+    #     #origin_dot = pygame.Rect(904,201,4,4)
+    #     #origin_colour = (165,42,42)
+    #     #pygame.draw.rect(canvas,origin_colour,origin_dot)
     #     white = (255, 255, 255)
     #     red = (255, 0, 0)
-    #     pygame.draw.rect(canvas,origin_colour,origin_dot)
     #     #draw obstacles
     #     scalefactor_x = 155/1.5
     #     scalefactor_y = -155/1.5
@@ -777,7 +657,7 @@ if __name__ == "__main__":
     #     pygame.display.flip()
         
     #     for waypoint in waypoints_rrt:
-    #         add_waypoint_from_rrt(waypoint, aruco_true_pos)
+    #         add_waypoint_from_rrt(waypoint)
         
     #     operate.draw(canvas)
     #     pygame.display.update()
@@ -786,15 +666,21 @@ if __name__ == "__main__":
         
     #     sleep(2)
 
+    # END RRT stuff  
+    # =============
+
     while start:
-        operate.update_keyboard(aruco_true_pos)
+        operate.update_keyboard()
         operate.take_pic()
+        drive()
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
+        operate.robot_pose = operate.ekf.robot.state[:3,0]
+        print(operate.robot_pose)
         operate.record_data()
         operate.save_image()
         operate.detect_target()
         # visualise
         operate.draw(canvas)
         pygame.display.update()
-  
+        
