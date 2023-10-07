@@ -107,7 +107,7 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
 # note that this function requires your camera and wheel calibration parameters from M2, and the "util" folder from M1
 # fully automatic navigation:
 # try developing a path-finding algorithm that produces the waypoints automatically
-def drive_to_point(waypoint, robot_pose):
+def drive_to_point(waypoint, robot_pose, aruco_true_pos):
     # imports camera / wheel calibration parameters 
     fileS = "calibration/param/scale.txt"
     scale = np.loadtxt(fileS, delimiter=',')
@@ -123,7 +123,7 @@ def drive_to_point(waypoint, robot_pose):
 
     x_pos = robot_pose[0]
     y_pos = robot_pose[1]
-    theta = robot_pose[2]
+    theta = -robot_pose[2]          # Change This - If this stays, blame Bryan (0432635952)
     waypoint_x = waypoint[0]
     waypoint_y = waypoint[1]
     
@@ -134,16 +134,17 @@ def drive_to_point(waypoint, robot_pose):
 
     # turn to face robot
     turn_time = abs(10*scale*wheel_vel*-angle_to_goal/(2*np.pi*baseline))
-    direction = -1 if angle_to_goal < 0 else 1 
-    lv, rv = ppi.set_velocity([0, direction], turning_tick=wheel_vel, time=turn_time)
-    print(f"Turning for {turn_time:.2f} seconds")
+    if turn_time != 0 :
+        direction = 1 if angle_to_goal < 0 else -1 
+        lv, rv = ppi.set_velocity([0, direction], turning_tick=wheel_vel, time=turn_time)
+        print(f"Turning for {turn_time:.2f} seconds")
     
     # do a slam
     drive_meas = measure.Drive(lv, -rv, turn_time)
     slam_tings(drive_meas)
 
     # after turning, drive straight to the waypoint
-    drive_time = distance_to_goal / (scale*wheel_vel)
+    drive_time = float(distance_to_goal / (1.3*scale*wheel_vel))
     print(f"Driving for {drive_time:.2f} seconds")
 
     # check for slam each sec
@@ -151,7 +152,7 @@ def drive_to_point(waypoint, robot_pose):
         # print(drive_time)
         if drive_time >= 1:
             lv, rv = ppi.set_velocity([1, 0], turning_tick = 0, tick=wheel_vel, time=1)
-            drive_meas = measure.Drive(lv, -rv, drive_time) 
+            drive_meas = measure.Drive(lv, -rv, 1) 
             slam_tings(drive_meas) 
             drive_time -= 1
         else:
@@ -162,7 +163,24 @@ def drive_to_point(waypoint, robot_pose):
 
     ####################################################
     print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
-    return (theta + angle_to_goal)
+
+    # Facing towards an aruco
+    robot_pose = operate.ekf.get_state_vector()[:3,0]
+    print("Robot thinks Arrived at [{}, {}]".format(robot_pose[0], robot_pose[1]))
+
+    angle_to_aruco, index_aruco = angle_aruco(waypoint, aruco_true_pos, (theta + angle_to_goal))             
+    turn_time = abs(10*scale*wheel_vel*angle_to_aruco/(2*np.pi*baseline))
+
+    if turn_time != 0 :
+        direction = 1 if angle_to_aruco < 0 else -1 
+        print("     Turning for {:.2f} seconds towards Aruco Marker ".format(turn_time) + str(index_aruco))
+        lv, rv = ppi.set_velocity([0, direction], turning_tick=wheel_vel, time=turn_time)
+    
+    # do a slam
+    drive_meas = measure.Drive(lv, -rv, turn_time)
+    slam_tings(drive_meas)
+
+    return (theta + angle_to_goal + angle_to_aruco)
     
 def slam_tings(drive_meas):
     operate.take_pic()
@@ -173,6 +191,29 @@ def slam_tings(drive_meas):
     # operate.detect_target()
     operate.draw(canvas)
     pygame.display.update()
+
+def angle_aruco(waypoint, aruco_true_pos, angle_rn) : 
+    """
+    This finds the nearest aruco marker and helps angle towards it
+    This helps it slam
+    """
+    closest_aruco = aruco_true_pos[0]
+    distance_to_closest = np.sqrt((waypoint[0]-closest_aruco[0])**2+(waypoint[1]-closest_aruco[1])**2)      # Change this to neg
+    index_aruco = 1
+
+    for i in range(10) : 
+        distance_to_aruco = np.sqrt((waypoint[0]-aruco_true_pos[i][0])**2+(waypoint[1]-aruco_true_pos[i][1])**2)
+        if distance_to_aruco < distance_to_closest :
+            closest_aruco = aruco_true_pos[i]
+            distance_to_closest = distance_to_aruco
+            index_aruco = i + 1
+
+    y_diff = closest_aruco[1] - waypoint[1]
+    x_diff = closest_aruco[0] - waypoint[0]
+
+    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - angle_rn,-np.pi,np.pi)
+
+    return angle_to_turn, index_aruco
     
 def clamp_angle(rad_angle=0, min_value=-np.pi, max_value=np.pi):
 	"""
@@ -409,10 +450,10 @@ class Operate:
         canvas.blit(caption_surface, (position[0], position[1] - 25))
 
     # keyboard teleoperation, replace with your M1 codes if preferred        
-    def update_keyboard(self):
+    def update_keyboard(self, aruco_true_pos):
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONUP:
-                add_waypoint_from_click(pygame.mouse.get_pos())
+                add_waypoint_from_click(pygame.mouse.get_pos(), aruco_true_pos)
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -490,7 +531,7 @@ class Operate:
             pygame.quit()
             sys.exit()
         
-def add_waypoint_from_click(mouse_pos: tuple):
+def add_waypoint_from_click(mouse_pos: tuple, aruco_true_pos):
     x_offset = 751 + 310/2
     y_offset = 48 + 310/2
     x_scaling = 3/310
@@ -507,7 +548,7 @@ def add_waypoint_from_click(mouse_pos: tuple):
 
     # robot drives to the waypoint
     waypoint = [x,y]
-    waypoint.append(drive_to_point(waypoint,robot_pose))
+    waypoint.append(drive_to_point(waypoint,robot_pose, aruco_true_pos))
     new_robot_pose_corrected = operate.ekf.get_state_vector()[:3,0]
     
     print(f"Finished driving to waypoint: {waypoint}; New robot pose: {new_robot_pose_corrected}")
@@ -583,6 +624,11 @@ if __name__ == "__main__":
     # read in the true map
     fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
 
+    ## Bryan Changed this 
+    for i in range(len(aruco_true_pos)) :
+        aruco_true_pos[i][1] = - aruco_true_pos[i][1]
+    # Bryan finished changing
+
     operate = Operate(args, aruco_true_pos)
     operate.ekf_on = True
 
@@ -595,7 +641,7 @@ if __name__ == "__main__":
     robot_pose = [0.0,0.0,0.0]
 
     while start:
-        operate.update_keyboard()
+        operate.update_keyboard(aruco_true_pos)
         operate.take_pic()
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
