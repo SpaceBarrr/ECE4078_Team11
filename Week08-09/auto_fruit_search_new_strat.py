@@ -25,8 +25,12 @@ import slam.aruco_detector as aruco
 
 from YOLO.detector import Detector
 
+# RRT imports (hopefully not needed)
 from rrt import *
 from Obstacle import *
+
+# Astar imports
+import astar
 
 from txt_to_image import *
 
@@ -628,7 +632,7 @@ if __name__ == "__main__":
     # read in the true map
     fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
 
-    # print(fruits_true_pos)
+    print(fruits_true_pos)
     # print(aruco_true_pos)
 
     operate = Operate(args, aruco_true_pos)
@@ -643,51 +647,9 @@ if __name__ == "__main__":
     operate.ekf_on = True
     sleep(1)
 
-    #RRT stuff
-    #=================
-    # run this code inside main loop (start with a button press?)
-    # for i in range(len(fruit_goal_list)):
-    #     #initialise map each loop to remove path drawings
-    #     canvas.blit(map_image, (700, 0))
-    #     #origin_dot = pygame.Rect(904,201,4,4)
-    #     #origin_colour = (165,42,42)
-    #     #pygame.draw.rect(canvas,origin_colour,origin_dot)
-    #     white = (255, 255, 255)
-    #     red = (255, 0, 0)
-    #     #draw obstacles
-    #     scalefactor_x = 155/1.5
-    #     scalefactor_y = -155/1.5
-
-    #     # run rrt
-    #     goal = fruit_goal_list[i]
-    #     start = robot_pose
-    #     waypoints_rrt, circles = rrt_waypoints(goal, start, obstacle_list) 
-        
-    #     waypoints_rrt = waypoints_rrt[-2:0:-1]
-
-    #     for circle in circles:
-    #         pygame.draw.circle(canvas, red, (int(circle.center[0] * scalefactor_x+906), int(circle.center[1] * scalefactor_y+203)), circle.radius * scalefactor_x)
-    #     pygame.display.flip()
-
-    #     #draw path as white line
-    #     coordinates = [[scalefactor_x * x + 906, scalefactor_y * y + 203] for x, y in waypoints_rrt]
-
-    #     for i in range(len(coordinates) - 1):
-    #         pygame.draw.line(canvas, white, coordinates[i], coordinates[i + 1], 2)
-    #     pygame.display.flip()
-        
-    #     for waypoint in waypoints_rrt:
-    #         add_waypoint_from_rrt(waypoint)
-        
-    #     operate.draw(canvas)
-    #     pygame.display.update()
-        
-    #     print(f"(Hopefully) arrived at {search_list[i]}...")
-        
-    #     sleep(2)
-
-    # END RRT stuff  
-    # =============
+    fruit_to_find = search_list.pop(0)
+    fruit_index = fruits_list.index(fruit_to_find.lower())
+    operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
 
     while start:
         operate.update_keyboard()
