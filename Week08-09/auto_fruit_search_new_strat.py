@@ -128,6 +128,7 @@ class Operate:
         self.cur_waypoint = list()
         self.all_waypoints = list()
         self.minimum_seen_distance = np.inf
+        self.last_5_dist = [np.inf, np.inf, np.inf, np.inf, np.inf]
         
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
@@ -484,13 +485,14 @@ def drive():
     
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
-    LINEAR_THRESHOLD = 0.1
-    start = 0
+    LINEAR_THRESHOLD = 0.2
+    LINEAR_FUDGE_FACTOR = 0.1
     
     # grab pose data and calculate angles
     robot_x = operate.robot_pose[0]
-    robot_y = operate.robot_pose[1]
-    robot_theta = -operate.robot_pose[2]
+    robot_y = -operate.robot_pose[1]
+    robot_theta = clamp_angle(-operate.robot_pose[2], -2*np.pi, 2*np.pi)
+    # print(robot_theta)
     waypoint_x = operate.cur_waypoint[0]
     waypoint_y = operate.cur_waypoint[1]
     
@@ -503,7 +505,7 @@ def drive():
             operate.command['motion'] = [0,-1]
         elif theta_diff < 0: # turn left
             operate.command['motion'] = [0,1]
-        elif theta_diff == 0 :
+        elif theta_diff == 0 : # should be impossible to end up in this situation
             operate.command['motion'] = [0,0]
         
         if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
@@ -515,16 +517,23 @@ def drive():
     # DRIVING FORWARD
     if operate.driving_forward: 
         new_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
-        print(operate.minimum_seen_distance)
-        print(new_distance)
+        # print(operate.minimum_seen_distance)
+        # print(new_distance)
 
         print("Robot Pose X : " + str(robot_x))
         print("Robot Pose Y : " + str(robot_y))
-        print("Robot Pose theta : " + str(robot_theta))
         print("Waypoint x: " + str(waypoint_x))
         print("Waypoint y : " + str(waypoint_y))
         
-        if (new_distance > (operate.minimum_seen_distance)): # distance increasing scenario
+        # the below is basically a scuffed implementation of moving avg
+        # TODO: is there a better of doing this?
+        # np.roll will shift the last item of the array to the front
+        # [D, A, B, C] = np.roll([A, B, C, D])
+        operate.last_5_dist = np.roll(operate.last_5_dist, 1)
+        operate.last_5_dist[0] = new_distance # replace the oldest value (now at the front) with the new distance
+        moving_avg_dist = np.mean(operate.last_5_dist)
+        
+        if (moving_avg_dist > (operate.minimum_seen_distance + LINEAR_FUDGE_FACTOR)): # distance increasing scenario (add some fudge factor for SLAM noise)
             print("Distance Increasing")
             operate.command['motion'] = [0,0]
             operate.minimum_seen_distance = np.inf
@@ -538,26 +547,28 @@ def drive():
             print("Distance increasing, arriving at waypoint early...")
         else: # distance decreasing (good)
             print("Distance decreasing (or not moving)")
-            if new_distance < LINEAR_THRESHOLD: # arrived at waypoint
-                print("reached")
-                # reset for next run
-                operate.command['motion'] = [0,0]
-                operate.minimum_seen_distance = np.inf
-                operate.driving_forward = False
-                try:
-                    new_waypoint = operate.all_waypoints.pop()
-                    operate.cur_waypoint = new_waypoint
-                except IndexError:
-                    print("last waypoint")
-                    operate.cur_waypoint = []
-                print("Arrived at waypoint")
-            else: # drive forward
-                print("Moving Foward")
-                operate.minimum_seen_distance = new_distance
-                print("distance left to move : " + str(new_distance))
-                operate.command['motion'] = [1,0]
-                
-            # TODO: implement logic if angle error has increased too much
+        print(f"DISTANCE: {moving_avg_dist}, THRESHOLD: {LINEAR_THRESHOLD}")
+        if moving_avg_dist < LINEAR_THRESHOLD: # arrived at waypoint
+            print("reached")
+            # reset for next run
+            operate.command['motion'] = [0,0]
+            operate.minimum_seen_distance = np.inf
+            operate.driving_forward = False
+            try:
+                new_waypoint = operate.all_waypoints.pop()
+                operate.cur_waypoint = new_waypoint
+            except IndexError:
+                print("last waypoint")
+                operate.cur_waypoint = []
+            print("Arrived at waypoint")
+        else: # drive forward
+            print("Moving Foward")
+            if new_distance < operate.minimum_seen_distance:
+                operate.minimum_seen_distance = new_distance 
+            # print("distance left to move : " + str(new_distance))
+            operate.command['motion'] = [1,0]
+            
+        # TODO: implement logic if angle error has increased too much
                 
 if __name__ == "__main__":
     import argparse
@@ -691,7 +702,7 @@ if __name__ == "__main__":
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.robot_pose = operate.ekf.robot.state[:3,0]
-        print(operate.robot_pose)
+        # print(operate.robot_pose)
         operate.record_data()
         operate.save_image()
         operate.detect_target()
