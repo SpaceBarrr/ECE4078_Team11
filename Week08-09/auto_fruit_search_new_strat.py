@@ -492,20 +492,20 @@ def drive():
     # grab pose data and calculate angles
     robot_x = operate.robot_pose[0]
     robot_y = -operate.robot_pose[1]
-    robot_theta = clamp_angle(-operate.robot_pose[2], -2*np.pi, 2*np.pi)
+    robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
     # print(robot_theta)
     waypoint_x = operate.cur_waypoint[0]
     waypoint_y = operate.cur_waypoint[1]
     
     waypoint_theta = np.arctan2((waypoint_y-robot_y),(waypoint_x-robot_x))
-    theta_diff = clamp_angle(robot_theta - waypoint_theta, -2*np.pi, 2*np.pi)
+    theta_diff = clamp_angle(robot_theta - waypoint_theta, -np.pi, np.pi)
         
     # TURNING
     if not operate.driving_forward:
         if theta_diff > 0: # turn right
-            operate.command['motion'] = [0,-1]
-        elif theta_diff < 0: # turn left
             operate.command['motion'] = [0,1]
+        elif theta_diff < 0: # turn left
+            operate.command['motion'] = [0,-1]
         elif theta_diff == 0 : # should be impossible to end up in this situation
             operate.command['motion'] = [0,0]
         
@@ -563,6 +563,29 @@ def drive():
                 operate.command['motion'] = [1,0]
             
         # TODO: implement logic if angle error has increased too much
+
+def angle_aruco(waypoint, aruco_true_pos, angle_rn) : 
+    """
+    This finds the nearest aruco marker and helps angle towards it
+    This helps it slam
+    """
+    closest_aruco = aruco_true_pos[0]
+    distance_to_closest = np.sqrt((waypoint[0]-closest_aruco[0])**2+(waypoint[1]-closest_aruco[1])**2)      # Change this to neg
+    index_aruco = 1
+
+    for i in range(10) : 
+        distance_to_aruco = np.sqrt((waypoint[0]-aruco_true_pos[i][0])**2+(waypoint[1]-aruco_true_pos[i][1])**2)
+        if distance_to_aruco < distance_to_closest :
+            closest_aruco = aruco_true_pos[i]
+            distance_to_closest = distance_to_aruco
+            index_aruco = i + 1
+
+    y_diff = closest_aruco[1] - waypoint[1]
+    x_diff = closest_aruco[0] - waypoint[0]
+
+    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - angle_rn,-np.pi,np.pi)
+
+    return angle_to_turn, index_aruco
                 
 if __name__ == "__main__":
     import argparse
