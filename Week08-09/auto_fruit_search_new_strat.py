@@ -206,8 +206,8 @@ class Operate:
             lv, rv = self.pibot.set_velocity()
         else:
             lv, rv = self.pibot.set_velocity(
-                self.command['motion'],tick=20,
-                turning_tick=10) # slow down the robot
+                self.command['motion'],tick=operate.tick,
+                turning_tick=operate.turning_tick) # slow down the robot
         if self.data is not None:
             self.data.write_keyboard(lv, rv)
         dt = time.time() - self.control_clock
@@ -527,8 +527,10 @@ def drive(aruco_true_pos):
         
     # TURNING TO WAYPOINT
     if (not operate.driving_forward) and (not operate.turn_to_aruco):
-        operate.turning_tick = abs(theta_diff * TURNING_SCALING) + TURNING_CONST
+        # operate.turning_tick = abs(theta_diff * TURNING_SCALING) + TURNING_CONST
         print("Turning to Waypoint ...")
+        operate.turning_tick = 20
+        operate.tick = 10
 
         if theta_diff > 0: # turn right
             operate.command['motion'] = [0,1]
@@ -551,9 +553,10 @@ def drive(aruco_true_pos):
     
     # DRIVING FORWARD TO WAYPOINT
     if operate.driving_forward: 
+        operate.tick = 10
         new_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
         dist_needed = abs(new_distance - operate.minimum_seen_distance)             # Used for P tuning
-        operate.tick = dist_needed * FORWARD_SCALING + FORWARD_CONST                # Used for P tuning
+        # operate.tick = dist_needed * FORWARD_SCALING + FORWARD_CONST                # Used for P tuning
 
         # the below is basically a scuffed implementation of moving avg
         # TODO: is there a better of doing this?
@@ -617,11 +620,14 @@ def drive(aruco_true_pos):
 
         if theta_diff > 0: # turn right
             operate.command['motion'] = [0,1]
+            operate.turning_tick = 20
         elif theta_diff < 0: # turn left
             operate.command['motion'] = [0,-1]
+            operate.turning_tick = 20
         elif theta_diff == 0 : # should be impossible to end up in this situation
             operate.command['motion'] = [0,0]
             operate.turn_to_aruco = False
+            
     
         if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
             print(f"Finished turning to ARUCO MARKER {operate.closestArucoIndex}")
@@ -816,7 +822,9 @@ if __name__ == "__main__":
             
             operate.notification = f"Arrived at fruit: {fruit_to_find}"
             time.sleep(3)
-            
+
+            # STOP SPINNING
+            operate.command['motion'] = [0,0]
             last_fruit_pos = operate.fruit_to_find_xy
             
     except KeyboardInterrupt:
