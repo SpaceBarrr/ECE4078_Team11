@@ -759,22 +759,15 @@ if __name__ == "__main__":
             all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_index-1)
         
         # Waypoints are reversed, trying to set it right
-        operate.all_waypoints = []
-        operate.simplified_path = []
-        j = len(all_waypoints_reverse)-1
-        for i in range(len(all_waypoints_reverse)) : 
-            operate.all_waypoints.append(all_waypoints_reverse[j])
-            j-=1
-        j= len(simplified_path_reverse)-1
-        for i in range(len(simplified_path_reverse)) : 
-            operate.simplified_path.append(simplified_path_reverse[j])
-            j-=1
-        # Waypoints and simplified path are not set the right way
-        
+        operate.all_waypoints = operate.all_waypoints[::-1]
+        operate.simplified_path =  operate.simplified_path[::-1]
+
         # Waypoints contain the goal
         operate.all_waypoints = np.delete(operate.all_waypoints, -1, axis=0)  
         final_waypoint = operate.all_waypoints[-3]
-        fruits_true_pos = np.insert(fruits_true_pos, fruit_index, operate.fruit_to_find_xy, axis = 0)        # Add the finding fruit back to obstacle list
+        
+        # Add the finding fruit back to obstacle list for next time
+        fruits_true_pos = np.insert(fruits_true_pos, fruit_index, operate.fruit_to_find_xy, axis = 0)        
         obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
         print(operate.all_waypoints)
         robot_x = final_waypoint[0]
