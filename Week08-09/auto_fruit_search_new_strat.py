@@ -734,7 +734,7 @@ if __name__ == "__main__":
 
     fruit_to_find = search_list.pop(0)
     fruit_index = fruits_list.index(fruit_to_find.lower())
-    # operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
+    operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
 
     while start:
         operate.update_keyboard()
