@@ -129,6 +129,7 @@ class Operate:
         self.all_waypoints = list()
         self.minimum_seen_distance = np.inf
         self.last_5_dist = [np.inf, np.inf, np.inf, np.inf, np.inf]
+        self.drive_iterations = 0
         
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
@@ -479,14 +480,14 @@ def drive():
     (4): If the distance to the waypoint begins to increase, arrive early & go next
     '''
     
-    # user either hasn't clicked or path planning returned nothing
-    if len(operate.cur_waypoint) == 0:
-        return  
-    
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
     LINEAR_THRESHOLD = 0.2
     LINEAR_FUDGE_FACTOR = 0.1
+    
+    # user either hasn't clicked or path planning returned nothing
+    if len(operate.cur_waypoint) == 0:
+        return  
     
     # grab pose data and calculate angles
     robot_x = operate.robot_pose[0]
@@ -517,13 +518,6 @@ def drive():
     # DRIVING FORWARD
     if operate.driving_forward: 
         new_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
-        # print(operate.minimum_seen_distance)
-        # print(new_distance)
-
-        print("Robot Pose X : " + str(robot_x))
-        print("Robot Pose Y : " + str(robot_y))
-        print("Waypoint x: " + str(waypoint_x))
-        print("Waypoint y : " + str(waypoint_y))
         
         # the below is basically a scuffed implementation of moving avg
         # TODO: is there a better of doing this?
@@ -533,9 +527,9 @@ def drive():
         operate.last_5_dist[0] = new_distance # replace the oldest value (now at the front) with the new distance
         moving_avg_dist = np.mean(operate.last_5_dist)
         
-        if (moving_avg_dist > (operate.minimum_seen_distance + LINEAR_FUDGE_FACTOR)): # distance increasing scenario (add some fudge factor for SLAM noise)
-            print("Distance Increasing")
+        if (moving_avg_dist > (operate.minimum_seen_distance + LINEAR_FUDGE_FACTOR) and operate.drive_iterations > 10): # distance increasing scenario (add some fudge factor for SLAM noise)
             operate.command['motion'] = [0,0]
+            operate.drive_iterations = 0
             operate.minimum_seen_distance = np.inf
             operate.driving_forward = False
             try:
@@ -546,27 +540,27 @@ def drive():
                 operate.cur_waypoint = []
             print("Distance increasing, arriving at waypoint early...")
         else: # distance decreasing (good)
-            print("Distance decreasing (or not moving)")
-        print(f"DISTANCE: {moving_avg_dist}, THRESHOLD: {LINEAR_THRESHOLD}")
-        if moving_avg_dist < LINEAR_THRESHOLD: # arrived at waypoint
-            print("reached")
-            # reset for next run
-            operate.command['motion'] = [0,0]
-            operate.minimum_seen_distance = np.inf
-            operate.driving_forward = False
-            try:
-                new_waypoint = operate.all_waypoints.pop()
-                operate.cur_waypoint = new_waypoint
-            except IndexError:
-                print("last waypoint")
-                operate.cur_waypoint = []
-            print("Arrived at waypoint")
-        else: # drive forward
-            print("Moving Foward")
-            if new_distance < operate.minimum_seen_distance:
-                operate.minimum_seen_distance = new_distance 
-            # print("distance left to move : " + str(new_distance))
-            operate.command['motion'] = [1,0]
+            print(f"DISTANCE: {moving_avg_dist}, THRESHOLD: {LINEAR_THRESHOLD}")
+            if moving_avg_dist < LINEAR_THRESHOLD: # arrived at waypoint
+                # reset for next run
+                operate.command['motion'] = [0,0]
+                operate.minimum_seen_distance = np.inf
+                operate.drive_iterations = 0
+                operate.driving_forward = False
+                try:
+                    new_waypoint = operate.all_waypoints.pop()
+                    operate.cur_waypoint = new_waypoint
+                except IndexError:
+                    print("last waypoint")
+                    operate.cur_waypoint = []
+                print("Arrived at waypoint")
+            else: # drive forward
+                print("Moving Foward")
+                operate.drive_iterations += 1
+                if new_distance < operate.minimum_seen_distance:
+                    operate.minimum_seen_distance = new_distance 
+                # print("distance left to move : " + str(new_distance))
+                operate.command['motion'] = [1,0]
             
         # TODO: implement logic if angle error has increased too much
                 
