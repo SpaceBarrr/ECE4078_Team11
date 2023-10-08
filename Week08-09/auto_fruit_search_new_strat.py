@@ -206,8 +206,8 @@ class Operate:
             lv, rv = self.pibot.set_velocity()
         else:
             lv, rv = self.pibot.set_velocity(
-                self.command['motion'],tick=10,
-                turning_tick=5) # slow down the robot
+                self.command['motion'],tick=20,
+                turning_tick=10) # slow down the robot
         if self.data is not None:
             self.data.write_keyboard(lv, rv)
         dt = time.time() - self.control_clock
@@ -499,7 +499,7 @@ def drive(aruco_true_pos):
     
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
-    LINEAR_THRESHOLD = 0.01
+    LINEAR_THRESHOLD = 0.07
     LINEAR_FUDGE_FACTOR = 0.1
     TURNING_SCALING = 10
     TURNING_CONST = 10
@@ -520,13 +520,13 @@ def drive(aruco_true_pos):
     
     waypoint_theta = np.arctan2((waypoint_y-robot_y),(waypoint_x-robot_x))
     theta_diff = clamp_angle(robot_theta - waypoint_theta, -np.pi, np.pi)
-    print(f"Robot Pose : [{robot_x}, {robot_y}, {robot_theta}]")
-    print(f"Waypoint : [{waypoint_x}, {waypoint_y}]")
-    print(f"Theta diff : {theta_diff}")
-    print(f"operate.reached_waypoint = {operate.reached_waypoint}")
+    # print(f"Robot Pose : [{robot_x}, {robot_y}, {robot_theta}]")
+    # print(f"Waypoint : [{waypoint_x}, {waypoint_y}]")
+    # print(f"Theta diff : {theta_diff}")
+    # print(f"operate.reached_waypoint = {operate.reached_waypoint}")
         
     # TURNING TO WAYPOINT
-    if (not operate.driving_forward) and (not operate.turn_to_aruco):
+    if (not operate.driving_forward): # and (not operate.turn_to_aruco):
         operate.turning_tick = abs(theta_diff * TURNING_SCALING) + TURNING_CONST
         print("Turning to Waypoint ...")
 
@@ -570,7 +570,8 @@ def drive(aruco_true_pos):
             operate.driving_forward = False
             operate.turn_to_aruco = True
             operate.reached_waypoint = True
-            operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos, (operate.initial_robot_pose_theta+operate.initial_theta_diff))
+            # print(operate.reached_waypoint)
+            # operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos, (operate.initial_robot_pose_theta+operate.initial_theta_diff))
             # try:
             #     new_waypoint = operate.all_waypoints.pop()
             #     operate.cur_waypoint = new_waypoint
@@ -590,9 +591,11 @@ def drive(aruco_true_pos):
                 operate.driving_forward = False
                 #  theta_diff = angle_aruco(operate.cur_waypoint, aruco_true_pos)          ########
                 operate.turn_to_aruco = True
+                operate.reached_waypoint = True
+                # print(operate.reached_waypoint)
                 operate.turning_tick = 5
                 operate.tick = 10
-                operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
+                # operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
                 print("Arrived at waypoint")
 
             else: # drive forward
@@ -674,6 +677,8 @@ def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose) :
         # visualise
         operate.draw(canvas)
         pygame.display.update()
+        
+    print("GOT OUT OF LOOP")
 
 def angle_aruco(waypoint, closest_aruco, robot_theta) : 
     y_diff = closest_aruco[1] - waypoint[1]
@@ -807,11 +812,13 @@ if __name__ == "__main__":
         print(operate.simplified_path)
         
         # Drive there
-        for i in range(len(operate.simplified_path)) : 
+        for path in operate.simplified_path: 
             operate.robot_pose = operate.ekf.robot.state[:3,0]
             operate.reached_waypoint = False
             operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
-            drive_to_waypoint(obstacle_list, operate.simplified_path[i], aruco_true_pos, operate.robot_pose)
+            operate.cur_waypoint = path
+            print(f"Driving to waypoint: {path}")
+            drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
 
         robot_x = operate.robot_pose[0]
         robot_y = operate.robot_pose[1]
