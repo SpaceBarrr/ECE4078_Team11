@@ -12,7 +12,8 @@ See Wikipedia article (https://en.wikipedia.org/wiki/A*_search_algorithm)
 import math
 import matplotlib.pyplot as plt
 from Obstacle import *
-import json
+
+from rdp import rdp
 
 show_animation = True
 
@@ -230,67 +231,6 @@ class AStarPlanner:
                   [1, 1, math.sqrt(2)]]
 
         return motion
-def read_true_map(fname):
-    """Read the ground truth map and output the pose of the ArUco markers and 5 target fruits&vegs to search for
-
-    @param fname: filename of the map
-    @return:
-        1) list of targets, e.g. ['lemon', 'tomato', 'garlic']
-        2) locations of the targets, [[x1, y1], ..... [xn, yn]]
-        3) locations of ArUco markers in order, i.e. pos[9, :] = position of the aruco10_0 marker
-    """
-    with open(fname, 'r') as fd:
-        gt_dict = json.load(fd)
-        fruit_list = []
-        fruit_true_pos = []
-        aruco_true_pos = np.empty([10, 2])
-
-        # remove unique id of targets of the same type
-        for key in gt_dict:
-            x = np.round(gt_dict[key]['x'], 1)
-            y = np.round(gt_dict[key]['y'], 1)
-
-            if key.startswith('aruco'):
-                if key.startswith('aruco10'):
-                    aruco_true_pos[9][0] = x
-                    aruco_true_pos[9][1] = y
-                else:
-                    marker_id = int(key[5]) - 1
-                    aruco_true_pos[marker_id][0] = x
-                    aruco_true_pos[marker_id][1] = y
-            else:
-                fruit_list.append(key[:-2])
-                if len(fruit_true_pos) == 0:
-                    fruit_true_pos = np.array([[x, y]])
-                else:
-                    fruit_true_pos = np.append(fruit_true_pos, [[x, y]], axis=0)
-
-        return fruit_list, fruit_true_pos, aruco_true_pos
-
-def calculate_gradient(point1, point2):
-    x1, y1 = point1
-    x2, y2 = point2
-    if x2 - x1 == 0:
-        return float('inf')  # Vertical line, use infinity as gradient
-    return (y2 - y1) / (x2 - x1)
-
-def simplify_path(waypoint_x, waypoint_y, threshold=1):
-    if len(waypoint_x) != len(waypoint_y) or len(waypoint_x) <= 1:
-        return None  # Invalid input
-
-    waypoints = list(zip(waypoint_x, waypoint_y))
-    simplified_path = [waypoints[0]]
-    prev_point = waypoints[0]
-    prev_gradient = None
-
-    for current_point in waypoints[1:]:
-        gradient = calculate_gradient(prev_point, current_point)
-        if prev_gradient is None or abs(gradient - prev_gradient) >= threshold:
-            simplified_path.append(current_point)
-            prev_gradient = gradient
-        prev_point = current_point
-
-    return simplified_path
 
 # ================================
 
@@ -357,43 +297,20 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
     rx, ry = a_star.planning(sx, sy, gx, gy)
 
     if rx == None and ry == None:
-        return None, None
-    #rsimpx = [-1.0, -1.0, -0.52, -0.21999, 0.0]
-    #rsimpy = [-1.0, -0.7, -0.2199, -0.2199, 0.0]
+        return None, None # no path could be found
 
     # Simplify waypoints
-    waypoint_x = rx
-    waypoint_y = ry
+    waypoints = list(zip(rx, ry))
 
-    simplified_path = simplify_path(waypoint_x, waypoint_y)
-    simple_path_points_x = []
-    simple_path_points_y = []
-    if simplified_path:
-        for point in simplified_path:
-            print(point)
-            if show_animation:
-                plt.plot(point[0],point[1], "*r")
-            simple_path_points_x.append(point[0])
-            simple_path_points_y.append(point[1])
-    else:
-        print("Invalid input: Lengths of waypoint_x and waypoint_y must be the same.")
-   
+    epsilon = 0.02  # Adjust this value based on the level of simplification
+    simplified_waypoints = rdp(waypoints, epsilon)
+    simplified_x, simplified_y = zip(*simplified_waypoints)
+    
     if show_animation:  # pragma: no cover
-        plt.plot(rx, ry, "-r") 
-        plt.plot(waypoint_x,waypoint_y,"-k")
+        plt.plot(rx,ry,"-k")
+        plt.plot(simplified_x, simplified_y, "-r")                          
         # plt.pause(0.001)
         # plt.show()
         plt.savefig("astar_generated.png") # for cian, cant view plt.show() on my laptop
-    
-    waypoint = []
-    for i in range(len(waypoint_x)) :
-        waypoint.append( [waypoint_x[i], waypoint_y[i]] )
-    simple_path = []
-    for i in range(len(simple_path_points_x)):
-        simple_path.append( [simple_path_points_x[i], simple_path_points_y[i]] )
-    print("unfiltered waypoints:")
-    print(waypoint)
-    print("simplified waypoints:")
-    print(simple_path)
 
-    return waypoint, simple_path
+    return waypoints, simplified_waypoints
