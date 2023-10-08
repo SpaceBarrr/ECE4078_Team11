@@ -605,7 +605,7 @@ def drive(aruco_true_pos):
                     operate.minimum_seen_distance = new_distance 
                 print("distance left to move : " + str(new_distance))
                 operate.command['motion'] = [1,0]
-            
+        
         # TODO: implement logic if angle error has increased too much
 
     ###### TURNING TO ARUCO (IF Bryan messes this up, its his fault)

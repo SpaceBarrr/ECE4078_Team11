@@ -366,9 +366,15 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
     waypoint_y = ry
 
     simplified_path = simplify_path(waypoint_x, waypoint_y)
+    simple_path_points_x = []
+    simple_path_points_y = []
     if simplified_path:
         for point in simplified_path:
             print(point)
+            if show_animation:
+                plt.plot(point[0],point[1], "*r")
+            simple_path_points_x.append(point[0])
+            simple_path_points_y.append(point[1])
     else:
         print("Invalid input: Lengths of waypoint_x and waypoint_y must be the same.")
    
@@ -382,7 +388,12 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
     waypoint = []
     for i in range(len(waypoint_x)) :
         waypoint.append( [waypoint_x[i], waypoint_y[i]] )
-    
+    simple_path = []
+    for i in range(len(simple_path_points_x)):
+        simple_path.append( [simple_path_points_x[i], simple_path_points_y[i]] )
+    print("unfiltered waypoints:")
     print(waypoint)
+    print("simplified waypoints:")
+    print(simple_path)
 
-    return waypoint, simplified_path
+    return waypoint, simple_path
