@@ -134,6 +134,14 @@ class Operate:
         self.minimum_seen_distance = np.inf
         self.last_5_dist = [np.inf, np.inf, np.inf, np.inf, np.inf]
         self.drive_iterations = 0
+        self.turn_to_aruco = False
+        self.turning_tick = 5
+        self.tick = 10
+        self.start_turn = 0
+        self.initial_theta_diff = 0
+        self.initial_robot_pose_theta = 0
+        self.closestAruco = []
+        self.closestArucoIndex = 1
         
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
@@ -353,6 +361,7 @@ class Operate:
             if event.type == pygame.MOUSEBUTTONUP:
                 # continue
                 add_waypoint_from_click(pygame.mouse.get_pos())
+                self.start_turn = 1
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -472,7 +481,7 @@ def add_waypoint_from_click(mouse_pos: tuple):
     # robot drives to the waypoint
     operate.cur_waypoint = [x, y]
             
-def drive():
+def drive(aruco_true_pos):
     '''
     Main logic for driving the robot
     Runs in the main pygame loop each clock cycle
@@ -488,6 +497,10 @@ def drive():
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
     LINEAR_THRESHOLD = 0.2
     LINEAR_FUDGE_FACTOR = 0.1
+    TURNING_SCALING = 10
+    TURNING_CONST = 10
+    FORWARD_SCALING = 10
+    FORWARD_CONST = 10
     
     # user either hasn't clicked or path planning returned nothing
     if len(operate.cur_waypoint) == 0:
@@ -504,25 +517,35 @@ def drive():
     waypoint_theta = np.arctan2((waypoint_y-robot_y),(waypoint_x-robot_x))
     theta_diff = clamp_angle(robot_theta - waypoint_theta, -np.pi, np.pi)
         
-    # TURNING
-    if not operate.driving_forward:
+    # TURNING TO WAYPOINT
+    if (not operate.driving_forward) and (not operate.turn_to_aruco):
+        operate.turning_tick = abs(theta_diff * TURNING_SCALING) + TURNING_CONST
+
         if theta_diff > 0: # turn right
             operate.command['motion'] = [0,1]
         elif theta_diff < 0: # turn left
             operate.command['motion'] = [0,-1]
         elif theta_diff == 0 : # should be impossible to end up in this situation
             operate.command['motion'] = [0,0]
+
+        if operate.start_turn == 1 : 
+            operate.initial_theta_diff = theta_diff
+            operate.initial_robot_pose_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
+            operate.start_turn = 0
         
         if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
+            operate.turning_tick = 5
             print("Finished turning to waypoint...")
             operate.command['motion'] = [0,0]
             operate.minimum_seen_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
             operate.driving_forward = True
     
-    # DRIVING FORWARD
+    # DRIVING FORWARD TO WAYPOINT
     if operate.driving_forward: 
         new_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
-        
+        dist_needed = abs(new_distance - operate.minimum_seen_distance)             # Used for P tuning
+        operate.tick = dist_needed * FORWARD_SCALING + FORWARD_CONST                # Used for P tuning
+
         # the below is basically a scuffed implementation of moving avg
         # TODO: is there a better of doing this?
         # np.roll will shift the last item of the array to the front
@@ -536,13 +559,17 @@ def drive():
             operate.drive_iterations = 0
             operate.minimum_seen_distance = np.inf
             operate.driving_forward = False
-            try:
-                new_waypoint = operate.all_waypoints.pop()
-                operate.cur_waypoint = new_waypoint
-            except IndexError:
-                print("last waypoint")
-                operate.cur_waypoint = []
+            operate.turn_to_aruco = True
+            operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos, (operate.initial_robot_pose_theta+operate.initial_theta_diff))
+            # try:
+            #     new_waypoint = operate.all_waypoints.pop()
+            #     operate.cur_waypoint = new_waypoint
+            # except IndexError:
+            #     print("last waypoint")
+            #     operate.cur_waypoint = []
+            
             print("Distance increasing, arriving at waypoint early...")
+            
         else: # distance decreasing (good)
             print(f"DISTANCE: {moving_avg_dist}, THRESHOLD: {LINEAR_THRESHOLD}")
             if moving_avg_dist < LINEAR_THRESHOLD: # arrived at waypoint
@@ -551,13 +578,13 @@ def drive():
                 operate.minimum_seen_distance = np.inf
                 operate.drive_iterations = 0
                 operate.driving_forward = False
-                try:
-                    new_waypoint = operate.all_waypoints.pop()
-                    operate.cur_waypoint = new_waypoint
-                except IndexError:
-                    print("last waypoint")
-                    operate.cur_waypoint = []
+                #  theta_diff = angle_aruco(operate.cur_waypoint, aruco_true_pos)          ########
+                operate.turn_to_aruco = True
+                operate.turning_tick = 5
+                operate.tick = 10
+                operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
                 print("Arrived at waypoint")
+
             else: # drive forward
                 print("Moving Foward")
                 operate.drive_iterations += 1
@@ -568,28 +595,63 @@ def drive():
             
         # TODO: implement logic if angle error has increased too much
 
-def angle_aruco(waypoint, aruco_true_pos, angle_rn) : 
-    """
-    This finds the nearest aruco marker and helps angle towards it
-    This helps it slam
-    """
+    ###### TURNING TO ARUCO (IF Bryan messes this up, its his fault)
+        
+    if (not operate.driving_forward) and (operate.turn_to_aruco) :
+        theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, operate.closestAruco, robot_theta)
+        print(f"Turning to ARUCO_MARKER {operate.closestArucoIndex}")
+        print("     waypoint_theta : " + str(way_point_theta))
+        print("     theta_diff : " + str(theta_diff))
+
+        if theta_diff > 0: # turn right
+            operate.command['motion'] = [0,1]
+        elif theta_diff < 0: # turn left
+            operate.command['motion'] = [0,-1]
+        elif theta_diff == 0 : # should be impossible to end up in this situation
+            operate.command['motion'] = [0,0]
+            operate.turn_to_aruco = False
+    
+        if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
+            print(f"Finished turning to ARUCO MARKER {operate.closestArucoIndex}")
+            operate.command['motion'] = [0,0]
+            operate.turn_to_aruco = False
+            
+            try:
+                new_waypoint = operate.all_waypoints.pop()
+                operate.cur_waypoint = new_waypoint
+            except IndexError:
+                print("last waypoint")
+                operate.cur_waypoint = []
+
+def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
     closest_aruco = aruco_true_pos[0]
+    print(waypoint)
     distance_to_closest = np.sqrt((waypoint[0]-closest_aruco[0])**2+(waypoint[1]-closest_aruco[1])**2)      # Change this to neg
     index_aruco = 1
+    print(f"robot theta : {robot_theta}")
+    print("distance to closest" + str(distance_to_closest))
+    #  print(f"Now facing to Aruco Marker {index_aruco}")
 
     for i in range(10) : 
         distance_to_aruco = np.sqrt((waypoint[0]-aruco_true_pos[i][0])**2+(waypoint[1]-aruco_true_pos[i][1])**2)
+        print("distance to aruco : " + str(distance_to_aruco))
+        print("distance to closest" + str(distance_to_closest))
         if distance_to_aruco < distance_to_closest :
             closest_aruco = aruco_true_pos[i]
             distance_to_closest = distance_to_aruco
             index_aruco = i + 1
+    
+    print(f"Now turning to ArucoMarker {index_aruco}")
+    return closest_aruco, index_aruco
 
+def angle_aruco(waypoint, closest_aruco, robot_theta) : 
     y_diff = closest_aruco[1] - waypoint[1]
     x_diff = closest_aruco[0] - waypoint[0]
 
-    angle_to_turn = clamp_angle(np.arctan2(y_diff, x_diff) - angle_rn,-np.pi,np.pi)
+    theta_dif = clamp_angle(np.arctan2(y_diff, x_diff) + robot_theta,-np.pi,np.pi)      # Change this
+    way_point_theta = clamp_angle(np.arctan2(y_diff, x_diff),-np.pi,np.pi)
 
-    return angle_to_turn, index_aruco
+    return theta_dif, way_point_theta
                 
 if __name__ == "__main__":
     import argparse
@@ -672,15 +734,16 @@ if __name__ == "__main__":
 
     fruit_to_find = search_list.pop(0)
     fruit_index = fruits_list.index(fruit_to_find.lower())
-    operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
+    # operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
 
     while start:
         operate.update_keyboard()
         operate.take_pic()
-        drive()
+        drive(aruco_true_pos)
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.robot_pose = operate.ekf.robot.state[:3,0]
+        operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
         # print(operate.robot_pose)
         operate.record_data()
         operate.save_image()
