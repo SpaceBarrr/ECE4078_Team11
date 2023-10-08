@@ -363,7 +363,7 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list):
         print("Invalid input: Lengths of waypoint_x and waypoint_y must be the same.")
    
     if show_animation:  # pragma: no cover
-        #plt.plot(rx, ry, "-r") 
+        plt.plot(rx, ry, "-r") 
         plt.plot(waypoint_x,waypoint_y,"-k")
         # plt.pause(0.001)
         # plt.show()
