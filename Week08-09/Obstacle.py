@@ -132,7 +132,7 @@ class Polygon:
                     count_collisions += 1
 
             if count_collisions % 2 == 1:
-                Qpoints_in_collision.append(point)
+                points_in_collision.append(point)
 
         if len(points_in_collision):
             return True
