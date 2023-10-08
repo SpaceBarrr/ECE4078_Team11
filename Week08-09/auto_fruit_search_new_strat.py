@@ -781,7 +781,7 @@ if __name__ == "__main__":
 
         all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list)
         if all_waypoints_reverse == None and simplified_path_reverse == None:
-            all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_index-1)
+            all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_pos)
         
         # Waypoints are reversed, trying to set it right
         operate.all_waypoints = all_waypoints_reverse[::-1]
@@ -810,24 +810,24 @@ if __name__ == "__main__":
         robot_x = operate.robot_pose[0]
         robot_y = operate.robot_pose[1]
         
-        last_fruit_index = fruit_index
+        last_fruit_pos = operate.fruit_to_find_xy
     ###
+    print("Done")
 
-
-    while start:
-        operate.update_keyboard()
-        operate.take_pic()
-        drive(aruco_true_pos)
-        drive_meas = operate.control()
-        operate.update_slam(drive_meas)
-        operate.robot_pose = operate.ekf.robot.state[:3,0]
-        operate.notification = f"Robot Pose : [{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
-        # print(operate.robot_pose)
-        operate.record_data()
-        operate.save_image()
-        operate.detect_target()
-        # visualise
-        operate.draw(canvas)
-        pygame.display.update()
+    # while start:
+    #     operate.update_keyboard()
+    #     operate.take_pic()
+    #     drive(aruco_true_pos)
+    #     drive_meas = operate.control()
+    #     operate.update_slam(drive_meas)
+    #     operate.robot_pose = operate.ekf.robot.state[:3,0]
+    #     operate.notification = f"Robot Pose : [{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
+    #     # print(operate.robot_pose)
+    #     operate.record_data()
+    #     operate.save_image()
+    #     operate.detect_target()
+    #     # visualise
+    #     operate.draw(canvas)
+    #     pygame.display.update()
         
     

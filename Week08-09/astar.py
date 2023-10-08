@@ -325,8 +325,9 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
         oy.append(i*0.1)
 
     #set obstacle positions
-    for obst in range(len(obstacle_list)):
-        if obst == last_fruit:
+    OBSTACLE_RADIUS = 1
+    for obst, fruit_name in enumerate(obstacle_list):
+        if last_fruit is not None and np.array_equal(fruit_name, np.array(last_fruit)*10):
             OBSTACLE_RADIUS = 0
         else: 
             OBSTACLE_RADIUS = 1
