@@ -740,7 +740,8 @@ if __name__ == "__main__":
     # obstacle_list.insert(fruit_index, operate.fruit_to_find)        # Add the finding fruit back to obstacle list
     # print(operate.all_waypoints)
 
-     ### for Autonomous Waypoints (COMMENT THIS OUT : Do not use thiss until its time to test)
+    ### for Autonomous Waypoints (COMMENT THIS OUT : Do not use thiss until its time to test)
+    last_fruit_index = -1
     for K in range(5) : 
         fruit_to_find = search_list.pop(0)
         fruit_index = fruits_list.index(fruit_to_find.lower())
@@ -753,8 +754,9 @@ if __name__ == "__main__":
             robot_x = 0
             robot_y = 0
 
-    
         all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list)
+        if all_waypoints_reverse == None and simplified_path_reverse == None:
+            all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_index-1)
         
         # Waypoints are reversed, trying to set it right
         operate.all_waypoints = []
@@ -777,6 +779,8 @@ if __name__ == "__main__":
         print(operate.all_waypoints)
         robot_x = final_waypoint[0]
         robot_y = final_waypoint[1]
+        
+        last_fruit_index = fruit_index
     ###
 
     ppi = PenguinPi(args.ip,args.port)

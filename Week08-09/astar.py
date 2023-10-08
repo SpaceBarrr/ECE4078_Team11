@@ -74,7 +74,8 @@ class AStarPlanner:
         while True:
             if len(open_set) == 0:
                 print("Open set is empty..")
-                break
+                return None, None
+                # break
 
             c_id = min(
                 open_set,
@@ -193,15 +194,15 @@ class AStarPlanner:
         self.min_y = round(min(oy))
         self.max_x = round(max(ox))
         self.max_y = round(max(oy))
-        print("min_x:", self.min_x)
-        print("min_y:", self.min_y)
-        print("max_x:", self.max_x)
-        print("max_y:", self.max_y)
+        # print("min_x:", self.min_x)
+        # print("min_y:", self.min_y)
+        # print("max_x:", self.max_x)
+        # print("max_y:", self.max_y)
 
         self.x_width = round((self.max_x - self.min_x) / self.resolution)
         self.y_width = round((self.max_y - self.min_y) / self.resolution)
-        print("x_width:", self.x_width)
-        print("y_width:", self.y_width)
+        # print("x_width:", self.x_width)
+        # print("y_width:", self.y_width)
 
         # obstacle map generation
         self.obstacle_map = [[False for _ in range(self.y_width)]
@@ -293,8 +294,8 @@ def simplify_path(waypoint_x, waypoint_y, threshold=1):
 
 # ================================
 
-def a_start(start_x,start_y,goal_x,goal_y,obstacle_list):
-    print(__file__ + " start!!")
+def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
+    print("Running astar...")
     plt.clf() # so we don't get previous plots overlaid
 
     # start and goal position
@@ -305,7 +306,7 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list):
     grid_size = 0.02  # [m]
     robot_radius = 0.08  # [m]
 
-    OBSTACLE_RADIUS = 1 # 1 is 10cm 
+    # OBSTACLE_RADIUS = 0 # 1 is 10cm 
     obstacle_list = (obstacle_list*10).astype(int)
 
     # set border positions
@@ -325,6 +326,11 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list):
 
     #set obstacle positions
     for obst in range(len(obstacle_list)):
+        if obst == last_fruit:
+            OBSTACLE_RADIUS = 0
+        else: 
+            OBSTACLE_RADIUS = 1
+        
         for i in range(obstacle_list[obst][0]-OBSTACLE_RADIUS, obstacle_list[obst][0]+OBSTACLE_RADIUS): # bottom
             ox.append(i*0.1)
             oy.append((obstacle_list[obst][1]-OBSTACLE_RADIUS)*0.1)
@@ -344,10 +350,12 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list):
         plt.plot(gx, gy, "xb")
         plt.grid(True)
         plt.axis("equal")
+        plt.savefig("astar_temp.png")
 
     a_star = AStarPlanner(ox, oy, grid_size, robot_radius)
     rx, ry = a_star.planning(sx, sy, gx, gy)
-    print("made it out")
+    if rx == None and ry == None:
+        return None, None
     #rsimpx = [-1.0, -1.0, -0.52, -0.21999, 0.0]
     #rsimpy = [-1.0, -0.7, -0.2199, -0.2199, 0.0]
 
@@ -368,7 +376,6 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list):
         # plt.pause(0.001)
         # plt.show()
         plt.savefig("astar_generated.png") # for cian, cant view plt.show() on my laptop
-
     
     waypoint = []
     for i in range(len(waypoint_x)) :
