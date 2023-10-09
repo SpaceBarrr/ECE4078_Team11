@@ -369,6 +369,11 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list):
         # plt.show()
         plt.savefig("astar_generated.png") # for cian, cant view plt.show() on my laptop
 
-    print(waypoint_x, waypoint_y)
+    
+    waypoint = []
+    for i in range(len(waypoint_x)) :
+        waypoint.append( [waypoint_x[i], waypoint_y[i]] )
+    
+    print(waypoint)
 
-    return waypoint_x, waypoint_y
+    return waypoint, simplified_path

@@ -142,7 +142,8 @@ class Operate:
         self.initial_robot_pose_theta = 0
         self.closestAruco = []
         self.closestArucoIndex = 1
-        self.fruit_to_find = []
+        self.fruit_to_find_xy = []
+        self.simplified_path = []
         
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
@@ -717,31 +718,68 @@ if __name__ == "__main__":
 
     # read in the true map
     fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
-
-    print(fruits_true_pos)
     # print(aruco_true_pos)
-
-    operate = Operate(args, aruco_true_pos)
-
-    ppi = PenguinPi(args.ip,args.port)
 
     search_list = read_search_list(args.shopping_list)
     fruit_goal_list = print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
     
     obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
+    operate = Operate(args, aruco_true_pos)
 
     operate.ekf_on = True
     sleep(1)
 
-    operate.fruit_to_find = search_list.pop(0)
-    fruit_index = fruits_list.index(operate.fruit_to_find.lower())
-    obstacle_index = obstacle_list.index(operate.fruit_to_find.lower())
-    print(fruit_index)
-    obstacle_list.pop(operate.fruit_to_find)        # Removes the finding fruit from obstacle list
+    ## Testing for Level 1
+    # operate.fruit_to_find = search_list.pop(0)
+    # fruit_index = fruits_list.index(operate.fruit_to_find.lower())
+    # obstacle_index = obstacle_list.index(operate.fruit_to_find.lower())
+    # print(fruit_index)
+    # obstacle_list.pop(operate.fruit_to_find)        # Removes the finding fruit from obstacle list
     
-    operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
-    obstacle_list.insert(fruit_index, operate.fruit_to_find)        # Add the finding fruit back to obstacle list
-    print(operate.all_waypoints)
+    # operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
+    # obstacle_list.insert(fruit_index, operate.fruit_to_find)        # Add the finding fruit back to obstacle list
+    # print(operate.all_waypoints)
+
+     ### for Autonomous Waypoints (COMMENT THIS OUT : Do not use thiss until its time to test)
+    for K in range(5) : 
+        fruit_to_find = search_list.pop(0)
+        fruit_index = fruits_list.index(fruit_to_find.lower())
+        print(f"Now Heading to Fruit number {fruit_index} : " + fruit_to_find)
+        operate.fruit_to_find_xy = fruits_true_pos[fruit_index]
+        fruits_true_pos = np.delete(fruits_true_pos, fruit_index, axis=0)        # Removes the finding fruit from obstacle list
+        obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
+
+        if K== 0 : 
+            robot_x = 0
+            robot_y = 0
+
+    
+        all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list)
+        
+        # Waypoints are reversed, trying to set it right
+        operate.all_waypoints = []
+        operate.simplified_path = []
+        j = len(all_waypoints_reverse)-1
+        for i in range(len(all_waypoints_reverse)) : 
+            operate.all_waypoints.append(all_waypoints_reverse[j])
+            j-=1
+        j= len(simplified_path_reverse)-1
+        for i in range(len(simplified_path_reverse)) : 
+            operate.simplified_path.append(simplified_path_reverse[j])
+            j-=1
+        # Waypoints and simplified path are not set the right way
+        
+        # Waypoints contain the goal
+        operate.all_waypoints = np.delete(operate.all_waypoints, -1, axis=0)  
+        final_waypoint = operate.all_waypoints[-3]
+        fruits_true_pos = np.insert(fruits_true_pos, fruit_index, operate.fruit_to_find_xy, axis = 0)        # Add the finding fruit back to obstacle list
+        obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
+        print(operate.all_waypoints)
+        robot_x = final_waypoint[0]
+        robot_y = final_waypoint[1]
+    ###
+
+    ppi = PenguinPi(args.ip,args.port)
 
     while start:
         operate.update_keyboard()
@@ -759,5 +797,14 @@ if __name__ == "__main__":
         operate.draw(canvas)
         pygame.display.update()
         
-    ### for Autonomous Waypoints
-
+    ### for Autonomous Waypoints (COMMENT THIS OUT : Do not use thiss until its time to test)
+    for K in range(5) : 
+        operate.fruit_to_find = search_list.pop(0)
+        fruit_index = fruits_list.index(operate.fruit_to_find.lower())
+        obstacle_index = obstacle_list.index(operate.fruit_to_find.lower())
+        print(fruit_index)
+        obstacle_list.pop(operate.fruit_to_find)        # Removes the finding fruit from obstacle list
+    
+        operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
+        obstacle_list.insert(fruit_index, operate.fruit_to_find)        # Add the finding fruit back to obstacle list
+        print(operate.all_waypoints)
