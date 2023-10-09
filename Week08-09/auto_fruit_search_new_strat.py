@@ -142,6 +142,7 @@ class Operate:
         self.initial_robot_pose_theta = 0
         self.closestAruco = []
         self.closestArucoIndex = 1
+        self.fruit_to_find = []
         
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
@@ -732,9 +733,15 @@ if __name__ == "__main__":
     operate.ekf_on = True
     sleep(1)
 
-    fruit_to_find = search_list.pop(0)
-    fruit_index = fruits_list.index(fruit_to_find.lower())
-    # operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
+    operate.fruit_to_find = search_list.pop(0)
+    fruit_index = fruits_list.index(operate.fruit_to_find.lower())
+    obstacle_index = obstacle_list.index(operate.fruit_to_find.lower())
+    print(fruit_index)
+    obstacle_list.pop(obstacle_list)        # Removes the finding fruit from obstacle list
+    
+    operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
+    obstacle_list.insert(fruit_index, operate.fruit_to_find)        # Add the finding fruit back to obstacle list
+    print(operate.all_waypoints)
 
     while start:
         operate.update_keyboard()
@@ -752,3 +759,5 @@ if __name__ == "__main__":
         operate.draw(canvas)
         pygame.display.update()
         
+    ### for Autonomous Waypoints
+
