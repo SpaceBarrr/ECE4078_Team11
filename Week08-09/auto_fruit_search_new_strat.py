@@ -571,7 +571,6 @@ def drive(aruco_true_pos):
             operate.turn_to_aruco = True
             operate.reached_waypoint = True
             operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos, (operate.initial_robot_pose_theta+operate.initial_theta_diff))
-            return 1
             # try:
             #     new_waypoint = operate.all_waypoints.pop()
             #     operate.cur_waypoint = new_waypoint
@@ -603,8 +602,7 @@ def drive(aruco_true_pos):
                     operate.minimum_seen_distance = new_distance 
                 print("distance left to move : " + str(new_distance))
                 operate.command['motion'] = [1,0]
-            
-            return 0
+        
         # TODO: implement logic if angle error has increased too much
 
     ###### TURNING TO ARUCO (IF Bryan messes this up, its his fault)
@@ -660,12 +658,11 @@ def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose) :
     waypoint_x = waypoint[0]
     waypoint_y = waypoint[1]
     operate.cur_waypoint = [waypoint_x, waypoint_y]
-    reached_waypoint = 0
 
-    while not reached_waypoint:
+    while not operate.reached_waypoint:
         # operate.update_keyboard()
         operate.take_pic()
-        reached_waypoint = drive(aruco_true_pos)
+        drive(aruco_true_pos)
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.robot_pose = operate.ekf.robot.state[:3,0]
