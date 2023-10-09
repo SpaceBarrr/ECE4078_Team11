@@ -499,7 +499,7 @@ def drive(aruco_true_pos):
     
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
-    LINEAR_THRESHOLD = 0.2
+    LINEAR_THRESHOLD = 0.01
     LINEAR_FUDGE_FACTOR = 0.1
     TURNING_SCALING = 10
     TURNING_CONST = 10
@@ -516,14 +516,19 @@ def drive(aruco_true_pos):
     robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
     # print(robot_theta)
     waypoint_x = operate.cur_waypoint[0]
-    waypoint_y = operate.cur_waypoint[1]
+    waypoint_y = -operate.cur_waypoint[1]
     
     waypoint_theta = np.arctan2((waypoint_y-robot_y),(waypoint_x-robot_x))
     theta_diff = clamp_angle(robot_theta - waypoint_theta, -np.pi, np.pi)
+    print(f"Robot Pose : [{robot_x}, {robot_y}, {robot_theta}]")
+    print(f"Waypoint : [{waypoint_x}, {waypoint_y}]")
+    print(f"Theta diff : {theta_diff}")
+    print(f"operate.reached_waypoint = {operate.reached_waypoint}")
         
     # TURNING TO WAYPOINT
     if (not operate.driving_forward) and (not operate.turn_to_aruco):
         operate.turning_tick = abs(theta_diff * TURNING_SCALING) + TURNING_CONST
+        print("Turning to Waypoint ...")
 
         if theta_diff > 0: # turn right
             operate.command['motion'] = [0,1]
@@ -564,6 +569,7 @@ def drive(aruco_true_pos):
             operate.minimum_seen_distance = np.inf
             operate.driving_forward = False
             operate.turn_to_aruco = True
+            operate.reached_waypoint = True
             operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos, (operate.initial_robot_pose_theta+operate.initial_theta_diff))
             # try:
             #     new_waypoint = operate.all_waypoints.pop()
@@ -584,7 +590,6 @@ def drive(aruco_true_pos):
                 operate.driving_forward = False
                 #  theta_diff = angle_aruco(operate.cur_waypoint, aruco_true_pos)          ########
                 operate.turn_to_aruco = True
-                operate.reached_waypoint = True
                 operate.turning_tick = 5
                 operate.tick = 10
                 operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
@@ -653,7 +658,6 @@ def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose) :
     waypoint_x = waypoint[0]
     waypoint_y = waypoint[1]
     operate.cur_waypoint = [waypoint_x, waypoint_y]
-    operate.reached_waypoint = False
 
     while not operate.reached_waypoint:
         # operate.update_keyboard()
@@ -753,6 +757,7 @@ if __name__ == "__main__":
 
     operate.ekf_on = True
     ppi = PenguinPi(args.ip,args.port)
+    operate.command['motion'] = [0,0]
 
     ## Testing for Level 1
     # operate.fruit_to_find = search_list.pop(0)
@@ -804,6 +809,7 @@ if __name__ == "__main__":
         # Drive there
         for i in range(len(operate.simplified_path)) : 
             operate.robot_pose = operate.ekf.robot.state[:3,0]
+            operate.reached_waypoint = False
             operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
             drive_to_waypoint(obstacle_list, operate.simplified_path[i], aruco_true_pos, operate.robot_pose)
 
