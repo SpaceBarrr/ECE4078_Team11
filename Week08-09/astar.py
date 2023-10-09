@@ -354,6 +354,7 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
 
     a_star = AStarPlanner(ox, oy, grid_size, robot_radius)
     rx, ry = a_star.planning(sx, sy, gx, gy)
+
     if rx == None and ry == None:
         return None, None
     #rsimpx = [-1.0, -1.0, -0.52, -0.21999, 0.0]

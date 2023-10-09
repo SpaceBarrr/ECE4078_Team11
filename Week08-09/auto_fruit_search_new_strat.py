@@ -144,6 +144,8 @@ class Operate:
         self.closestArucoIndex = 1
         self.fruit_to_find_xy = []
         self.simplified_path = []
+        self.reached_waypoint = 0
+        self.reached_fruit = 0
         
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
@@ -582,6 +584,7 @@ def drive(aruco_true_pos):
                 operate.driving_forward = False
                 #  theta_diff = angle_aruco(operate.cur_waypoint, aruco_true_pos)          ########
                 operate.turn_to_aruco = True
+                operate.reached_waypoint = True
                 operate.turning_tick = 5
                 operate.tick = 10
                 operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
@@ -592,38 +595,38 @@ def drive(aruco_true_pos):
                 operate.drive_iterations += 1
                 if new_distance < operate.minimum_seen_distance:
                     operate.minimum_seen_distance = new_distance 
-                # print("distance left to move : " + str(new_distance))
+                print("distance left to move : " + str(new_distance))
                 operate.command['motion'] = [1,0]
             
         # TODO: implement logic if angle error has increased too much
 
     ###### TURNING TO ARUCO (IF Bryan messes this up, its his fault)
         
-    if (not operate.driving_forward) and (operate.turn_to_aruco) :
-        theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, operate.closestAruco, robot_theta)
-        print(f"Turning to ARUCO_MARKER {operate.closestArucoIndex}")
-        print("     waypoint_theta : " + str(way_point_theta))
-        print("     theta_diff : " + str(theta_diff))
+    # if (not operate.driving_forward) and (operate.turn_to_aruco) :
+    #     theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, operate.closestAruco, robot_theta)
+    #     print(f"Turning to ARUCO_MARKER {operate.closestArucoIndex}")
+    #     print("     waypoint_theta : " + str(way_point_theta))
+    #     print("     theta_diff : " + str(theta_diff))
 
-        if theta_diff > 0: # turn right
-            operate.command['motion'] = [0,1]
-        elif theta_diff < 0: # turn left
-            operate.command['motion'] = [0,-1]
-        elif theta_diff == 0 : # should be impossible to end up in this situation
-            operate.command['motion'] = [0,0]
-            operate.turn_to_aruco = False
+    #     if theta_diff > 0: # turn right
+    #         operate.command['motion'] = [0,1]
+    #     elif theta_diff < 0: # turn left
+    #         operate.command['motion'] = [0,-1]
+    #     elif theta_diff == 0 : # should be impossible to end up in this situation
+    #         operate.command['motion'] = [0,0]
+    #         operate.turn_to_aruco = False
     
-        if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
-            print(f"Finished turning to ARUCO MARKER {operate.closestArucoIndex}")
-            operate.command['motion'] = [0,0]
-            operate.turn_to_aruco = False
+    #     if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
+    #         print(f"Finished turning to ARUCO MARKER {operate.closestArucoIndex}")
+    #         operate.command['motion'] = [0,0]
+    #         operate.turn_to_aruco = False
             
-            try:
-                new_waypoint = operate.all_waypoints.pop()
-                operate.cur_waypoint = new_waypoint
-            except IndexError:
-                print("last waypoint")
-                operate.cur_waypoint = []
+    #         try:
+    #             new_waypoint = operate.all_waypoints.pop()
+    #             operate.cur_waypoint = new_waypoint
+    #         except IndexError:
+    #             print("last waypoint")
+    #             operate.cur_waypoint = []
 
 def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
     closest_aruco = aruco_true_pos[0]
@@ -645,6 +648,28 @@ def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) :
     
     print(f"Now turning to ArucoMarker {index_aruco}")
     return closest_aruco, index_aruco
+
+def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose) :
+    waypoint_x = waypoint[0]
+    waypoint_y = waypoint[1]
+    operate.cur_waypoint = [waypoint_x, waypoint_y]
+    operate.reached_waypoint = False
+
+    while not operate.reached_waypoint:
+        # operate.update_keyboard()
+        operate.take_pic()
+        drive(aruco_true_pos)
+        drive_meas = operate.control()
+        operate.update_slam(drive_meas)
+        operate.robot_pose = operate.ekf.robot.state[:3,0]
+        operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
+        # print(operate.robot_pose)
+        operate.record_data()
+        operate.save_image()
+        operate.detect_target()
+        # visualise
+        operate.draw(canvas)
+        pygame.display.update()
 
 def angle_aruco(waypoint, closest_aruco, robot_theta) : 
     y_diff = closest_aruco[1] - waypoint[1]
@@ -727,7 +752,7 @@ if __name__ == "__main__":
     operate = Operate(args, aruco_true_pos)
 
     operate.ekf_on = True
-    sleep(1)
+    ppi = PenguinPi(args.ip,args.port)
 
     ## Testing for Level 1
     # operate.fruit_to_find = search_list.pop(0)
@@ -759,24 +784,35 @@ if __name__ == "__main__":
             all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_index-1)
         
         # Waypoints are reversed, trying to set it right
-        operate.all_waypoints = operate.all_waypoints[::-1]
-        operate.simplified_path =  operate.simplified_path[::-1]
+        operate.all_waypoints = all_waypoints_reverse[::-1]
+        operate.simplified_path =  simplified_path_reverse[::-1]
 
-        # Waypoints contain the goal
-        operate.all_waypoints = np.delete(operate.all_waypoints, -1, axis=0)  
-        final_waypoint = operate.all_waypoints[-3]
+        # Waypoints contain the goal, so we get the goal and the 2nd last waypoint, average them together and take that as our last waypoint
+        operate.all_waypoints = np.delete(operate.all_waypoints, -1, axis=0) 
+        goal = []
+        goal = operate.simplified_path[-1]
+        operate.simplified_path = np.delete(operate.simplified_path, -1, axis=0) 
+        final_waypoint = operate.simplified_path[-1]
+        final_waypoint = [(final_waypoint[0] + goal[0])/2, (final_waypoint[1] + goal[1])/2 ]
+        operate.simplified_path = np.vstack((operate.simplified_path, final_waypoint))    
         
         # Add the finding fruit back to obstacle list for next time
         fruits_true_pos = np.insert(fruits_true_pos, fruit_index, operate.fruit_to_find_xy, axis = 0)        
         obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
-        print(operate.all_waypoints)
-        robot_x = final_waypoint[0]
-        robot_y = final_waypoint[1]
+        print(operate.simplified_path)
+        
+        # Drive there
+        for i in range(len(operate.simplified_path)) : 
+            operate.robot_pose = operate.ekf.robot.state[:3,0]
+            operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
+            drive_to_waypoint(obstacle_list, operate.simplified_path[i], aruco_true_pos, operate.robot_pose)
+
+        robot_x = operate.robot_pose[0]
+        robot_y = operate.robot_pose[1]
         
         last_fruit_index = fruit_index
     ###
 
-    ppi = PenguinPi(args.ip,args.port)
 
     while start:
         operate.update_keyboard()
@@ -785,7 +821,7 @@ if __name__ == "__main__":
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.robot_pose = operate.ekf.robot.state[:3,0]
-        operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
+        operate.notification = f"Robot Pose : [{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
         # print(operate.robot_pose)
         operate.record_data()
         operate.save_image()
@@ -794,14 +830,4 @@ if __name__ == "__main__":
         operate.draw(canvas)
         pygame.display.update()
         
-    ### for Autonomous Waypoints (COMMENT THIS OUT : Do not use thiss until its time to test)
-    for K in range(5) : 
-        operate.fruit_to_find = search_list.pop(0)
-        fruit_index = fruits_list.index(operate.fruit_to_find.lower())
-        obstacle_index = obstacle_list.index(operate.fruit_to_find.lower())
-        print(fruit_index)
-        obstacle_list.pop(operate.fruit_to_find)        # Removes the finding fruit from obstacle list
     
-        operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
-        obstacle_list.insert(fruit_index, operate.fruit_to_find)        # Add the finding fruit back to obstacle list
-        print(operate.all_waypoints)
