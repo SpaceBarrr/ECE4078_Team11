@@ -737,7 +737,7 @@ if __name__ == "__main__":
     fruit_index = fruits_list.index(operate.fruit_to_find.lower())
     obstacle_index = obstacle_list.index(operate.fruit_to_find.lower())
     print(fruit_index)
-    obstacle_list.pop(obstacle_list)        # Removes the finding fruit from obstacle list
+    obstacle_list.pop(operate.fruit_to_find)        # Removes the finding fruit from obstacle list
     
     operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
     obstacle_list.insert(fruit_index, operate.fruit_to_find)        # Add the finding fruit back to obstacle list
