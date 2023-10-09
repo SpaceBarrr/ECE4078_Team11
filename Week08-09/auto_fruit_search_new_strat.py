@@ -516,7 +516,7 @@ def drive(aruco_true_pos):
     robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
     # print(robot_theta)
     waypoint_x = operate.cur_waypoint[0]
-    waypoint_y = operate.cur_waypoint[1]
+    waypoint_y = -operate.cur_waypoint[1]
     
     waypoint_theta = np.arctan2((waypoint_y-robot_y),(waypoint_x-robot_x))
     theta_diff = clamp_angle(robot_theta - waypoint_theta, -np.pi, np.pi)
