@@ -822,7 +822,9 @@ if __name__ == "__main__":
             
             operate.notification = f"Arrived at fruit: {fruit_to_find}"
             time.sleep(3)
-            
+
+            # STOP SPINNING
+            operate.command['motion'] = [0,0]
             last_fruit_pos = operate.fruit_to_find_xy
             
     except KeyboardInterrupt:
