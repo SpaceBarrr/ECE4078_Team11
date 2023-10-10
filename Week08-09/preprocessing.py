@@ -22,11 +22,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser("Process M2 and M3 for M4")
     parser.add_argument("--slam", type=str, default="slam_1.txt")
     parser.add_argument("--fruits", type=str, default="targets_1.txt")
+    parser.add_argument("--map_name", type=str, default="TrueMap.txt")
     args = parser.parse_args()
 
     slam_dict = parse_slam_map(args.slam)
     fruits_dict = parse_fruit_map(args.fruits)
     
     slam_dict.update(fruits_dict)
-    json.dumps(slam_dict)
+    with open(args.map_name, "w") as outfile: 
+        json.dump(slam_dict, outfile)
     print(slam_dict)
