@@ -825,6 +825,7 @@ if __name__ == "__main__":
 
             # STOP SPINNING
             operate.command['motion'] = [0,0]
+            drive_meas = operate.control()
             operate.update_slam(drive_meas)
             operate.robot_pose = operate.ekf.robot.state[:3,0]
             operate.record_data()
@@ -834,11 +835,7 @@ if __name__ == "__main__":
             
     except KeyboardInterrupt:
         operate.command['motion'] = [0,0]
-        operate.update_slam(drive_meas)
-        operate.robot_pose = operate.ekf.robot.state[:3,0]
-        operate.record_data()
-        operate.save_image()
-        operate.detect_target()
+        drive_meas = operate.control()
         print("Done")
         raise
     
