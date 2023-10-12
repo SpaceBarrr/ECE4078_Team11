@@ -499,12 +499,12 @@ def drive(aruco_true_pos):
     
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
-    LINEAR_THRESHOLD = 0.05
-    LINEAR_FUDGE_FACTOR = 0.1
+    LINEAR_THRESHOLD = 0.2
+    LINEAR_FUDGE_FACTOR = 0.15
     TURNING_SCALING = 10
-    TURNING_CONST = 10
-    FORWARD_SCALING = 10
-    FORWARD_CONST = 10
+    TURNING_CONST = 20
+    FORWARD_SCALING = 80
+    FORWARD_CONST = 20
     
     # user either hasn't clicked or path planning returned nothing
     if len(operate.cur_waypoint) == 0:
@@ -527,10 +527,11 @@ def drive(aruco_true_pos):
         
     # TURNING TO WAYPOINT
     if (not operate.driving_forward) and (not operate.turn_to_aruco):
-        # operate.turning_tick = abs(theta_diff * TURNING_SCALING) + TURNING_CONST
+        operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
         print("Turning to Waypoint ...")
-        operate.turning_tick = 20
-        operate.tick = 10
+        print(f"operate tick when turning : {operate.turning_tick}")
+        # operate.turning_tick = 22
+        # operate.tick = 10
 
         if theta_diff > 0: # turn right
             operate.command['motion'] = [0,1]
@@ -545,7 +546,7 @@ def drive(aruco_true_pos):
             operate.start_turn = 0
         
         if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
-            operate.turning_tick = 5
+            # operate.turning_tick = 5
             print("Finished turning to waypoint...")
             operate.command['motion'] = [0,0]
             operate.minimum_seen_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
@@ -553,10 +554,10 @@ def drive(aruco_true_pos):
     
     # DRIVING FORWARD TO WAYPOINT
     if operate.driving_forward: 
-        operate.tick = 10
+        # operate.tick = 20
         new_distance = np.sqrt((waypoint_x-robot_x)**2 + (waypoint_y-robot_y)**2)
-        dist_needed = abs(new_distance - operate.minimum_seen_distance)             # Used for P tuning
-        # operate.tick = dist_needed * FORWARD_SCALING + FORWARD_CONST                # Used for P tuning
+        operate.tick = int(np.round(new_distance * FORWARD_SCALING + FORWARD_CONST )  )             # Used for P tuning
+        print(f"        operate tick when driving : {operate.tick}")
 
         # the below is basically a scuffed implementation of moving avg
         # TODO: is there a better of doing this?
@@ -596,8 +597,8 @@ def drive(aruco_true_pos):
                 operate.turn_to_aruco = True
                 operate.reached_waypoint = True
                 # print(operate.reached_waypoint)
-                operate.turning_tick = 5
-                operate.tick = 10
+                # operate.turning_tick = 5
+                # operate.tick = 10
                 # operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
                 print("Arrived at waypoint")
 
@@ -611,12 +612,15 @@ def drive(aruco_true_pos):
         
         # TODO: implement logic if angle error has increased too much
 
-    ###### TURNING TO ARUCO (IF Bryan messes this up, its his fault)
+    ###### TURNING TO Origin (IF Bryan messes this up, its his fault)
     if (not operate.driving_forward) and (operate.turn_to_aruco) :
         theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0, 0], robot_theta)
+        operate.turning_tick = 45
         print(f"Turning to ORIGIN")
-        print("     waypoint_theta : " + str(way_point_theta))
-        print("     theta_diff : " + str(theta_diff))
+        # print("     waypoint_theta : " + str(way_point_theta))
+        # print("     theta_diff : " + str(theta_diff))
+        operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
+        print(f"operate tick when turning : {operate.turning_tick}")
 
         if theta_diff > 0: # turn right
             operate.command['motion'] = [0,1]
@@ -804,16 +808,35 @@ if __name__ == "__main__":
             operate.all_waypoints = np.delete(operate.all_waypoints, -1, axis=0) 
             goal = []
             goal = operate.simplified_path[-1]
-            operate.simplified_path = np.delete(operate.simplified_path, -1, axis=0) 
-            final_waypoint = operate.simplified_path[-1]
-            final_waypoint = [(final_waypoint[0] + goal[0])/2, (final_waypoint[1] + goal[1])/2 ]
-            operate.simplified_path = np.vstack((operate.simplified_path, final_waypoint))    
+            # operate.simplified_path = np.delete(operate.simplified_path, -1, axis=0) 
+            # final_waypoint = operate.simplified_path[-1]
+            # final_waypoint = [(final_waypoint[0] + final_waypoint[0]+ goal[0])/3, (final_waypoint[1]+final_waypoint[1]+ goal[1])/3 ]
+            # operate.simplified_path = np.vstack((operate.simplified_path, final_waypoint)) 
+
+            
             
             # Add the finding fruit back to obstacle list for next time
             fruits_true_pos = np.insert(fruits_true_pos, fruit_index, operate.fruit_to_find_xy, axis = 0)        
             obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
             print(operate.simplified_path)
             
+            # ## Spin a little 
+            # operate.command['motion'] = [0,1]
+            # drive_meas = operate.control()
+            # operate.update_slam(drive_meas)
+            # operate.robot_pose = operate.ekf.robot.state[:3,0]
+            # operate.record_data()
+            # operate.save_image()
+            # operate.detect_target()
+            # time.sleep(5)
+            # operate.command['motion'] = [0,0]
+            # drive_meas = operate.control()
+            # operate.update_slam(drive_meas)
+            # operate.robot_pose = operate.ekf.robot.state[:3,0]
+            # operate.record_data()
+            # operate.save_image()
+            # operate.detect_target()
+
             # Drive there
             for path in operate.simplified_path: 
                 operate.robot_pose = operate.ekf.robot.state[:3,0]
@@ -825,9 +848,20 @@ if __name__ == "__main__":
 
             robot_x = operate.robot_pose[0]
             robot_y = operate.robot_pose[1]
+
+            distance = np.sqrt((robot_x-goal[0])**2 + (robot_y-goal[1])**2) 
+
+            ## Check the distance at the end of the run. Is it still far from the fruit?
+            # while distance > 0.3 : 
+            #     final_waypoint = [(robot_x + goal[0] + robot_x)/3, (robot_y + goal[1] + robot_y)/3 ]
+            #     operate.simplified_path = np.vstack((operate.simplified_path, final_waypoint)) 
+            #     drive_to_waypoint(obstacle_list, final_waypoint, aruco_true_pos, operate.robot_pose)
+            #     operate.robot_pose = operate.ekf.robot.state[:3,0]
+            #     robot_x = operate.robot_pose[0]
+            #     robot_y = operate.robot_pose[1]
+            #     distance = np.sqrt((robot_x-goal[0])**2 + (robot_y-goal[1])**2) 
             
             operate.notification = f"Arrived at fruit: {fruit_to_find}"
-            time.sleep(3)
 
             # STOP SPINNING
             operate.command['motion'] = [0,0]
@@ -838,6 +872,7 @@ if __name__ == "__main__":
             operate.save_image()
             operate.detect_target()
             last_fruit_pos = operate.fruit_to_find_xy
+            time.sleep(2)
             
     except KeyboardInterrupt:
         operate.command['motion'] = [0,0]
