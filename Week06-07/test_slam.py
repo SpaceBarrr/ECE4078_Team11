@@ -12,6 +12,10 @@ import numpy as np
 from util.measure import *
 import pickle
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8891121fd95162b051c38d92c9f9576b91ad5e84
 class fake_args:
     def __init__(self):
         self.play_data = False
@@ -19,12 +23,19 @@ class fake_args:
         self.calib_dir = "calibration/param/"
         self.ip = "127.0.0.1"
         self.port = "40000"
+<<<<<<< HEAD
+=======
+        self.yolo_model = ""
+>>>>>>> 8891121fd95162b051c38d92c9f9576b91ad5e84
 logger = logging.getLogger(__name__)
 
 
 args = fake_args()   
-with open("test/slam_test.pk", "rb") as pk_file:
+with open("slam_test.pk", "rb") as pk_file:
     expected_data = pickle.load(pk_file)
+
+
+
 
 test_drive_measurement = [
     Drive(0, 0, 0.1, left_cov = 1, right_cov = 1),
@@ -96,8 +107,20 @@ def test_ekf_update():
     states = np.array(states).squeeze(2)
 
     assert np.all(np.isclose(states, expected_state)), "MAYBE wrong implementation of update function"
+<<<<<<< HEAD
 
 test_wheel_scale_calibration()
 test_covariance_drive()
 test_ekf_predict()
 test_ekf_update()
+=======
+    
+if __name__ == "__main__":
+    test_ekf_update()
+    test_ekf_predict()
+    test_covariance_drive()
+    test_derivative_drive()
+    test_intrinsic_calibration()
+    test_wheel_width_calibration()
+    test_wheel_scale_calibration()
+>>>>>>> 8891121fd95162b051c38d92c9f9576b91ad5e84
