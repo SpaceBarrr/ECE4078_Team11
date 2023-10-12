@@ -1,5 +1,5 @@
 import numpy as np
-from mapping_utils import MappingUtils
+from slam.mapping_utils import MappingUtils
 import cv2
 import math
 import pygame

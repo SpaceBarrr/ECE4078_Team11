@@ -11,7 +11,7 @@ See Wikipedia article (https://en.wikipedia.org/wiki/A*_search_algorithm)
 
 import math
 import matplotlib.pyplot as plt
-from Obstacle import *
+import numpy as np
 
 from rdp import rdp
 
@@ -76,7 +76,6 @@ class AStarPlanner:
             if len(open_set) == 0:
                 print("Open set is empty..")
                 return None, None
-                # break
 
             c_id = min(
                 open_set,
@@ -233,8 +232,23 @@ class AStarPlanner:
         return motion
 
 # ================================
+def arange(start, stop, step):
+    '''Range function with support for decimal steps - assumes start and stop are numpy numbers'''
+    steps = np.round((stop - start) / step)
 
-def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
+    if steps % 1 != 0:
+        raise ValueError("step is not a multiple of stop-start")
+
+    return np.linspace(float(start),float(stop),int(steps),endpoint=False)
+
+def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1):
+    '''
+    Star A-Star path planning
+    Inputs: start_x, start_y, goal_x, goal_y, obstacle_list, last_fruit (optional)
+    Outputs: waypoints, simplified_waypoints
+    
+    '''
+    
     print("Running astar...")
     plt.clf() # so we don't get previous plots overlaid
 
@@ -246,7 +260,6 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
     grid_size = 0.02  # [m]
     robot_radius = 0.08  # [m]
 
-    # OBSTACLE_RADIUS = 0 # 1 is 10cm 
     obstacle_list = (obstacle_list*10).astype(int)
 
     # set border positions
@@ -265,25 +278,24 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
         oy.append(i*0.1)
 
     #set obstacle positions
-    OBSTACLE_RADIUS = 1
     for obst, fruit_name in enumerate(obstacle_list):
         if last_fruit is not None and np.array_equal(fruit_name, np.array(last_fruit)*10):
-            OBSTACLE_RADIUS = 0
-        else: 
-            OBSTACLE_RADIUS = 1
+            radius = 0
         
-        for i in range(obstacle_list[obst][0]-OBSTACLE_RADIUS, obstacle_list[obst][0]+OBSTACLE_RADIUS): # bottom
-            ox.append(i*0.1)
-            oy.append((obstacle_list[obst][1]-OBSTACLE_RADIUS)*0.1)
-        for i in range(obstacle_list[obst][1]-OBSTACLE_RADIUS, obstacle_list[obst][1]+OBSTACLE_RADIUS): # right
-            ox.append((obstacle_list[obst][0]+OBSTACLE_RADIUS)*0.1)
-            oy.append(i*0.1)
-        for i in range(obstacle_list[obst][0]-OBSTACLE_RADIUS, obstacle_list[obst][0]+OBSTACLE_RADIUS+1): # top , requires +1 at end for square
-            ox.append(i*0.1)
-            oy.append((obstacle_list[obst][1]+OBSTACLE_RADIUS)*0.1)
-        for i in range(obstacle_list[obst][1]-OBSTACLE_RADIUS, obstacle_list[obst][1]+OBSTACLE_RADIUS): # left
-            ox.append((obstacle_list[obst][0]-OBSTACLE_RADIUS)*0.1)
-            oy.append(i*0.1)
+        for i in arange(obstacle_list[obst][0]-radius, obstacle_list[obst][0]+radius,0.25): # bottom
+            ox.append(np.round(i,2)/10)
+            oy.append(np.round(obstacle_list[obst][1]-radius,2)/10)
+        for i in arange(obstacle_list[obst][1]-radius, obstacle_list[obst][1]+radius,0.25): # right
+            ox.append(np.round(obstacle_list[obst][0]+radius,2)/10)
+            oy.append(np.round(i,2)/10)
+        for i in arange(obstacle_list[obst][0]-radius, obstacle_list[obst][0]+radius+0.25,0.25): # top , requires +1 at end for square
+            ox.append(np.round(i,2)/10)
+            oy.append(np.round(obstacle_list[obst][1]+radius,2)/10)
+        for i in arange(obstacle_list[obst][1]-radius, obstacle_list[obst][1]+radius,0.25): # left
+            ox.append(np.round(obstacle_list[obst][0]-radius,2)/10)
+            oy.append(np.round(i,2)/10)
+            
+        # print(ox,oy)
 
     if show_animation:  # pragma: no cover
         plt.plot(ox, oy, ".k")
@@ -302,8 +314,8 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None):
     # Simplify waypoints
     waypoints = list(zip(rx, ry))
 
-    epsilon = 0.02  # Adjust this value based on the level of simplification
-    simplified_waypoints = rdp(waypoints, epsilon)
+    EPSILON = 0.02  # Adjust this value based on the level of simplification
+    simplified_waypoints = rdp(waypoints, EPSILON)
     simplified_x, simplified_y = zip(*simplified_waypoints)
     
     if show_animation:  # pragma: no cover

@@ -774,7 +774,9 @@ if __name__ == "__main__":
     ### for Autonomous Waypoints (COMMENT THIS OUT : Do not use thiss until its time to test)
     try:
         last_fruit_index = -1
-        for K in range(5) : 
+        for K in range(5):
+            last_fruit_pos = None
+             
             fruit_to_find = search_list.pop(0)
             fruit_index = fruits_list.index(fruit_to_find.lower())
             print(f"Now Heading to Fruit number {fruit_index} : " + fruit_to_find)
@@ -786,9 +788,13 @@ if __name__ == "__main__":
                 robot_x = 0
                 robot_y = 0
 
-            all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list)
-            if all_waypoints_reverse == None and simplified_path_reverse == None:
-                all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_pos)
+            STARTING_RADIUS = 1.5 # NOTE tunable param
+            
+            radius = STARTING_RADIUS
+            all_waypoints_reverse, simplified_path_reverse = None, None # bc python doesnt have a do while loop :(
+            while all_waypoints_reverse == None and simplified_path_reverse == None:
+                all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_pos, radius)
+                radius -= 0.1
             
             # Waypoints are reversed, trying to set it right
             operate.all_waypoints = all_waypoints_reverse[::-1]
