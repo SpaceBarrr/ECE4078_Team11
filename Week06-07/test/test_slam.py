@@ -19,12 +19,11 @@ class fake_args:
         self.calib_dir = "calibration/param/"
         self.ip = "127.0.0.1"
         self.port = "40000"
-        self.yolo_model = ""
 logger = logging.getLogger(__name__)
 
 
 args = fake_args()   
-with open("slam_test.pk", "rb") as pk_file:
+with open("test/slam_test.pk", "rb") as pk_file:
     expected_data = pickle.load(pk_file)
 
 
@@ -100,12 +99,3 @@ def test_ekf_update():
     states = np.array(states).squeeze(2)
 
     assert np.all(np.isclose(states, expected_state)), "MAYBE wrong implementation of update function"
-    
-if __name__ == "__main__":
-    test_ekf_update()
-    test_ekf_predict()
-    test_covariance_drive()
-    test_derivative_drive()
-    test_intrinsic_calibration()
-    test_wheel_width_calibration()
-    test_wheel_scale_calibration()
