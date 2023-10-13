@@ -602,7 +602,7 @@ def drive(aruco_true_pos):
             
     
         if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
-            print(f"Finished turning to ARUCO MARKER {operate.closestArucoIndex}")
+            print(f"Finished turning to ORIGIN")
             operate.command['motion'] = [0,0]
             operate.turn_to_aruco = False
 
@@ -766,7 +766,9 @@ if __name__ == "__main__":
             all_waypoints_reverse, simplified_path_reverse = None, None # bc python doesnt have a do while loop :(
             while all_waypoints_reverse == None and simplified_path_reverse == None:
                 all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_pos, radius)
-                radius -= 0.1
+                radius -= 0.2 # if this too small, the algorithm will be quite slow. too large, and we'll take shit paths. 
+                if radius < 0:
+                    radius = 0
             
             # Waypoints are reversed, trying to set it right
             operate.all_waypoints = all_waypoints_reverse[::-1]

@@ -222,4 +222,4 @@ if __name__ == "__main__":
     with open("TrueMap.txt", "w") as outfile: 
         json.dump(aruco_dict, outfile)
 
-    print("Preprocessing compleete")
+    print("Preprocessing complete")
