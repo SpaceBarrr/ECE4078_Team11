@@ -125,7 +125,7 @@ def merge_estimations(target_pose_dict: dict, threshold: float) -> dict:
         # 10cm threshold
         fruits_temp[fruit]["all_points"] = np.vstack((fruits_temp[fruit]["points_x"], fruits_temp[fruit]["points_y"])).T
         fruits_temp[fruit]["average_dist"] = np.mean(pdist(fruits_temp[fruit]["all_points"]))
-        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.25 else 1
+        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > threshold else 1
         
     # calculate kmeans
     for fruit in fruits_temp:
@@ -152,7 +152,7 @@ def parse_slam_map(fname : str) -> dict:
         aruco_dict = {}
         for (i, tag) in enumerate(usr_dict["taglist"]):
             if tag > 0 and tag < 11:
-                aruco_dict[f"aruco_{tag}"] = {
+                aruco_dict[f"aruco{tag}_0"] = {
                     "x": usr_dict["map"][0][i],
                     "y": usr_dict["map"][1][i]
                 }
@@ -211,17 +211,17 @@ if __name__ == "__main__":
 
     with open(f'{script_dir}/lab_output/targets_run{args.run}_411.txt', 'w') as fo:
         json.dump(target_est, fo, indent=4)
+    print('Estimations saved!')
         
     try:
         aruco_dict = parse_slam_map(f'{script_dir}/lab_output/slam.txt')
         os.rename(f'{script_dir}/lab_output/slam.txt', f'{script_dir}/lab_output/slam_run{args.run}_411.txt')
     except FileNotFoundError:
         print("WARNING: Could not find slam.txt - File will not be renamed and truemap will not be created!!!\nMost likely you either forgot to save slam map or have already ran TargetPoseEst.py")
-        
-    print('Estimations saved!')
-    
+    else:
+        print("Renamed slam file")
+
     aruco_dict.update(target_est)
     with open("TrueMap.txt", "w") as outfile: 
         json.dump(aruco_dict, outfile)
-
-    print("Preprocessing complete.")
+    print("Created TrueMap.txt")
