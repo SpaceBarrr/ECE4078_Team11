@@ -152,7 +152,7 @@ def parse_slam_map(fname : str) -> dict:
         aruco_dict = {}
         for (i, tag) in enumerate(usr_dict["taglist"]):
             if tag > 0 and tag < 11:
-                aruco_dict[f"aruco_{tag}"] = {
+                aruco_dict[f"aruco{tag}_0"] = {
                     "x": usr_dict["map"][0][i],
                     "y": usr_dict["map"][1][i]
                 }
