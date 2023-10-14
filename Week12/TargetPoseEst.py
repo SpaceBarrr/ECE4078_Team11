@@ -125,7 +125,7 @@ def merge_estimations(target_pose_dict: dict, threshold: float) -> dict:
         # 10cm threshold
         fruits_temp[fruit]["all_points"] = np.vstack((fruits_temp[fruit]["points_x"], fruits_temp[fruit]["points_y"])).T
         fruits_temp[fruit]["average_dist"] = np.mean(pdist(fruits_temp[fruit]["all_points"]))
-        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > 0.25 else 1
+        fruits_temp[fruit]["clusters"] = 2 if fruits_temp[fruit]["average_dist"] > threshold else 1
         
     # calculate kmeans
     for fruit in fruits_temp:
