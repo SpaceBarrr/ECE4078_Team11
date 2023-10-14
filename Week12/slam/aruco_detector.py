@@ -39,7 +39,7 @@ class aruco_detector:
 
             lm_tvecs = tvecs[ids==idi].T
             lm_bff2d = np.block([[lm_tvecs[2,:]],[-lm_tvecs[0,:]]])
-            lm_bff2d = np.mean(lm_bff2d, axis=1).reshape(-1,1) + 0.04 # cian changed - try and estimate the centrepoint of the cube
+            lm_bff2d = np.mean(lm_bff2d, axis=1).reshape(-1,1) # cian changed - try and estimate the centrepoint of the cube
 
             # print(lm_bff2d)
 
