@@ -48,15 +48,15 @@ def update_gui_map(robotpose_x, robotpose_y, robotpose_theta, map_image, pibot, 
   # Update robot's position
 
   # TESTING ================================================================
-  pibot_x = robotpose_x
-  pibot_y = robotpose_y
-  pibot_angle = robotpose_theta
+  # pibot_x = robotpose_x
+  # pibot_y = robotpose_y
+  # pibot_angle = robotpose_theta
   # ========================================================================
 
   #use this if inputting coordinates in metres/from robot pose
-    # pibot_x = gui_xcoord(robotpose_x) # <-- place x coord inside from robot pose 
-    # pibot_y = gui_ycoord(robotpose_y) # <-- place y coord inside from robot pose 
-    # pibot_theta = np.degrees(robotpose_theta) # <-- place theta inside from robot pose in radians
+  pibot_x = gui_xcoord(robotpose_x) # <-- place x coord inside from robot pose 
+  pibot_y = gui_ycoord(robotpose_y) # <-- place y coord inside from robot pose 
+  pibot_angle = np.degrees(robotpose_theta) # <-- place theta inside from robot pose in radians
   
 
   canvas.blit(map_image, (700, 0))
@@ -95,41 +95,41 @@ pibot = pygame.transform.scale(pibot, (PIBOT_WIDTH, PIBOT_HEIGHT))
 map_image = initialise_map(map_image)
 # ========================================================================
 
-# TESTING ================================================================
-j = 0
-pibot_x = gui_xcoord(0)
-pibot_y = gui_ycoord(0)
-pibot_theta = 0
-waypoints = [[0,0],[0.25,0.25],[0.75,0.75],[1,1]]
-# =======================================================================
+# # TESTING ================================================================
+# j = 0
+# pibot_x = gui_xcoord(0)
+# pibot_y = gui_ycoord(0)
+# pibot_theta = 0
+# waypoints = [[0,0],[0.25,0.25],[0.75,0.75],[1,1]]
+# # =======================================================================
 
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    # TESTING ==================================================================
-    # if j == 1:
-        #operate.notification = f"Travelling to fruit: {fruit_to_find}"
-    if j <= 100: 
-      pibot_x = pibot_x+1  #pos x dir
-      pibot_y = pibot_y-1  #pos y dir
-      pibot_theta = pibot_theta+5
-      j = j + 1
-    if j == 101: # treat this as the event of finding fruit and looking for next
-      #operate.notification = f"Found fruit: {fruit_to_find}!"
-      waypoints = [[0,0],[-0.25,-0.25],[-0.75,-0.75],[-1,-1]]
-      time.sleep(1)
-      j = j + 1
-      #operate.notification = f"Travelling to fruit: {fruit_to_find}"
-    if j >101 and j<300:
-      pibot_x = pibot_x-1  #neg x dir
-      pibot_y = pibot_y+1  #neg y dir
-      pibot_theta = pibot_theta+5
-      j = j + 1
-    # ========================================================================
+# running = True
+# while running:
+#     for event in pygame.event.get():
+#         if event.type == pygame.QUIT:
+#             running = False
+#     # TESTING ==================================================================
+#     # if j == 1:
+#         #operate.notification = f"Travelling to fruit: {fruit_to_find}"
+#     if j <= 100: 
+#       pibot_x = pibot_x+1  #pos x dir
+#       pibot_y = pibot_y-1  #pos y dir
+#       pibot_theta = pibot_theta+0.0872665 # + 5 deg in rad
+#       j = j + 1
+#     if j == 101: # treat this as the event of finding fruit and looking for next
+#       #operate.notification = f"Found fruit: {fruit_to_find}!"
+#       waypoints = [[0,0],[-0.25,-0.25],[-0.75,-0.75],[-1,-1]]
+#       time.sleep(1)
+#       j = j + 1
+#       #operate.notification = f"Travelling to fruit: {fruit_to_find}"
+#     if j >101 and j<300:
+#       pibot_x = pibot_x-1  #neg x dir
+#       pibot_y = pibot_y+1  #neg y dir
+#       pibot_theta = pibot_theta+0.0872665 # + 5 deg in rad
+#       j = j + 1
+#     # ========================================================================
 
-    update_gui_map(pibot_x, pibot_y, pibot_theta, map_image, pibot, waypoints) 
+#     update_gui_map(pibot_x, pibot_y, pibot_theta, map_image, pibot, waypoints) 
     
     
 
