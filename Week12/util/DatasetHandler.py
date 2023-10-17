@@ -7,6 +7,7 @@ import csv
 import os
 import json
 from datetime import datetime
+import ast
 
 # save a keyboard control sequence and a list of images seen by the robot
 class DatasetWriter:
@@ -108,7 +109,7 @@ class OutputWriter:
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
         
-        self.img_f = open(folder_name+"images.txt", 'w')   
+        self.img_f = open(folder_name+"images.txt", 'w+')
         # self.map_f_path = folder_name+"slam.txt"
 
         self.image_count = 0
@@ -137,7 +138,20 @@ class OutputWriter:
         self.img_f.flush()
         cv2.imwrite(img_fname, image)
         return f'pred_{self.image_count}.png'
-
+    
+    def delete_prediction(self):
+        # remove it from the dict
+        predict_lines = self.img_f.readlines()
+        predict_lines = predict_lines[:-1]
+        
+        # refresh the file
+        self.img_f.close()
+        self.img_f = open(self.folder+"images.txt", 'w+')
+        self.img_f.write(predict_lines)
+        
+        # delete the image prediction
+        os.remove(f"pred_{self.image_count}.png")
+        self.image_count -= 1
 
 if __name__ == '__main__':
     # For testing

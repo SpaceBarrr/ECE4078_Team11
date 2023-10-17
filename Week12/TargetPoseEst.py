@@ -7,7 +7,7 @@ import cv2
 from scipy.spatial.distance import pdist
 import numpy as np
 from YOLO.detector import Detector
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans #, DBSCAN
 
 # list of target fruits and vegs types
 # Make sure the names are the same as the ones used in your YOLO model

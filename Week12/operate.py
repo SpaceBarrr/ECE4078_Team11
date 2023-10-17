@@ -269,6 +269,9 @@ class Operate:
                 elif event.key == pygame.K_x:
                     self.command['motion'] = [int(x * 1/3) for x in self.command['motion']]
                     self.notification = 'Boost DEACTIVATED!'
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                self.output.delete_prediction()
+                self.notification = 'Deleted last prediction!'
             ####################################################
             # stop
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
