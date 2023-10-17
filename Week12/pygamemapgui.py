@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 import sys
 import time
-from auto_fruit_search_new_strat import canvas
 
 background_colour = (45,45,45)
 rect_colour = (128,128,128)
@@ -39,13 +38,13 @@ def wp_ycoord(in_y):
   return y
 
 
-def initialise_map(map_image):
+def initialise_map(canvas, map_image):
     map_image = pygame.transform.scale(map_image, (400, 400))
     canvas.blit(map_image, (700, 0))
     pygame.display.flip()
     return map_image
 
-def update_gui_map(robotpose_x, robotpose_y, robotpose_theta, map_image, pibot, waypoints): # update this to take in waypoints as well?
+def update_gui_map(canvas, robotpose_x, robotpose_y, robotpose_theta, map_image, pibot, waypoints): # update this to take in waypoints as well?
   # Update robot's position
 
   # TESTING ================================================================
