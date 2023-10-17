@@ -776,7 +776,7 @@ if __name__ == "__main__":
     map_image = pygame.image.load('map_imagev2.png')
     pibot = pygame.image.load('guipngs/pibot_top.png')
     pibot = pygame.transform.scale(pibot, (PIBOT_WIDTH, PIBOT_HEIGHT))
-    map_image = pygamemapgui.initialise_map(map_image)
+    map_image = pygamemapgui.initialise_map(canvas, map_image)
     
     # ========================================================================
     start = False
@@ -878,7 +878,7 @@ if __name__ == "__main__":
                 operate.cur_waypoint = path
                 print(f"Driving to waypoint: {path}")
                 drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
-                pygamemapgui.update_gui_map(operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+                pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
             robot_x = operate.robot_pose[0]
