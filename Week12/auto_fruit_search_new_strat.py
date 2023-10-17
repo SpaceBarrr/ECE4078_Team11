@@ -739,7 +739,7 @@ if __name__ == "__main__":
     pibot = pygame.transform.scale(pibot, (PIBOT_WIDTH, PIBOT_HEIGHT))
     map_image = pygamemapgui.initialise_map(map_image)
     
-    #update_gui_map(pibot_x, pibot_y, pibot_theta, map_image, pibot, waypoints)
+    pygamemapgui.update_gui_map(operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
      
     # ========================================================================
     start = False
