@@ -78,12 +78,12 @@ orange = (245, 117, 20)
 PIBOT_WIDTH = (155/1.5)*0.1
 PIBOT_HEIGHT = PIBOT_WIDTH
 
-(width, height) = (1100, 660)
-canvas = pygame.display.set_mode((width, height))
-pygame.display.set_caption('Test map')
+# (width, height) = (1100, 660)
+# canvas = pygame.display.set_mode((width, height))
+# pygame.display.set_caption('Test map')
 
 map_background_rect = pygame.Rect(700, 0, 400, 660)
-canvas.fill(background_colour)
+#canvas.fill(background_colour)
 pygame.draw.rect(canvas,rect_colour,map_background_rect)
 
 

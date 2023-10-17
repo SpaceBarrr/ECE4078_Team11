@@ -28,7 +28,8 @@ from YOLO.detector import Detector
 # Astar imports
 import astar
 
-from txt_to_image import *
+from txt_to_imagev2 import *
+import pygamemapgui
 
 def read_true_map(fname):
     """Read the ground truth map and output the pose of the ArUco markers and 5 target fruits&vegs to search for
@@ -47,8 +48,8 @@ def read_true_map(fname):
 
         # remove unique id of targets of the same type
         for key in gt_dict:
-            x = np.round(gt_dict[key]['x'], 1)
-            y = np.round(gt_dict[key]['y'], 1)
+            x = np.round(gt_dict[key]['x'], 4)
+            y = np.round(gt_dict[key]['y'], 4)
 
             if key.startswith('aruco'):
                 if key.startswith('aruco10') or key.startswith('aruco_10'):
@@ -468,11 +469,11 @@ def drive(aruco_true_pos, initial = 0):
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
     LINEAR_THRESHOLD = 0.2
-    LINEAR_FUDGE_FACTOR = 0.15
-    TURNING_SCALING = 10
-    TURNING_CONST = 20
-    FORWARD_SCALING = 50
-    FORWARD_CONST = 20
+    LINEAR_FUDGE_FACTOR = 0.15      # Woodside : 0.15 
+    TURNING_SCALING = 10               # Woodside : 10
+    TURNING_CONST = 20                  # Woodside : 20
+    FORWARD_SCALING = 30                # Woodside : 50
+    FORWARD_CONST = 20                  # Woodside : 20
     
     # user either hasn't clicked or path planning returned nothing
     if len(operate.cur_waypoint) == 0:
@@ -569,7 +570,7 @@ def drive(aruco_true_pos, initial = 0):
                 # print(operate.reached_waypoint)
                 # operate.turning_tick = 5
                 # operate.tick = 10
-                operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
+                # operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
                 print("Arrived at waypoint")
 
             else: # drive forward
@@ -584,9 +585,9 @@ def drive(aruco_true_pos, initial = 0):
 
     ###### TURNING TO Origin (IF Bryan messes this up, its his fault)
     if (not operate.driving_forward) and (operate.turn_to_aruco) :
-        theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [operate.closestAruco[0], operate.closestAruco[1]], robot_theta)
+        theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0,0], robot_theta)
         operate.turning_tick = 45
-        print(f"Turning to point [{operate.closestAruco[0]},{operate.closestAruco[1]}], Aruco {operate.closestArucoIndex}")
+        print(f"Turning to Origin")
         # print("     waypoint_theta : " + str(way_point_theta))
         print("     theta_diff : " + str(theta_diff))
         operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
@@ -660,6 +661,45 @@ def angle_aruco(waypoint, closest_aruco, robot_theta) :
 
     return theta_dif, way_point_theta
 
+def turn_to_aruco(aruco_true_pos) : 
+    # TUNEABLE PARAMS:
+    ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
+    TURNING_SCALING = 10               # Woodside : 10
+    TURNING_CONST = 20                  # Woodside : 20
+
+    robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
+    
+    # user either hasn't clicked or path planning returned nothing
+    if len(operate.cur_waypoint) == 0:
+        return  
+    
+    ###### TURNING TO ARUCO (IF Bryan messes this up, its his fault)
+    if (not operate.driving_forward) and (operate.turn_to_aruco) :
+        theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [operate.closestAruco[0], operate.closestAruco[1]], robot_theta)
+        operate.turning_tick = 45
+        print(f"Turning to point [{operate.closestAruco[0]},{operate.closestAruco[1]}], Aruco {operate.closestArucoIndex}")
+        # print("     waypoint_theta : " + str(way_point_theta))
+        print("     theta_diff : " + str(theta_diff))
+        operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
+        print(f"operate tick when turning : {operate.turning_tick}")
+
+        if theta_diff > 0: # turn right
+            operate.command['motion'] = [0,1]
+            operate.turning_tick = 20
+        elif theta_diff < 0: # turn left
+            operate.command['motion'] = [0,-1]
+            operate.turning_tick = 20
+        elif theta_diff == 0 : # should be impossible to end up in this situation
+            operate.command['motion'] = [0,0]
+            operate.turn_to_aruco = False
+            operate.reached_waypoint = True
+    
+        if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
+            print(f"Finished turning to Aruco")
+            operate.command['motion'] = [0,0]
+            operate.turn_to_aruco = False
+            operate.reached_waypoint = True
+
 def initial_turn_to_nearest_aruco(aruco_true_pos) : 
     operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco([0,0], aruco_true_pos, 0)
     operate.turn_to_aruco = True
@@ -670,7 +710,7 @@ def initial_turn_to_nearest_aruco(aruco_true_pos) :
     while operate.turn_to_aruco == True : 
         # operate.update_keyboard()
         operate.take_pic()
-        drive(aruco_true_pos, initial=1)
+        turn_to_aruco(aruco_true_pos)
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.robot_pose = operate.ekf.robot.state[:3,0]
@@ -715,23 +755,30 @@ if __name__ == "__main__":
                      pygame.image.load('pics/8bit/pibot4.png'),
                      pygame.image.load('pics/8bit/pibot5.png')]
     pygame.display.update()
-
+    # ========================================================================
     # create map_image.png from text file
     visualise_map(args.map)
-
+    # params for gui
+    background_colour = (45,45,45)
+    rect_colour = (128,128,128)
+    white = (255, 255, 255)
+    black = (0, 0, 0)
+    red = (255, 0, 0)
+    orange = (245, 117, 20)
+    PIBOT_WIDTH = (155/1.5)*0.1
+    PIBOT_HEIGHT = PIBOT_WIDTH
+    
     # drawing map_image rectangle
-    map_background_rect = pygame.Rect(700, 0, 400, 660) #
-    map_background_colour = (45,45,45)
-    pygame.draw.rect(canvas,map_background_colour,map_background_rect)
-    # resizing map_image and drawing on the canvas
-    map_image = pygame.image.load('map_image.png')
-    map_image = pygame.transform.scale(map_image, (400, 400))
-    canvas.blit(map_image, (700, 0))
-    # adding origin marker for original pibot pos
-    #origin_dot = pygame.Rect(904,201,4,4) # origin is 906,203 but drawing two pixels either side
-    #origin_colour = (165,42,42)
-    #pygame.draw.rect(canvas,origin_colour,origin_dot)
+    map_background_rect = pygame.Rect(700, 0, 400, 660)
 
+    pygame.draw.rect(canvas,rect_colour,map_background_rect)
+    # resizing map_image and drawing on the canvas
+    map_image = pygame.image.load('map_imagev2.png')
+    pibot = pygame.image.load('guipngs/pibot_top.png')
+    pibot = pygame.transform.scale(pibot, (PIBOT_WIDTH, PIBOT_HEIGHT))
+    map_image = pygamemapgui.initialise_map(map_image)
+    
+    # ========================================================================
     start = False
 
     # read in the true map
@@ -819,7 +866,6 @@ if __name__ == "__main__":
             fruits_true_pos = np.insert(fruits_true_pos, fruit_index, operate.fruit_to_find_xy, axis = 0)        
             obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
             print(operate.simplified_path)
-
             
             if K==0 :
                 initial_turn_to_nearest_aruco(aruco_true_pos)
@@ -832,6 +878,8 @@ if __name__ == "__main__":
                 operate.cur_waypoint = path
                 print(f"Driving to waypoint: {path}")
                 drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
+                pygamemapgui.update_gui_map(operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+
 
             robot_x = operate.robot_pose[0]
             robot_y = operate.robot_pose[1]
