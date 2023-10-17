@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import sys
 import time
+from auto_fruit_search_new_strat import canvas
 
 background_colour = (45,45,45)
 rect_colour = (128,128,128)
