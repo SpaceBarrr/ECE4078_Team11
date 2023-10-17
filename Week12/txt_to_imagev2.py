@@ -120,7 +120,7 @@ def visualise_map(map):
     ax.scatter(0,0, color = "black", marker = "x")
     print(ReferenceMap)
     plt.grid(True)
-    # plt.show()
+    #plt.show()
     fig.savefig("map_imagev2.png")
 
-visualise_map('TrueMap.txt')
+#visualise_map('TrueMap.txt')
