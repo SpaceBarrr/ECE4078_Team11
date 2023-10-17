@@ -109,7 +109,7 @@ class OutputWriter:
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
         
-        self.img_f = open(folder_name+"images.txt", 'w')
+        self.img_f = open(folder_name+"images.txt", 'w+')
         # self.map_f_path = folder_name+"slam.txt"
 
         self.image_count = 0
@@ -146,7 +146,7 @@ class OutputWriter:
         
         # refresh the file
         self.img_f.close()
-        self.img_f = open(self.folder+"images.txt", 'w')
+        self.img_f = open(self.folder+"images.txt", 'w+')
         self.img_f.write(predict_lines)
         
         # delete the image prediction
