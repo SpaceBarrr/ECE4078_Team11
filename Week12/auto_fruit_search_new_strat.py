@@ -608,7 +608,6 @@ def drive(aruco_true_pos, initial = 0):
             operate.command['motion'] = [0,0]
             operate.turn_to_aruco = False
             operate.reached_waypoint = True
-    pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
 def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
@@ -632,7 +631,7 @@ def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) :
     print(f"Now turning to ArucoMarker {index_aruco}")
     return closest_aruco, index_aruco
 
-def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose) :
+def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose,map_image, pibot, canvas) :
     waypoint_x = waypoint[0]
     waypoint_y = waypoint[1]
     operate.cur_waypoint = [waypoint_x, waypoint_y]
@@ -641,6 +640,7 @@ def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose) :
         # operate.update_keyboard()
         operate.take_pic()
         drive(aruco_true_pos)
+        pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.robot_pose = operate.ekf.robot.state[:3,0]
@@ -880,7 +880,7 @@ if __name__ == "__main__":
                     # operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
                     operate.cur_waypoint = path
                     print(f"Driving to waypoint: {path}")
-                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
+                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
                     #pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
