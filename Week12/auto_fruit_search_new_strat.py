@@ -465,7 +465,6 @@ def drive(aruco_true_pos, initial = 0):
     (3): NOT IMPLEMENTED: If the angle begins to increase, we can turn again to correct
     (4): If the distance to the waypoint begins to increase, arrive early & go next
     '''
-    
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
     LINEAR_THRESHOLD = 0.2
@@ -609,6 +608,8 @@ def drive(aruco_true_pos, initial = 0):
             operate.command['motion'] = [0,0]
             operate.turn_to_aruco = False
             operate.reached_waypoint = True
+    pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+
 
 def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
     closest_aruco = aruco_true_pos[0]
@@ -880,7 +881,7 @@ if __name__ == "__main__":
                     operate.cur_waypoint = path
                     print(f"Driving to waypoint: {path}")
                     drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
-                    pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+                    #pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
                 robot_x = operate.robot_pose[0]
