@@ -499,10 +499,10 @@ def drive(aruco_true_pos, initial = 0):
         
     # TURNING TO WAYPOINT
     if (not operate.driving_forward) and (not operate.turn_to_aruco):
-        operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
+        # operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
         print("Turning to Waypoint ...")
         print(f"operate tick when turning : {operate.turning_tick}")
-        # operate.turning_tick = 22
+        operate.turning_tick = 20
         # operate.tick = 10
 
         if theta_diff > 0: # turn right
@@ -585,11 +585,11 @@ def drive(aruco_true_pos, initial = 0):
     ###### TURNING TO Origin (IF Bryan messes this up, its his fault)
     if (not operate.driving_forward) and (operate.turn_to_aruco) :
         theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0,0], robot_theta)
-        operate.turning_tick = 45
+        operate.turning_tick = 20
         print(f"Turning to Origin")
         # print("     waypoint_theta : " + str(way_point_theta))
         print("     theta_diff : " + str(theta_diff))
-        operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
+        #operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
         print(f"operate tick when turning : {operate.turning_tick}")
 
         if theta_diff > 0: # turn right
@@ -608,6 +608,8 @@ def drive(aruco_true_pos, initial = 0):
             operate.command['motion'] = [0,0]
             operate.turn_to_aruco = False
             operate.reached_waypoint = True
+            time.sleep(0.5)
+
     pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
@@ -738,7 +740,7 @@ if __name__ == "__main__":
     parser.add_argument("--map", type=str, default="TrueMap.txt")
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
     parser.add_argument("--shopping_list", type=str, default="M4_prac_shopping_list.txt")
-    parser.add_argument("--auto", type=bool, default=True)
+    parser.add_argument("--auto", type=int, default=1)
     args, _ = parser.parse_known_args()
     
     pygame.font.init() 
@@ -770,6 +772,8 @@ if __name__ == "__main__":
     PIBOT_WIDTH = (218/1.5)*0.1
     PIBOT_HEIGHT = PIBOT_WIDTH
     
+    print(args.auto)
+
     # drawing map_image rectangle
     map_background_rect = pygame.Rect(700, 0, 566, 660)
 
@@ -883,7 +887,7 @@ if __name__ == "__main__":
                     drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
                     #pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
-
+                initial_turn_to_nearest_aruco(aruco_true_pos)
                 robot_x = operate.robot_pose[0]
                 robot_y = operate.robot_pose[1]
 
