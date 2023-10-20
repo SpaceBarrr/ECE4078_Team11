@@ -29,7 +29,7 @@ from YOLO.detector import Detector
 import astar
 
 from txt_to_imagev2 import *
-import pygamemapgui
+import pygamemapgui566
 
 def read_true_map(fname):
     """Read the ground truth map and output the pose of the ArUco markers and 5 target fruits&vegs to search for
@@ -608,7 +608,7 @@ def drive(aruco_true_pos, initial = 0):
             operate.command['motion'] = [0,0]
             operate.turn_to_aruco = False
             operate.reached_waypoint = True
-    pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+    pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
 def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
@@ -778,7 +778,7 @@ if __name__ == "__main__":
     map_image = pygame.image.load('map_imagev2.png')
     pibot = pygame.image.load('guipngs/pibot_top.png')
     pibot = pygame.transform.scale(pibot, (PIBOT_WIDTH, PIBOT_HEIGHT))
-    map_image = pygamemapgui.initialise_map(canvas, map_image)
+    map_image = pygamemapgui566.initialise_map(canvas, map_image)
     
     # ========================================================================
     start = False
@@ -881,7 +881,7 @@ if __name__ == "__main__":
                     operate.cur_waypoint = path
                     print(f"Driving to waypoint: {path}")
                     drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
-                    #pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+                    #pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
                 robot_x = operate.robot_pose[0]
