@@ -259,6 +259,7 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1
     '''
     
     print("Running astar...")
+    print(f"Obstacle radius: {radius}, Robot radius: {robot_radius}")
     plt.clf() # so we don't get previous plots overlaid
 
     # start and goal position
