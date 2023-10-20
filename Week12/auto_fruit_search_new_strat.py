@@ -29,7 +29,7 @@ from YOLO.detector import Detector
 import astar
 
 from txt_to_imagev2 import *
-import pygamemapgui
+import pygamemapgui566
 
 def read_true_map(fname):
     """Read the ground truth map and output the pose of the ArUco markers and 5 target fruits&vegs to search for
@@ -441,10 +441,10 @@ class Operate:
             sys.exit()
         
 def add_waypoint_from_click(mouse_pos: tuple):
-    x_offset = 751 + 310/2
-    y_offset = 48 + 310/2
-    x_scaling = 3/310
-    y_scaling = 3/310
+    x_offset = 774 + 438/2
+    y_offset = 72 + 438/2
+    x_scaling = 3/438
+    y_scaling = 3/438
     
     x = (mouse_pos[0] - x_offset)  * x_scaling
     y = (mouse_pos[1] - y_offset)  * y_scaling
@@ -471,7 +471,7 @@ def drive(aruco_true_pos, initial = 0):
     LINEAR_FUDGE_FACTOR = 0.15      # Woodside : 0.15 
     TURNING_SCALING = 10               # Woodside : 10
     TURNING_CONST = 20                  # Woodside : 20
-    FORWARD_SCALING = 30                # Woodside : 50
+    FORWARD_SCALING = 10                # Woodside : 50
     FORWARD_CONST = 20                  # Woodside : 20
     
     # user either hasn't clicked or path planning returned nothing
@@ -499,10 +499,10 @@ def drive(aruco_true_pos, initial = 0):
         
     # TURNING TO WAYPOINT
     if (not operate.driving_forward) and (not operate.turn_to_aruco):
-        operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
+        # operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
         print("Turning to Waypoint ...")
         print(f"operate tick when turning : {operate.turning_tick}")
-        # operate.turning_tick = 22
+        operate.turning_tick = 20
         # operate.tick = 10
 
         if theta_diff > 0: # turn right
@@ -585,11 +585,11 @@ def drive(aruco_true_pos, initial = 0):
     ###### TURNING TO Origin (IF Bryan messes this up, its his fault)
     if (not operate.driving_forward) and (operate.turn_to_aruco) :
         theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0,0], robot_theta)
-        operate.turning_tick = 45
+        operate.turning_tick = 20
         print(f"Turning to Origin")
         # print("     waypoint_theta : " + str(way_point_theta))
         print("     theta_diff : " + str(theta_diff))
-        operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
+        #operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
         print(f"operate tick when turning : {operate.turning_tick}")
 
         if theta_diff > 0: # turn right
@@ -608,6 +608,8 @@ def drive(aruco_true_pos, initial = 0):
             operate.command['motion'] = [0,0]
             operate.turn_to_aruco = False
             operate.reached_waypoint = True
+            time.sleep(0.5)
+
     pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
@@ -632,7 +634,7 @@ def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) :
     print(f"Now turning to ArucoMarker {index_aruco}")
     return closest_aruco, index_aruco
 
-def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose) :
+def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose,map_image, pibot, canvas) :
     waypoint_x = waypoint[0]
     waypoint_y = waypoint[1]
     operate.cur_waypoint = [waypoint_x, waypoint_y]
@@ -641,6 +643,7 @@ def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose) :
         # operate.update_keyboard()
         operate.take_pic()
         drive(aruco_true_pos)
+        pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.robot_pose = operate.ekf.robot.state[:3,0]
@@ -738,7 +741,7 @@ if __name__ == "__main__":
     parser.add_argument("--map", type=str, default="TrueMap.txt")
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
     parser.add_argument("--shopping_list", type=str, default="M4_prac_shopping_list.txt")
-    parser.add_argument("--auto", type=bool, default=True)
+    parser.add_argument("--auto", type=int, default=1)
     args, _ = parser.parse_known_args()
     
     pygame.font.init() 
@@ -770,6 +773,8 @@ if __name__ == "__main__":
     PIBOT_WIDTH = (218/1.5)*0.1
     PIBOT_HEIGHT = PIBOT_WIDTH
     
+    print(args.auto)
+
     # drawing map_image rectangle
     map_background_rect = pygame.Rect(700, 0, 566, 660)
 
@@ -778,7 +783,7 @@ if __name__ == "__main__":
     map_image = pygame.image.load('map_imagev2.png')
     pibot = pygame.image.load('guipngs/pibot_top.png')
     pibot = pygame.transform.scale(pibot, (PIBOT_WIDTH, PIBOT_HEIGHT))
-    map_image = pygamemapgui.initialise_map(canvas, map_image)
+    map_image = pygamemapgui566.initialise_map(canvas, map_image)
     
     # ========================================================================
     start = False
@@ -880,10 +885,10 @@ if __name__ == "__main__":
                     # operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
                     operate.cur_waypoint = path
                     print(f"Driving to waypoint: {path}")
-                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
-                    #pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
+                    #pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
-
+                initial_turn_to_nearest_aruco(aruco_true_pos)
                 robot_x = operate.robot_pose[0]
                 robot_y = operate.robot_pose[1]
 
