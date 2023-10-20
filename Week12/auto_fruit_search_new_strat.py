@@ -744,7 +744,7 @@ if __name__ == "__main__":
     TITLE_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 35)
     TEXT_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 40)
     
-    width, height = 1100, 660 #original size 700, 660; map is 400x400 added to the right
+    width, height = 1266, 660  #original size 700, 660; map is 1100,660 for 400px map, 1266,660 for 566px map
     canvas = pygame.display.set_mode((width, height))
     pygame.display.set_caption('ECE4078 Lab')
     pygame.display.set_icon(pygame.image.load('pics/8bit/pibot5.png'))
@@ -766,11 +766,11 @@ if __name__ == "__main__":
     black = (0, 0, 0)
     red = (255, 0, 0)
     orange = (245, 117, 20)
-    PIBOT_WIDTH = (155/1.5)*0.1
+    PIBOT_WIDTH = (218/1.5)*0.1
     PIBOT_HEIGHT = PIBOT_WIDTH
     
     # drawing map_image rectangle
-    map_background_rect = pygame.Rect(700, 0, 400, 660)
+    map_background_rect = pygame.Rect(700, 0, 566, 660)
 
     pygame.draw.rect(canvas,rect_colour,map_background_rect)
     # resizing map_image and drawing on the canvas
