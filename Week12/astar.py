@@ -7,6 +7,8 @@ author: Atsushi Sakai(@Atsushi_twi)
 
 See Wikipedia article (https://en.wikipedia.org/wiki/A*_search_algorithm)
 
+Modified by Cian, Bryan and Joel for ECE 4078
+
 """
 
 import math
@@ -241,6 +243,13 @@ def arange(start, stop, step):
 
     return np.linspace(float(start),float(stop),int(steps),endpoint=False)
 
+def clamp_boundaries(point, limit):
+    if point > limit:
+        point = limit - 0.01
+    elif point < -limit:
+        point = -limit + 0.01
+    return point
+
 def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1):
     '''
     Star A-Star path planning
@@ -253,8 +262,8 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1
     plt.clf() # so we don't get previous plots overlaid
 
     # start and goal position
-    sx = start_x  # [m]
-    sy = start_y  # [m]
+    sx = clamp_boundaries(start_x, 1.5)  # [m]
+    sy = clamp_boundaries(start_y, 1.5)  # [m]
     gx = goal_x  # [m]
     gy = goal_y  # [m]
     grid_size = 0.02  # [m]
