@@ -465,7 +465,6 @@ def drive(aruco_true_pos, initial = 0):
     (3): NOT IMPLEMENTED: If the angle begins to increase, we can turn again to correct
     (4): If the distance to the waypoint begins to increase, arrive early & go next
     '''
-    
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
     LINEAR_THRESHOLD = 0.2
@@ -609,6 +608,8 @@ def drive(aruco_true_pos, initial = 0):
             operate.command['motion'] = [0,0]
             operate.turn_to_aruco = False
             operate.reached_waypoint = True
+    pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+
 
 def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
     closest_aruco = aruco_true_pos[0]
@@ -744,7 +745,7 @@ if __name__ == "__main__":
     TITLE_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 35)
     TEXT_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 40)
     
-    width, height = 1100, 660 #original size 700, 660; map is 400x400 added to the right
+    width, height = 1266, 660  #original size 700, 660; map is 1100,660 for 400px map, 1266,660 for 566px map
     canvas = pygame.display.set_mode((width, height))
     pygame.display.set_caption('ECE4078 Lab')
     pygame.display.set_icon(pygame.image.load('pics/8bit/pibot5.png'))
@@ -766,11 +767,11 @@ if __name__ == "__main__":
     black = (0, 0, 0)
     red = (255, 0, 0)
     orange = (245, 117, 20)
-    PIBOT_WIDTH = (155/1.5)*0.1
+    PIBOT_WIDTH = (218/1.5)*0.1
     PIBOT_HEIGHT = PIBOT_WIDTH
     
     # drawing map_image rectangle
-    map_background_rect = pygame.Rect(700, 0, 400, 660)
+    map_background_rect = pygame.Rect(700, 0, 566, 660)
 
     pygame.draw.rect(canvas,rect_colour,map_background_rect)
     # resizing map_image and drawing on the canvas
@@ -880,7 +881,7 @@ if __name__ == "__main__":
                     operate.cur_waypoint = path
                     print(f"Driving to waypoint: {path}")
                     drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose)
-                    pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+                    #pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
                 robot_x = operate.robot_pose[0]
