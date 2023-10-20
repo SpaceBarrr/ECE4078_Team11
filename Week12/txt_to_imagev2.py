@@ -103,8 +103,8 @@ def visualise_map(map):
             obj_image = mpimg.imread(image_path)
             
             # Specify the size of the displayed image (adjust these values)
-            image_width = 0.2  # You can adjust the width as needed
-            image_height = 0.2  # You can adjust the height as needed
+            image_width = 0.15 
+            image_height = 0.15  # 0.2 for both for s=1300, 0.15 for s=130
             
             # Calculate the extent for the image
             extent = [x - image_width / 2, x + image_width / 2, y - image_height / 2, y + image_height / 2]
@@ -113,10 +113,10 @@ def visualise_map(map):
             plt.imshow(obj_image, extent=extent, alpha=1.0, zorder=2)
         if 'number' in values:
             number = values['number']
-            plt.text(x, y, str(number), fontsize=12, ha='center', va='center', color='white', fontweight='bold')
+            plt.text(x, y, str(number), fontsize=10, ha='center', va='center', color='white', fontweight='bold') #12 for s=1300, 10 for s=130
         
-    ax.scatter(ReferenceArUcos_x, ReferenceArUcos_y, color = "blue", marker = "s", s=1300)
-    ax.scatter(ReferenceObjects_x, ReferenceObjects_y, c = "green", marker = "s", s =1300)
+    ax.scatter(ReferenceArUcos_x, ReferenceArUcos_y, color = "blue", marker = "s", s=130)
+    ax.scatter(ReferenceObjects_x, ReferenceObjects_y, c = "green", marker = "s", s =130) #s=1300 is for obstacle size, 130 closer to real size (slightly bigger by a couple cm)
     ax.scatter(0,0, color = "black", marker = "x")
     print(ReferenceMap)
     plt.grid(True)

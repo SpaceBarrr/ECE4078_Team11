@@ -38,13 +38,13 @@ def wp_ycoord(in_y):
   return y
 
 
-def initialise_map(map_image):
+def initialise_map(canvas, map_image):
     map_image = pygame.transform.scale(map_image, (400, 400))
     canvas.blit(map_image, (700, 0))
     pygame.display.flip()
     return map_image
 
-def update_gui_map(robotpose_x, robotpose_y, robotpose_theta, map_image, pibot, waypoints): # update this to take in waypoints as well?
+def update_gui_map(canvas, robotpose_x, robotpose_y, robotpose_theta, map_image, pibot, waypoints): # update this to take in waypoints as well?
   # Update robot's position
 
   # TESTING ================================================================
@@ -68,31 +68,31 @@ def update_gui_map(robotpose_x, robotpose_y, robotpose_theta, map_image, pibot, 
   pygame.display.flip()
 
 # ===============================================================
-background_colour = (45,45,45)
-rect_colour = (128,128,128)
-white = (255, 255, 255)
-black = (0, 0, 0)
-red = (255, 0, 0)
-orange = (245, 117, 20)
+# background_colour = (45,45,45)
+# rect_colour = (128,128,128)
+# white = (255, 255, 255)
+# black = (0, 0, 0)
+# red = (255, 0, 0)
+# orange = (245, 117, 20)
 
-PIBOT_WIDTH = (155/1.5)*0.1
-PIBOT_HEIGHT = PIBOT_WIDTH
+# PIBOT_WIDTH = (155/1.5)*0.1
+# PIBOT_HEIGHT = PIBOT_WIDTH
 
-# (width, height) = (1100, 660)
-# canvas = pygame.display.set_mode((width, height))
-# pygame.display.set_caption('Test map')
+# # (width, height) = (1100, 660)
+# # canvas = pygame.display.set_mode((width, height))
+# # pygame.display.set_caption('Test map')
 
-map_background_rect = pygame.Rect(700, 0, 400, 660)
-#canvas.fill(background_colour)
-pygame.draw.rect(canvas,rect_colour,map_background_rect)
+# map_background_rect = pygame.Rect(700, 0, 400, 660)
+# #canvas.fill(background_colour)
+# pygame.draw.rect(canvas,rect_colour,map_background_rect)
 
 
 
-map_image = pygame.image.load('map_imagev2.png')
-pibot = pygame.image.load('guipngs/pibot_top.png')
-pibot = pygame.transform.scale(pibot, (PIBOT_WIDTH, PIBOT_HEIGHT))
+# map_image = pygame.image.load('map_imagev2.png')
+# pibot = pygame.image.load('guipngs/pibot_top.png')
+# pibot = pygame.transform.scale(pibot, (PIBOT_WIDTH, PIBOT_HEIGHT))
 
-map_image = initialise_map(map_image)
+# map_image = initialise_map(map_image)
 # ========================================================================
 
 # # TESTING ================================================================
