@@ -471,7 +471,7 @@ def drive(aruco_true_pos, initial = 0):
     LINEAR_FUDGE_FACTOR = 0.15      # Woodside : 0.15 
     TURNING_SCALING = 10               # Woodside : 10
     TURNING_CONST = 20                  # Woodside : 20
-    FORWARD_SCALING = 30                # Woodside : 50
+    FORWARD_SCALING = 10                # Woodside : 50
     FORWARD_CONST = 20                  # Woodside : 20
     
     # user either hasn't clicked or path planning returned nothing
