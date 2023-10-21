@@ -502,7 +502,7 @@ def drive(aruco_true_pos, initial = 0):
         # operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
         print("Turning to Waypoint ...")
         print(f"operate tick when turning : {operate.turning_tick}")
-        operate.turning_tick = 20
+        operate.turning_tick = 15
         # operate.tick = 10
 
         if theta_diff > 0: # turn right
@@ -585,7 +585,7 @@ def drive(aruco_true_pos, initial = 0):
     ###### TURNING TO Origin (IF Bryan messes this up, its his fault)
     if (not operate.driving_forward) and (operate.turn_to_aruco) :
         theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0,0], robot_theta)
-        operate.turning_tick = 20
+        operate.turning_tick = 15
         print(f"Turning to Origin")
         # print("     waypoint_theta : " + str(way_point_theta))
         print("     theta_diff : " + str(theta_diff))
@@ -611,6 +611,29 @@ def drive(aruco_true_pos, initial = 0):
             time.sleep(0.5)
 
     # pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+
+# Added the turn_360_deg
+def turn_360_deg(threshold, map_image, pibot) : 
+    # grab pose data and calculate angles
+    original_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
+
+    theta_diff = 2*np.pi 
+    while (theta_diff > threshold) : 
+        operate.take_pic()
+        operate.command['motion'] = [0,-1]
+        pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
+        drive_meas = operate.control()
+        operate.update_slam(drive_meas)
+        operate.robot_pose = operate.ekf.robot.state[:3,0]
+        # operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
+        # print(operate.robot_pose)
+        operate.record_data()
+        operate.save_image()
+        operate.detect_target()
+        # visualise
+        operate.draw(canvas)
+        robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
+        theta_diff = abs(robot_theta - original_theta)
 
 
 def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
