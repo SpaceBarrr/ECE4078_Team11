@@ -656,9 +656,9 @@ def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose,map_ima
         operate.draw(canvas)
         pygame.display.update()
     #this should delete current waypoint from map?
-    pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
-    operate.draw(canvas)
-    pygame.display.update()
+    # pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
+    # operate.draw(canvas)
+    # pygame.display.update()
 
         
 def angle_aruco(waypoint, closest_aruco, robot_theta) : 
@@ -890,6 +890,7 @@ if __name__ == "__main__":
                     operate.cur_waypoint = path
                     print(f"Driving to waypoint: {path}")
                     drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
+                    operate.simplified_path = np.delete(operate.simplified_path,0,0)
                     #pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
                 # initial_turn_to_nearest_aruco(aruco_true_pos)
