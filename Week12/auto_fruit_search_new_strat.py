@@ -441,10 +441,11 @@ class Operate:
             sys.exit()
         
 def add_waypoint_from_click(mouse_pos: tuple):
-    x_offset = 774 + 438/2
-    y_offset = 72 + 438/2
-    x_scaling = 3/438
-    y_scaling = 3/438
+    map_size_px = 868 
+    x_offset = 774 + map_size_px/2
+    y_offset = 72 + map_size_px/2
+    x_scaling = 3/map_size_px
+    y_scaling = 3/map_size_px
     
     x = (mouse_pos[0] - x_offset)  * x_scaling
     y = (mouse_pos[1] - y_offset)  * y_scaling
@@ -545,7 +546,7 @@ def drive(aruco_true_pos, initial = 0):
             operate.minimum_seen_distance = np.inf
             operate.driving_forward = False
             operate.turn_to_aruco = True
-            # print(operate.reached_waypoint)
+            operate.reached_waypoint = True
             # operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos, (operate.initial_robot_pose_theta+operate.initial_theta_diff))
             # try:
             #     new_waypoint = operate.all_waypoints.pop()
@@ -566,6 +567,7 @@ def drive(aruco_true_pos, initial = 0):
                 operate.driving_forward = False
                 #  theta_diff = angle_aruco(operate.cur_waypoint, aruco_true_pos)          ########
                 operate.turn_to_aruco = True
+                operate.reached_waypoint = True
                 # print(operate.reached_waypoint)
                 # operate.turning_tick = 5
                 # operate.tick = 10
@@ -583,32 +585,32 @@ def drive(aruco_true_pos, initial = 0):
         # TODO: implement logic if angle error has increased too much
 
     ###### TURNING TO Origin (IF Bryan messes this up, its his fault)
-    if (not operate.driving_forward) and (operate.turn_to_aruco) :
-        theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0,0], robot_theta)
-        operate.turning_tick = 15
-        print(f"Turning to Origin")
-        # print("     waypoint_theta : " + str(way_point_theta))
-        print("     theta_diff : " + str(theta_diff))
-        #operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
-        print(f"operate tick when turning : {operate.turning_tick}")
+    # if (not operate.driving_forward) and (operate.turn_to_aruco) :
+    #     theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0,0], robot_theta)
+    #     operate.turning_tick = 15
+    #     print(f"Turning to Origin")
+    #     # print("     waypoint_theta : " + str(way_point_theta))
+    #     print("     theta_diff : " + str(theta_diff))
+    #     #operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
+    #     print(f"operate tick when turning : {operate.turning_tick}")
 
-        if theta_diff > 0: # turn right
-            operate.command['motion'] = [0,1]
-            operate.turning_tick = 20
-        elif theta_diff < 0: # turn left
-            operate.command['motion'] = [0,-1]
-            operate.turning_tick = 20
-        elif theta_diff == 0 : # should be impossible to end up in this situation
-            operate.command['motion'] = [0,0]
-            operate.turn_to_aruco = False
-            operate.reached_waypoint = True
+    #     if theta_diff > 0: # turn right
+    #         operate.command['motion'] = [0,1]
+    #         operate.turning_tick = 20
+    #     elif theta_diff < 0: # turn left
+    #         operate.command['motion'] = [0,-1]
+    #         operate.turning_tick = 20
+    #     elif theta_diff == 0 : # should be impossible to end up in this situation
+    #         operate.command['motion'] = [0,0]
+    #         operate.turn_to_aruco = False
+    #         operate.reached_waypoint = True
     
-        if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
-            print(f"Finished turning to Aruco")
-            operate.command['motion'] = [0,0]
-            operate.turn_to_aruco = False
-            operate.reached_waypoint = True
-            time.sleep(0.5)
+    #     if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
+    #         print(f"Finished turning to Aruco")
+    #         operate.command['motion'] = [0,0]
+    #         operate.turn_to_aruco = False
+    #         operate.reached_waypoint = True
+    #         time.sleep(0.5)
 
     # pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
@@ -892,7 +894,7 @@ if __name__ == "__main__":
                 obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
                 print(operate.simplified_path)
                 
-                initial_turn_to_nearest_aruco(aruco_true_pos)
+                # initial_turn_to_nearest_aruco(aruco_true_pos)
 
                 # Drive there
                 for path in operate.simplified_path: 
@@ -903,6 +905,7 @@ if __name__ == "__main__":
                     print(f"Driving to waypoint: {path}")
                     drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
                     operate.simplified_path = np.delete(operate.simplified_path,0,0)
+                    turn_360_deg(0.3, map_image, pibot)
                     #pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
                 # initial_turn_to_nearest_aruco(aruco_true_pos)
