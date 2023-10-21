@@ -64,6 +64,8 @@ def update_gui_map(canvas, robotpose_x, robotpose_y, robotpose_theta, map_image,
   pibot_angle = np.degrees(robotpose_theta) # <-- place theta inside from robot pose in radians
   
   gui_waypoints = [(wp_xcoord(x), wp_ycoord(y)) for x, y in waypoints]
+  pibot_line_x = pibot_x+PIBOT_WIDTH/2
+  pibot_line_y = pibot_y+PIBOT_HEIGHT/2
 
 
   canvas.blit(map_image, (700, 0))
@@ -72,7 +74,7 @@ def update_gui_map(canvas, robotpose_x, robotpose_y, robotpose_theta, map_image,
   for i in range(len(gui_waypoints) - 1):
         pygame.draw.line(canvas, red, gui_waypoints[i], gui_waypoints[i+1])
   if gui_waypoints:  # Check if there's at least one waypoint
-        pygame.draw.line(canvas, red, (pibot_x, pibot_y), gui_waypoints[0])
+        pygame.draw.line(canvas, red, (pibot_line_x, pibot_line_y), gui_waypoints[0])
   pibot = pygame.transform.rotate(pibot,pibot_angle)
   canvas.blit(pibot, (pibot_x, pibot_y))
   time.sleep(0.01)
