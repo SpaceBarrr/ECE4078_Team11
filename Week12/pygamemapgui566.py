@@ -63,10 +63,16 @@ def update_gui_map(canvas, robotpose_x, robotpose_y, robotpose_theta, map_image,
   pibot_y = gui_ycoord(robotpose_y) # <-- place y coord inside from robot pose 
   pibot_angle = np.degrees(robotpose_theta) # <-- place theta inside from robot pose in radians
   
+  gui_waypoints = [(wp_xcoord(x), wp_ycoord(y)) for x, y in waypoints]
+
 
   canvas.blit(map_image, (700, 0))
-  for x, y in waypoints:
-    pygame.draw.circle(canvas, orange, (wp_xcoord(x),wp_ycoord(y)), 3)
+  for wx, wy in gui_waypoints:
+        pygame.draw.circle(canvas, red, (wx, wy), 3)
+  for i in range(len(gui_waypoints) - 1):
+        pygame.draw.line(canvas, red, gui_waypoints[i], gui_waypoints[i+1])
+  if gui_waypoints:  # Check if there's at least one waypoint
+        pygame.draw.line(canvas, red, (pibot_x, pibot_y), gui_waypoints[0])
   pibot = pygame.transform.rotate(pibot,pibot_angle)
   canvas.blit(pibot, (pibot_x, pibot_y))
   time.sleep(0.01)
@@ -117,25 +123,28 @@ def update_gui_map(canvas, robotpose_x, robotpose_y, robotpose_theta, map_image,
     # if j == 1:
     #     operate.notification = f"Travelling to fruit: {fruit_to_find}"
 
-    # if j <= 142: 
-    #   pibot_x = pibot_x+1  #pos x dir
-    #   pibot_y = pibot_y-1  #pos y dir
-    #   pibot_theta = pibot_theta+0.0872665 # + 5 deg in rad
-    #   j = j + 1
-    # if j == 143: # treat this as the event of finding fruit and looking for next
-    #   #operate.notification = f"Found fruit: {fruit_to_find}!"
-    #   waypoints = [[0,0],[-0.25,-0.25],[-0.75,-0.75],[-1,-1]]
-    #   time.sleep(1)
-    #   j = j + 1
-    #   #operate.notification = f"Travelling to fruit: {fruit_to_find}"
-    # if j >143 and j<426:
-    #   pibot_x = pibot_x-1  #neg x dir
-    #   pibot_y = pibot_y+1  #neg y dir
-    #   pibot_theta = pibot_theta+0.0872665 # + 5 deg in rad
-    #   j = j + 1
-#     # ========================================================================
+#     if j <= 142: 
+#       pibot_x = pibot_x+1  #pos x dir
+#       pibot_y = pibot_y-1  #pos y dir
+#       pibot_theta = pibot_theta+0.0872665 # + 5 deg in rad
+#       j = j + 1
+#     if j == 143: # treat this as the event of finding fruit and looking for next
+#       #operate.notification = f"Found fruit: {fruit_to_find}!"
+#       waypoints = [[0,0],[-0.25,-0.25],[-0.75,-0.75],[-1,-1]]
+#       time.sleep(1)
+#       j = j + 1
+#       #operate.notification = f"Travelling to fruit: {fruit_to_find}"
+#     if j >143 and j<426:
+#       pibot_x = pibot_x-1  #neg x dir
+#       pibot_y = pibot_y+1  #neg y dir
+#       pibot_theta = pibot_theta+0.0872665 # + 5 deg in rad
+#       if j== 200:
+#         waypoints = [[0,-0.25],[-0.75,-0.75],[-1,-1]]
 
-    # update_gui_map(canvas, pibot_x, pibot_y, pibot_theta, map_image, pibot, waypoints) 
+#       j = j + 1
+# #     # ========================================================================
+
+#     update_gui_map(canvas, pibot_x, pibot_y, pibot_theta, map_image, pibot, waypoints) 
     
     
 
