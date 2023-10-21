@@ -244,13 +244,16 @@ def arange(start, stop, step):
     return np.linspace(float(start),float(stop),int(steps),endpoint=False)
 
 def clamp_boundaries(point, limit):
+    '''
+    To account for erroneous SLAM, clamp the point within the arena boundaries
+    '''
     if point > limit:
         point = limit - 0.1
     elif point < -limit:
         point = -limit + 0.1
     return point
 
-def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1,robot_radius=0.8):
+def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1,robot_radius=0.08):
     '''
     Star A-Star path planning
     Inputs: start_x, start_y, goal_x, goal_y, obstacle_list, last_fruit (optional)
@@ -263,14 +266,10 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1
     plt.clf() # so we don't get previous plots overlaid
 
     # start and goal position
-    print(start_x)
-    print(start_y)
     sx = clamp_boundaries(start_x, 1.5)  # [m]
     sy = clamp_boundaries(start_y, 1.5)  # [m]
-    print(sx)
-    print(sy)
-    gx = goal_x  # [m]
-    gy = goal_y  # [m]
+    gx = clamp_boundaries(goal_x, 1.5)  # [m]
+    gy = clamp_boundaries(goal_y, 1.5)  # [m]
     grid_size = 0.02  # [m]
 
     obstacle_list = (obstacle_list*10).astype(int)

@@ -1,10 +1,7 @@
 
 import pygame
-import cv2
 import numpy as np
-import sys
 import time
-import math
 
 background_colour = (45,45,45)
 rect_colour = (128,128,128)
