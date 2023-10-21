@@ -441,10 +441,11 @@ class Operate:
             sys.exit()
         
 def add_waypoint_from_click(mouse_pos: tuple):
-    x_offset = 774 + 438/2
-    y_offset = 72 + 438/2
-    x_scaling = 3/438
-    y_scaling = 3/438
+    map_size_px = 868 
+    x_offset = 774 + map_size_px/2
+    y_offset = 72 + map_size_px/2
+    x_scaling = 3/map_size_px
+    y_scaling = 3/map_size_px
     
     x = (mouse_pos[0] - x_offset)  * x_scaling
     y = (mouse_pos[1] - y_offset)  * y_scaling
