@@ -610,7 +610,7 @@ def drive(aruco_true_pos, initial = 0):
             operate.reached_waypoint = True
             time.sleep(0.5)
 
-    pygamemapgui.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+    # pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
 
 def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
@@ -643,7 +643,7 @@ def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose,map_ima
         # operate.update_keyboard()
         operate.take_pic()
         drive(aruco_true_pos)
-        pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+        pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.robot_pose = operate.ekf.robot.state[:3,0]
@@ -875,8 +875,7 @@ if __name__ == "__main__":
                 obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
                 print(operate.simplified_path)
                 
-                if K==0 :
-                    initial_turn_to_nearest_aruco(aruco_true_pos)
+                initial_turn_to_nearest_aruco(aruco_true_pos)
 
                 # Drive there
                 for path in operate.simplified_path: 
@@ -888,7 +887,7 @@ if __name__ == "__main__":
                     drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
                     #pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
-                initial_turn_to_nearest_aruco(aruco_true_pos)
+                # initial_turn_to_nearest_aruco(aruco_true_pos)
                 robot_x = operate.robot_pose[0]
                 robot_y = operate.robot_pose[1]
 
