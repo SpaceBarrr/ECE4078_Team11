@@ -815,7 +815,7 @@ if __name__ == "__main__":
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
-    parser.add_argument("--map", type=str, default="TrueMap2.txt")
+    parser.add_argument("--map", type=str, default="TrueMap1.txt")
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
     parser.add_argument("--shopping_list", type=str, default="shopping_list.txt")
     parser.add_argument("--auto", type=int, default=1)
@@ -904,6 +904,7 @@ if __name__ == "__main__":
                 obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
 
                 STARTING_RADIUS = 1.2 # NOTE tunable param
+                STARTING_ROBOT_RADIUS = 0.08
 
                 if K==0 :
                     robot_x = 0
