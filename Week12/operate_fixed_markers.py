@@ -372,12 +372,11 @@ if __name__ == "__main__":
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
-    parser.add_argument("--run", type=str, default='1')
     args, _ = parser.parse_known_args()
     
-    slam_map = f"lab_output/slam_run{args.run}_411.txt"
-    if not os.path.isfile():
-        print("GIVEN SLAM MAP NOT FOUND!")
+    slam_map = "lab_output/slam.txt"
+    if not os.path.isfile(slam_map):
+        print(f"\n\nGIVEN SLAM MAP NOT FOUND!\n{slam_map}\n")
         raise FileNotFoundError
 
     pygame.font.init()
@@ -411,7 +410,7 @@ if __name__ == "__main__":
             pygame.display.update()
             counter += 2
 
-    aruco_dict = parse_slam_map(args.slam_map)
+    aruco_dict = parse_slam_map(slam_map)
     aruco_pos = read_true_map(aruco_dict)
 
     operate = Operate(args, aruco_pos)
