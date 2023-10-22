@@ -128,7 +128,7 @@ class Operate:
         self.cur_waypoint = list()
         self.all_waypoints = list()
         self.minimum_seen_distance = np.inf
-        self.last_5_dist = [np.inf, np.inf, np.inf]
+        self.last_3_dist = [np.inf, np.inf, np.inf]
         self.drive_iterations = 0
         self.turn_to_aruco = False
         self.turning_tick = 5
@@ -535,8 +535,8 @@ def drive(aruco_true_pos, initial = 0):
         # TODO: is there a better of doing this?
         # np.roll will shift the last item of the array to the front
         # [D, A, B, C] = np.roll([A, B, C, D])
-        operate.last_5_dist = np.roll(operate.last_5_dist, 1)
-        operate.last_5_dist[0] = new_distance # replace the oldest value (now at the front) with the new distance
+        operate.last_3_dist = np.roll(operate.last_5_dist, 1)
+        operate.last_3_dist[0] = new_distance # replace the oldest value (now at the front) with the new distance
         moving_avg_dist = np.mean(operate.last_5_dist)
         
         if (moving_avg_dist > (operate.minimum_seen_distance + LINEAR_FUDGE_FACTOR) and operate.drive_iterations > 10): # distance increasing scenario (add some fudge factor for SLAM noise)
@@ -544,8 +544,8 @@ def drive(aruco_true_pos, initial = 0):
             operate.drive_iterations = 0
             operate.minimum_seen_distance = np.inf
             operate.driving_forward = False
-            #operate.turn_to_aruco = True
-            operate.reached_waypoint = True
+            operate.turn_to_aruco = True
+            # operate.reached_waypoint = True
             
             # operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos, (operate.initial_robot_pose_theta+operate.initial_theta_diff))
             # try:
@@ -566,8 +566,8 @@ def drive(aruco_true_pos, initial = 0):
                 operate.drive_iterations = 0
                 operate.driving_forward = False
                 #  theta_diff = angle_aruco(operate.cur_waypoint, aruco_true_pos)          ########
-                #operate.turn_to_aruco = True
-                operate.reached_waypoint = True
+                operate.turn_to_aruco = True
+                # operate.reached_waypoint = True
                 # print(operate.reached_waypoint)
                 # operate.turning_tick = 5
                 # operate.tick = 10
@@ -585,32 +585,32 @@ def drive(aruco_true_pos, initial = 0):
         # TODO: implement logic if angle error has increased too much
 
     ###### TURNING TO Origin (IF Bryan messes this up, its his fault)
-    # if (not operate.driving_forward) and (operate.turn_to_aruco) :
-    #     theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0,0], robot_theta)
-    #     operate.turning_tick = 15
-    #     print(f"Turning to Origin")
-    #     # print("     waypoint_theta : " + str(way_point_theta))
-    #     print("     theta_diff : " + str(theta_diff))
-    #     #operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
-    #     print(f"operate tick when turning : {operate.turning_tick}")
+    if (not operate.driving_forward) and (operate.turn_to_aruco) :
+        theta_diff, way_point_theta = angle_aruco(operate.cur_waypoint, [0,0], robot_theta)
+        operate.turning_tick = 15
+        print(f"Turning to Origin")
+        # print("     waypoint_theta : " + str(way_point_theta))
+        print("     theta_diff : " + str(theta_diff))
+        #operate.turning_tick = int(np.round(abs(theta_diff * TURNING_SCALING) + TURNING_CONST))
+        print(f"operate tick when turning : {operate.turning_tick}")
 
-    #     if theta_diff > 0: # turn right
-    #         operate.command['motion'] = [0,1]
-    #         operate.turning_tick = 20
-    #     elif theta_diff < 0: # turn left
-    #         operate.command['motion'] = [0,-1]
-    #         operate.turning_tick = 20
-    #     elif theta_diff == 0 : # should be impossible to end up in this situation
-    #         operate.command['motion'] = [0,0]
-    #         operate.turn_to_aruco = False
-    #         operate.reached_waypoint = True
+        if theta_diff > 0: # turn right
+            operate.command['motion'] = [0,1]
+            operate.turning_tick = 20
+        elif theta_diff < 0: # turn left
+            operate.command['motion'] = [0,-1]
+            operate.turning_tick = 20
+        elif theta_diff == 0 : # should be impossible to end up in this situation
+            operate.command['motion'] = [0,0]
+            operate.turn_to_aruco = False
+            operate.reached_waypoint = True
     
-    #     if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
-    #         print(f"Finished turning to Aruco")
-    #         operate.command['motion'] = [0,0]
-    #         operate.turn_to_aruco = False
-    #         operate.reached_waypoint = True
-    #         time.sleep(0.5)
+        if abs(theta_diff) < ANGLE_THRESHOLD: # close enough, stop turning
+            print(f"Finished turning to Aruco")
+            operate.command['motion'] = [0,0]
+            operate.turn_to_aruco = False
+            operate.reached_waypoint = True
+            time.sleep(0.5)
 
     # pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
@@ -644,14 +644,27 @@ def turn_360_deg(threshold, map_image, pibot) :
         theta_diff = abs(clamp_angle((robot_theta - waypoint_theta), -np.pi, np.pi))
         print(theta_diff)
         n += 1
-        if (n > 30) : 
+        if (n > 10) : 
             n = 0
+            operate.command['motion'] = [0,0]
+            operate.take_pic()
+            pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
+            drive_meas = operate.control()
+            operate.update_slam(drive_meas)
+            operate.robot_pose = operate.ekf.robot.state[:3,0]
+            operate.record_data()
+            operate.save_image()
+            operate.detect_target()
+            # visualise
+            operate.draw(canvas)
+            pygame.display.update()
             time.sleep(1)
 
     print("Turned halfway...")
     operate.command['motion'] = [0,0]
     back_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
     theta_diff = np.pi
+    n = 0
 
     while (theta_diff > threshold) : 
         operate.take_pic()
@@ -670,7 +683,23 @@ def turn_360_deg(threshold, map_image, pibot) :
         operate.draw(canvas)
         robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
         theta_diff = abs(robot_theta - original_theta)
-        print(theta_diff)
+        n += 1
+        if (n > 10) : 
+            n = 0
+            operate.command['motion'] = [0,0]
+            operate.take_pic()
+            pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
+            drive_meas = operate.control()
+            operate.update_slam(drive_meas)
+            operate.robot_pose = operate.ekf.robot.state[:3,0]
+            operate.record_data()
+            operate.save_image()
+            operate.detect_target()
+            # visualise
+            operate.draw(canvas)
+            pygame.display.update()
+            time.sleep(1)
+        
 
     print("Finished turning")
     operate.command['motion'] = [0,0]
