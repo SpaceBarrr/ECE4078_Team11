@@ -7,7 +7,6 @@ import csv
 import os
 import json
 from datetime import datetime
-import ast
 
 # save a keyboard control sequence and a list of images seen by the robot
 class DatasetWriter:
@@ -102,14 +101,15 @@ class DatasetPlayer:
 
 # for SLAM (M2), save the map
 class OutputWriter:
-    def __init__(self, folder_name="output/"):
+    def __init__(self, folder_name="output/",auto=False):
         if not folder_name.endswith("/"):
             folder_name = folder_name + "/"
         self.folder = folder_name
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
         
-        self.img_f = open(folder_name+"images.txt", 'w')
+        if not auto:
+            self.img_f = open(folder_name+"images.txt", 'w')
         # self.map_f_path = folder_name+"slam.txt"
 
         self.image_count = 0

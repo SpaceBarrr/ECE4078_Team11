@@ -165,7 +165,7 @@ class Operate:
             self.data = dh.DatasetWriter('record')
         else:
             self.data = None
-        self.output = dh.OutputWriter('lab_output')
+        self.output = dh.OutputWriter('lab_output',auto=True)
         self.command = {'motion': [0, 0],
                         'inference': False,
                         'output': False,
@@ -801,8 +801,6 @@ if __name__ == "__main__":
     orange = (245, 117, 20)
     PIBOT_WIDTH = (218/1.5)*0.1
     PIBOT_HEIGHT = PIBOT_WIDTH
-    
-    print(args.auto)
 
     # drawing map_image rectangle
     map_background_rect = pygame.Rect(700, 0, 566, 660)
@@ -821,6 +819,7 @@ if __name__ == "__main__":
     fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
     # print(aruco_true_pos)
 
+    print("adsfasdsfadsfadsf")
     search_list = read_search_list(args.shopping_list)
     fruit_goal_list = print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
     
