@@ -1,6 +1,6 @@
 (prepare moodle windows, and folders first)
 (unzip the file in Windows land and copy to WSL)
-cd ./LiveDemo/Week06-07/
+cd ./LiveDemo/Week12/
 python operate.py
 (press enter to start slam, P to start predictions, s to save slam, n to save predictions)
 (control c or hit the x to close pygame once the run is finished, DONT FORGET TO SAVE SLAM)
@@ -8,11 +8,5 @@ python operate.py
 (ONCE THE RUN ENDS)
 python TargetPoseEst.py --run N (WHERE N IS THE RUN NUMBER)
 
-COPY slam.txt and targets.txt TO Week08-09
-cd ..
-cd ./Week08-09
-
-python preprocessing.py
-
-python auto_fruit_search_new_strat.py --shopping_list {SHOPPING_FILE.txt}
+python auto_fruit_search_new_strat.py --run N (WHERE N IS THE RUN NUMBER)
 (PRESS ANY KEY TO START)
