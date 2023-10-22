@@ -767,16 +767,11 @@ if __name__ == "__main__":
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
+    parser.add_argument("--map", type=str, default="TrueMap.txt")
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
-    parser.add_argument("--shopping_list", type=str, default="shopping_list.txt")
+    parser.add_argument("--shopping_list", type=str, default="M4_prac_shopping_list.txt")
     parser.add_argument("--auto", type=int, default=1)
-    parser.add_argument("--run", type=str, default="NOT SUPPLIED")
     args, _ = parser.parse_known_args()
-    
-    if args.run == "NOT SUPPLIED":
-        raise ValueError("YOU HAVE NOT SUPPLIED A RUN NUMBER. Please use --run N\nDONT PANIC THIS IS NOT A CODE ISSUE!!!")
-    
-    true_map = f"TrueMap{args.run}.txt"
     
     pygame.font.init() 
     TITLE_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 35)
@@ -796,7 +791,7 @@ if __name__ == "__main__":
     pygame.display.update()
     # ========================================================================
     # create map_image.png from text file
-    visualise_map(true_map)
+    visualise_map(args.map)
     # params for gui
     background_colour = (45,45,45)
     rect_colour = (128,128,128)
@@ -821,7 +816,7 @@ if __name__ == "__main__":
     start = False
 
     # read in the true map
-    fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(true_map)
+    fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
     # print(aruco_true_pos)
 
     search_list = read_search_list(args.shopping_list)

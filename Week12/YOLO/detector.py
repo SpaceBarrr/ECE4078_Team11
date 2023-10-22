@@ -66,7 +66,7 @@ class Detector:
 
         # predict target type and bounding box with your trained YOLO
 
-        predictions = self.model.predict(cv_img, imgsz=320, verbose=False, confidence=0.7) # NOTE: returned 
+        predictions = self.model.predict(cv_img, imgsz=320, verbose=False, conf=0.75) # NOTE: returned 
 
         # get bounding box and class label for target(s) detected
         bounding_boxes = []

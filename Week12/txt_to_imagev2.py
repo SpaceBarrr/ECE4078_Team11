@@ -121,3 +121,4 @@ def visualise_map(map):
     plt.grid(True)
     #plt.show()
     fig.savefig("map_imagev2.png")
+
