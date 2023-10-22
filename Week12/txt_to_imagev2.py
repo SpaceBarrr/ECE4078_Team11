@@ -118,9 +118,6 @@ def visualise_map(map):
     ax.scatter(ReferenceArUcos_x, ReferenceArUcos_y, color = "blue", marker = "s", s=130)
     ax.scatter(ReferenceObjects_x, ReferenceObjects_y, c = "green", marker = "s", s =130) #s=1300 is for obstacle size, 130 closer to real size (slightly bigger by a couple cm)
     ax.scatter(0,0, color = "black", marker = "x")
-    print(ReferenceMap)
     plt.grid(True)
     #plt.show()
     fig.savefig("map_imagev2.png")
-
-visualise_map('TrueMap.txt')

@@ -819,7 +819,6 @@ if __name__ == "__main__":
     fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
     # print(aruco_true_pos)
 
-    print("adsfasdsfadsfadsf")
     search_list = read_search_list(args.shopping_list)
     fruit_goal_list = print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
     
