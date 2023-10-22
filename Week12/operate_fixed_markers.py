@@ -245,8 +245,6 @@ class Operate:
     # keyboard teleoperation, replace with your M1 codes if preferred        
     def update_keyboard(self):
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONUP:
-                print(pygame.mouse.get_pos())
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -294,24 +292,24 @@ class Operate:
                     self.double_reset_comfirm = 0
                     self.ekf.reset()
             # run SLAM
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                n_observed_markers = len(self.ekf.taglist)
-                if n_observed_markers == 0:
-                    if not self.ekf_on:
-                        self.notification = 'SLAM is running'
-                        self.ekf_on = True
-                    else:
-                        self.notification = '> 2 landmarks is required for pausing'
-                elif n_observed_markers < 3:
-                    self.notification = '> 2 landmarks is required for pausing'
-                else:
-                    if not self.ekf_on:
-                        self.request_recover_robot = True
-                    self.ekf_on = not self.ekf_on
-                    if self.ekf_on:
-                        self.notification = 'SLAM is running'
-                    else:
-                        self.notification = 'SLAM is paused'
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            #     n_observed_markers = len(self.ekf.taglist)
+            #     if n_observed_markers == 0:
+            #         if not self.ekf_on:
+            #             self.notification = 'SLAM is running'
+            #             self.ekf_on = True
+            #         else:
+            #             self.notification = '> 2 landmarks is required for pausing'
+            #     elif n_observed_markers < 3:
+            #         self.notification = '> 2 landmarks is required for pausing'
+            #     else:
+            #         if not self.ekf_on:
+            #             self.request_recover_robot = True
+            #         self.ekf_on = not self.ekf_on
+            #         if self.ekf_on:
+            #             self.notification = 'SLAM is running'
+            #         else:
+            #             self.notification = 'SLAM is paused'
             # run object detector
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 self.command['inference'] = True
@@ -374,10 +372,11 @@ if __name__ == "__main__":
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
-    parser.add_argument("--slam_map", default='lab_output/slam_run1_411.txt')
+    parser.add_argument("--run", type=str, default='1')
     args, _ = parser.parse_known_args()
     
-    if not os.path.isfile(args.slam_map):
+    slam_map = f"lab_output/slam_run{args.run}_411.txt"
+    if not os.path.isfile():
         print("GIVEN SLAM MAP NOT FOUND!")
         raise FileNotFoundError
 
