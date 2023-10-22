@@ -449,7 +449,7 @@ def add_waypoint_from_click(mouse_pos: tuple):
     # robot drives to the waypoint
     operate.cur_waypoint = [x, -y]
             
-def drive(aruco_true_pos, initial = 0):
+def drive(aruco_true_pos, auto, initial = 0):
     '''
     Main logic for driving the robot
     Runs in the main pygame loop each clock cycle
@@ -468,7 +468,7 @@ def drive(aruco_true_pos, initial = 0):
     TURNING_CONST = 20                  # Woodside : 20
     FORWARD_SCALING = 10                # Woodside : 50
     FORWARD_CONST = 20                  # Woodside : 20
-    
+        
     # user either hasn't clicked or path planning returned nothing
     if len(operate.cur_waypoint) == 0:
         return  
@@ -530,9 +530,9 @@ def drive(aruco_true_pos, initial = 0):
         # TODO: is there a better of doing this?
         # np.roll will shift the last item of the array to the front
         # [D, A, B, C] = np.roll([A, B, C, D])
-        operate.last_3_dist = np.roll(operate.last_5_dist, 1)
-        operate.last_3_dist[0] = new_distance # replace the oldest value (now at the front) with the new distance
-        moving_avg_dist = np.mean(operate.last_5_dist)
+        operate.last_3_dist = np.roll(operate.last_3_dist, 1)
+        operate.last_3_dist[0] = new_distance # replace the oldest val`ue (now at the front) with the new distance
+        moving_avg_dist = np.mean(operate.last_3_dist)
         
         if (moving_avg_dist > (operate.minimum_seen_distance + LINEAR_FUDGE_FACTOR) and operate.drive_iterations > 10): # distance increasing scenario (add some fudge factor for SLAM noise)
             operate.command['motion'] = [0,0]
@@ -549,10 +549,15 @@ def drive(aruco_true_pos, initial = 0):
             # except IndexError:
             #     print("last waypoint")
             #     operate.cur_waypoint = []
-            
+            if not auto: 
+                print("SLEEPING")
+                operate.command['motion'] = [0,0]
+                drive_meas = operate.control()
+                pygame.time.wait(2000)
             print("Distance increasing, arriving at waypoint early...")
             
         else: # distance decreasing (good)
+            print(auto)
             print(f"DISTANCE: {moving_avg_dist}, THRESHOLD: {LINEAR_THRESHOLD}")
             if moving_avg_dist < LINEAR_THRESHOLD: # arrived at waypoint
                 # reset for next run
@@ -567,6 +572,11 @@ def drive(aruco_true_pos, initial = 0):
                 # operate.turning_tick = 5
                 # operate.tick = 10
                 # operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos,(operate.initial_robot_pose_theta+operate.initial_theta_diff))
+                if not auto: 
+                    print("SLEEPING")
+                    operate.command['motion'] = [0,0]
+                    drive_meas = operate.control()
+                    pygame.time.wait(2000)
                 print("Arrived at waypoint")
 
             else: # drive forward
@@ -618,7 +628,7 @@ def turn_360_deg(threshold, map_image, pibot) :
 
     waypoint_theta = original_theta + np.pi
     theta_diff = np.pi 
-    operate.turning_tick = 20
+    operate.turning_tick = 15
     n = 0
 
     while (theta_diff > threshold) : 
@@ -730,7 +740,7 @@ def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) :
     print(f"Now turning to ArucoMarker {index_aruco}")
     return closest_aruco, index_aruco
 
-def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose,map_image, pibot, canvas) :
+def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose,map_image, pibot, canvas, auto) :
     waypoint_x = waypoint[0]
     waypoint_y = waypoint[1]
     operate.cur_waypoint = [waypoint_x, waypoint_y]
@@ -738,7 +748,7 @@ def drive_to_waypoint(obstacle_list, waypoint, aruco_true_pos,robot_pose,map_ima
     while not operate.reached_waypoint:
         # operate.update_keyboard()
         operate.take_pic()
-        drive(aruco_true_pos)
+        drive(aruco_true_pos, auto)
         pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
@@ -988,7 +998,7 @@ if __name__ == "__main__":
                     # operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
                     operate.cur_waypoint = path
                     print(f"Driving to waypoint: {path}")
-                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
+                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas, args.auto)
                     operate.simplified_path = np.delete(operate.simplified_path,0,0)
                     turn_360_deg(0.3, map_image, pibot)
                     pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
@@ -1016,7 +1026,7 @@ if __name__ == "__main__":
                     # operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
                     operate.cur_waypoint = path
                     print(f"Driving to waypoint: {path}")
-                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
+                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas, args.auto)
                     operate.simplified_path = np.delete(operate.simplified_path,0,0)
                     turn_360_deg(0.3, map_image, pibot)
                 
@@ -1056,7 +1066,7 @@ if __name__ == "__main__":
             try:
                 operate.update_keyboard()
                 operate.take_pic()
-                drive(aruco_true_pos)
+                drive(aruco_true_pos, args.auto)
                 drive_meas = operate.control()
                 operate.update_slam(drive_meas)
                 operate.robot_pose = operate.ekf.robot.state[:3,0]
