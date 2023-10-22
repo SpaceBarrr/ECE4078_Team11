@@ -412,8 +412,10 @@ if __name__ == "__main__":
 
     aruco_dict = parse_slam_map(slam_map)
     aruco_pos = read_true_map(aruco_dict)
-
+    
     operate = Operate(args, aruco_pos)
+    
+    operate.ekf_on = True
 
     while start:
         operate.update_keyboard()
