@@ -5,6 +5,9 @@ python operate.py
 (press enter to start slam, P to start predictions, s to save slam, n to save predictions)
 (control c or hit the x to close pygame once the run is finished, DONT FORGET TO SAVE SLAM)
 
+(IF DESIRED FOR FRUIT DETECTION)
+python operate_fixed_markers.py
+
 (ONCE THE RUN ENDS)
 python TargetPoseEst.py --run N (WHERE N IS THE RUN NUMBER)
 
