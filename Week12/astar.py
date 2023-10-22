@@ -248,9 +248,9 @@ def clamp_boundaries(point, limit):
     To account for erroneous SLAM, clamp the point within the arena boundaries
     '''
     if point > limit:
-        point = limit - 0.1
+        point = limit - 0.3
     elif point < -limit:
-        point = -limit + 0.1
+        point = -limit + 0.3
     return point
 
 def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1,robot_radius=0.08):

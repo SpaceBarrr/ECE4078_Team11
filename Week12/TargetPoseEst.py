@@ -227,7 +227,7 @@ if __name__ == "__main__":
         aruco_dict = parse_slam_map(f'{script_dir}/lab_output/slam.txt')
         os.rename(f'{script_dir}/lab_output/slam.txt', f'{script_dir}/lab_output/slam_run{args.run}_411.txt')
     except FileNotFoundError:
-        print("WARNING: Could not find slam.txt - TRUEMAP WILL NOT BE CREATED AND SLAM WILL NOT BE RENAMED!!!\nMost likely you either forgot to save slam map or have already ran TargetPoseEst.py")
+        print("\n\nWARNING: Could not find slam.txt - TRUEMAP WILL NOT BE CREATED AND SLAM WILL NOT BE RENAMED!!!\nMost likely you either forgot to save slam map or have already ran TargetPoseEst.py")
     else:
         print("Renamed slam file")
 

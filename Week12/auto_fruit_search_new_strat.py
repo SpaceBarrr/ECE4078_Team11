@@ -128,7 +128,7 @@ class Operate:
         self.cur_waypoint = list()
         self.all_waypoints = list()
         self.minimum_seen_distance = np.inf
-        self.last_5_dist = [np.inf, np.inf, np.inf, np.inf, np.inf]
+        self.last_5_dist = [np.inf, np.inf, np.inf]
         self.drive_iterations = 0
         self.turn_to_aruco = False
         self.turning_tick = 5
@@ -468,7 +468,7 @@ def drive(aruco_true_pos, initial = 0):
     # TUNEABLE PARAMS:
     ANGLE_THRESHOLD = 0.05 # rad, 0.5 ~ 3 deg
     LINEAR_THRESHOLD = 0.2
-    LINEAR_FUDGE_FACTOR = 0.15      # Woodside : 0.15 
+    LINEAR_FUDGE_FACTOR = 0.1      # Woodside : 0.15 
     TURNING_SCALING = 10               # Woodside : 10
     TURNING_CONST = 20                  # Woodside : 20
     FORWARD_SCALING = 10                # Woodside : 50
@@ -544,8 +544,9 @@ def drive(aruco_true_pos, initial = 0):
             operate.drive_iterations = 0
             operate.minimum_seen_distance = np.inf
             operate.driving_forward = False
-            operate.turn_to_aruco = True
+            #operate.turn_to_aruco = True
             operate.reached_waypoint = True
+            
             # operate.closestAruco, operate.closestArucoIndex = finding_nearest_aruco(operate.cur_waypoint, aruco_true_pos, (operate.initial_robot_pose_theta+operate.initial_theta_diff))
             # try:
             #     new_waypoint = operate.all_waypoints.pop()
@@ -565,7 +566,7 @@ def drive(aruco_true_pos, initial = 0):
                 operate.drive_iterations = 0
                 operate.driving_forward = False
                 #  theta_diff = angle_aruco(operate.cur_waypoint, aruco_true_pos)          ########
-                operate.turn_to_aruco = True
+                #operate.turn_to_aruco = True
                 operate.reached_waypoint = True
                 # print(operate.reached_waypoint)
                 # operate.turning_tick = 5
@@ -617,8 +618,14 @@ def drive(aruco_true_pos, initial = 0):
 def turn_360_deg(threshold, map_image, pibot) : 
     # grab pose data and calculate angles
     original_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
+    robot_x = operate.robot_pose[0]
+    robot_y = -operate.robot_pose[1]
 
-    theta_diff = 2*np.pi 
+    waypoint_theta = original_theta + np.pi
+    theta_diff = np.pi 
+    operate.turning_tick = 20
+    n = 0
+
     while (theta_diff > threshold) : 
         operate.take_pic()
         operate.command['motion'] = [0,-1]
@@ -634,8 +641,49 @@ def turn_360_deg(threshold, map_image, pibot) :
         # visualise
         operate.draw(canvas)
         robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
-        theta_diff = abs(robot_theta - original_theta)
+        theta_diff = abs(clamp_angle((robot_theta - waypoint_theta), -np.pi, np.pi))
+        print(theta_diff)
+        n += 1
+        if (n > 30) : 
+            n = 0
+            time.sleep(1)
 
+    print("Turned halfway...")
+    operate.command['motion'] = [0,0]
+    back_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
+    theta_diff = np.pi
+
+    while (theta_diff > threshold) : 
+        operate.take_pic()
+        operate.command['motion'] = [0,-1]
+        print(theta_diff)
+        pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
+        drive_meas = operate.control()
+        operate.update_slam(drive_meas)
+        operate.robot_pose = operate.ekf.robot.state[:3,0]
+        # operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
+        # print(operate.robot_pose)
+        operate.record_data()
+        operate.save_image()
+        operate.detect_target()
+        # visualise
+        operate.draw(canvas)
+        robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
+        theta_diff = abs(robot_theta - original_theta)
+        print(theta_diff)
+
+    print("Finished turning")
+    operate.command['motion'] = [0,0]
+    drive_meas = operate.control()
+    operate.update_slam(drive_meas)
+    operate.robot_pose = operate.ekf.robot.state[:3,0]
+    # operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
+    # print(operate.robot_pose)
+    operate.record_data()
+    operate.save_image()
+    operate.detect_target()
+    # visualise
+    operate.draw(canvas)
 
 def finding_nearest_aruco(waypoint, aruco_true_pos, robot_theta) : 
     closest_aruco = aruco_true_pos[0]
@@ -767,9 +815,9 @@ if __name__ == "__main__":
     parser.add_argument("--calib_dir", type=str, default="calibration/param/")
     parser.add_argument("--save_data", action='store_true')
     parser.add_argument("--play_data", action='store_true')
-    parser.add_argument("--map", type=str, default="TrueMap.txt")
+    parser.add_argument("--map", type=str, default="TrueMap2.txt")
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
-    parser.add_argument("--shopping_list", type=str, default="M4_prac_shopping_list.txt")
+    parser.add_argument("--shopping_list", type=str, default="shopping_list.txt")
     parser.add_argument("--auto", type=int, default=1)
     args, _ = parser.parse_known_args()
     
@@ -855,7 +903,7 @@ if __name__ == "__main__":
                 fruits_true_pos = np.delete(fruits_true_pos, fruit_index, axis=0)        # Removes the finding fruit from obstacle list
                 obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
 
-                STARTING_RADIUS = 1.5 # NOTE tunable param
+                STARTING_RADIUS = 1.2 # NOTE tunable param
 
                 if K==0 :
                     robot_x = 0
@@ -892,6 +940,8 @@ if __name__ == "__main__":
                 print(operate.simplified_path)
                 
                 # initial_turn_to_nearest_aruco(aruco_true_pos)
+                if (K != 0) : 
+                    turn_360_deg(0.3, map_image, pibot)
 
                 # Drive there
                 for path in operate.simplified_path: 
@@ -903,25 +953,38 @@ if __name__ == "__main__":
                     drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
                     operate.simplified_path = np.delete(operate.simplified_path,0,0)
                     turn_360_deg(0.3, map_image, pibot)
-                    #pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
+                    pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], operate.robot_pose[2], map_image, pibot, operate.simplified_path)
 
-                # initial_turn_to_nearest_aruco(aruco_true_pos)
                 robot_x = operate.robot_pose[0]
                 robot_y = operate.robot_pose[1]
-
-                distance = np.sqrt((robot_x-goal[0])**2 + (robot_y-goal[1])**2) 
-
-                ## Check the distance at the end of the run. Is it still far from the fruit?
-                # while distance > 0.3 : 
-                #     final_waypoint = [(robot_x + goal[0] + robot_x)/3, (robot_y + goal[1] + robot_y)/3 ]
-                #     operate.simplified_path = np.vstack((operate.simplified_path, final_waypoint)) 
-                #     drive_to_waypoint(obstacle_list, final_waypoint, aruco_true_pos, operate.robot_pose)
-                #     operate.robot_pose = operate.ekf.robot.state[:3,0]
-                #     robot_x = operate.robot_pose[0]
-                #     robot_y = operate.robot_pose[1]
-                #     distance = np.sqrt((robot_x-goal[0])**2 + (robot_y-goal[1])**2) 
-                
+                #turn_360_deg(0.3, map_image, pibot)
                 operate.notification = f"Arrived at fruit: {fruit_to_find}"
+
+                time.sleep(2)
+                ####### Go back to the orgin #######
+                all_waypoints_reverse, simplified_path_reverse = None, None # bc python doesnt have a do while loop :(
+                while all_waypoints_reverse == None and simplified_path_reverse == None:
+                    all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, 0, 0, obstacle_list, last_fruit_pos, radius)
+                    radius -= 0.3 # if this too small, the algorithm will be quite slow. too large, and we'll take shit paths. 
+                    if radius < 0:
+                        radius = 0
+                
+                operate.all_waypoints = all_waypoints_reverse[::-1]
+                operate.simplified_path =  simplified_path_reverse[::-1]
+
+                for path in operate.simplified_path: 
+                    operate.robot_pose = operate.ekf.robot.state[:3,0]
+                    operate.reached_waypoint = False
+                    # operate.notification = f"[{operate.robot_pose[0]}, {operate.robot_pose[1]}, {operate.robot_pose[2]}]"
+                    operate.cur_waypoint = path
+                    print(f"Driving to waypoint: {path}")
+                    drive_to_waypoint(obstacle_list, path, aruco_true_pos, operate.robot_pose, map_image, pibot, canvas)
+                    operate.simplified_path = np.delete(operate.simplified_path,0,0)
+                    turn_360_deg(0.3, map_image, pibot)
+                
+                operate.notification = f"Arrived at ORIGIN"
+                robot_x = operate.robot_pose[0]
+                robot_y = operate.robot_pose[1]
 
                 # STOP SPINNING
                 operate.command['motion'] = [0,0]
