@@ -535,9 +535,9 @@ def drive(aruco_true_pos, initial = 0):
         # TODO: is there a better of doing this?
         # np.roll will shift the last item of the array to the front
         # [D, A, B, C] = np.roll([A, B, C, D])
-        operate.last_3_dist = np.roll(operate.last_5_dist, 1)
+        operate.last_3_dist = np.roll(operate.last_3_dist, 1)
         operate.last_3_dist[0] = new_distance # replace the oldest value (now at the front) with the new distance
-        moving_avg_dist = np.mean(operate.last_5_dist)
+        moving_avg_dist = np.mean(operate.last_3_dist)
         
         if (moving_avg_dist > (operate.minimum_seen_distance + LINEAR_FUDGE_FACTOR) and operate.drive_iterations > 10): # distance increasing scenario (add some fudge factor for SLAM noise)
             operate.command['motion'] = [0,0]
@@ -623,7 +623,7 @@ def turn_360_deg(threshold, map_image, pibot) :
 
     waypoint_theta = original_theta + np.pi
     theta_diff = np.pi 
-    operate.turning_tick = 20
+    operate.turning_tick = 15
     n = 0
 
     while (theta_diff > threshold) : 
@@ -644,21 +644,22 @@ def turn_360_deg(threshold, map_image, pibot) :
         theta_diff = abs(clamp_angle((robot_theta - waypoint_theta), -np.pi, np.pi))
         print(theta_diff)
         n += 1
-        if (n > 10) : 
-            n = 0
-            operate.command['motion'] = [0,0]
-            operate.take_pic()
-            pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
-            drive_meas = operate.control()
-            operate.update_slam(drive_meas)
-            operate.robot_pose = operate.ekf.robot.state[:3,0]
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
-            time.sleep(1)
+        # if (n > 10) : 
+        #     n = 0
+        #     print("Stop")
+        #     operate.command['motion'] = [0,0]
+        #     operate.take_pic()
+        #     pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
+        #     drive_meas = operate.control()
+        #     operate.update_slam(drive_meas)
+        #     operate.robot_pose = operate.ekf.robot.state[:3,0]
+        #     operate.record_data()
+        #     operate.save_image()
+        #     operate.detect_target()
+        #     # visualise
+        #     operate.draw(canvas)
+        #     pygame.display.update()
+        #     time.sleep(2)
 
     print("Turned halfway...")
     operate.command['motion'] = [0,0]
@@ -684,21 +685,22 @@ def turn_360_deg(threshold, map_image, pibot) :
         robot_theta = clamp_angle(-operate.robot_pose[2], -np.pi, np.pi)
         theta_diff = abs(robot_theta - original_theta)
         n += 1
-        if (n > 10) : 
-            n = 0
-            operate.command['motion'] = [0,0]
-            operate.take_pic()
-            pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
-            drive_meas = operate.control()
-            operate.update_slam(drive_meas)
-            operate.robot_pose = operate.ekf.robot.state[:3,0]
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
-            time.sleep(1)
+        # if (n > 10) : 
+        #     n = 0
+        #     print("Stop")
+        #     operate.command['motion'] = [0,0]
+        #     operate.take_pic()
+        #     pygamemapgui566.update_gui_map(canvas, operate.robot_pose[0], operate.robot_pose[1], (operate.robot_pose[2] - np.pi/2), map_image, pibot, operate.simplified_path)
+        #     drive_meas = operate.control()
+        #     operate.update_slam(drive_meas)
+        #     operate.robot_pose = operate.ekf.robot.state[:3,0]
+        #     operate.record_data()
+        #     operate.save_image()
+        #     operate.detect_target()
+        #     # visualise
+        #     operate.draw(canvas)
+        #     pygame.display.update()
+        #     time.sleep(2)
         
 
     print("Finished turning")
