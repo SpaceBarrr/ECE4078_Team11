@@ -855,19 +855,27 @@ if __name__ == "__main__":
                 fruits_true_pos = np.delete(fruits_true_pos, fruit_index, axis=0)        # Removes the finding fruit from obstacle list
                 obstacle_list = np.vstack((fruits_true_pos, aruco_true_pos))
 
-                STARTING_RADIUS = 1.5 # NOTE tunable param
+                STARTING_RADIUS = 1.5 # NOTE tunable params
+                STARTING_ROBOT_RADIUS = 0.08 
 
                 if K==0 :
                     robot_x = 0
                     robot_y = 0
                 
                 radius = STARTING_RADIUS
+                robot_radius = STARTING_ROBOT_RADIUS
+                
                 all_waypoints_reverse, simplified_path_reverse = None, None # bc python doesnt have a do while loop :(
+                # while all_waypoints_reverse == None and simplified_path_reverse == None:
+                #     all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_pos, radius)
+                #     radius -= 0.3 # if this too small, the algorithm will be quite slow. too large, and we'll take shit paths. 
+                #     if radius < 0:
+                #         radius = 0
                 while all_waypoints_reverse == None and simplified_path_reverse == None:
-                    all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_pos, radius)
-                    radius -= 0.3 # if this too small, the algorithm will be quite slow. too large, and we'll take shit paths. 
-                    if radius < 0:
-                        radius = 0
+                    all_waypoints_reverse, simplified_path_reverse = astar.a_start(robot_x, robot_y, operate.fruit_to_find_xy[0], operate.fruit_to_find_xy[1], obstacle_list, last_fruit_pos, radius, robot_radius)
+                    robot_radius -= 0.02 # if this too small, the algorithm will be quite slow. too large, and we'll take shit paths. 
+                    if robot_radius < 0:
+                        robot_radius = 0
                 
                 # get rid of orgin
                 if K== 0 : 
