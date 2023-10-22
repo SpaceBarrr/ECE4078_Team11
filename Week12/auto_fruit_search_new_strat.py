@@ -440,17 +440,12 @@ class Operate:
             sys.exit()
         
 def add_waypoint_from_click(mouse_pos: tuple):
-    map_size_px = 868 
-    x_offset = 774 + map_size_px/2
-    y_offset = 72 + map_size_px/2
-    x_scaling = 3/map_size_px
-    y_scaling = 3/map_size_px
+    print(mouse_pos)
     
-    x = (mouse_pos[0] - x_offset)  * x_scaling
-    y = (mouse_pos[1] - y_offset)  * y_scaling
+    x = (mouse_pos[0] - 774 - 868/2) / (868/2) * 3 + 1.5
+    y = (mouse_pos[1] - 72  - 868/2) / (868/2) * 3 + 1.5
     
     print(x,-y)
-
     # robot drives to the waypoint
     operate.cur_waypoint = [x, -y]
             
