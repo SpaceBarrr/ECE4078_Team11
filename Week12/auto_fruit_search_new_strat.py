@@ -7,7 +7,6 @@ import cv2
 import os, sys
 import time
 import json
-from time import sleep
 
 # import utility functions
 #sys.path.insert(0, "{}/util".format(os.getcwd()))
@@ -441,18 +440,19 @@ class Operate:
             sys.exit()
         
 def add_waypoint_from_click(mouse_pos: tuple):
-    x_offset = 774 + 438/2
-    y_offset = 72 + 438/2
-    x_scaling = 3/438
-    y_scaling = 3/438
+    map_size_px = 868 
+    x_offset = 774 + map_size_px/2
+    y_offset = 72 + map_size_px/2
+    x_scaling = 3/map_size_px
+    y_scaling = 3/map_size_px
     
     x = (mouse_pos[0] - x_offset)  * x_scaling
     y = (mouse_pos[1] - y_offset)  * y_scaling
     
-    print(x,y)
+    print(x,-y)
 
     # robot drives to the waypoint
-    operate.cur_waypoint = [x, y]
+    operate.cur_waypoint = [x, -y]
             
 def drive(aruco_true_pos, initial = 0):
     '''
@@ -843,17 +843,6 @@ if __name__ == "__main__":
             pygame.display.update()
             counter += 2
 
-    ## Testing for Level 1
-    # operate.fruit_to_find = search_list.pop(0)
-    # fruit_index = fruits_list.index(operate.fruit_to_find.lower())
-    # obstacle_index = obstacle_list.index(operate.fruit_to_find.lower())
-    # print(fruit_index)
-    # obstacle_list.pop(operate.fruit_to_find)        # Removes the finding fruit from obstacle list
-    
-    # operate.all_waypoints = astar.a_start(0, 0, fruits_true_pos[fruit_index][0], fruits_true_pos[fruit_index][1], obstacle_list)
-    # obstacle_list.insert(fruit_index, operate.fruit_to_find)        # Add the finding fruit back to obstacle list
-    # print(operate.all_waypoints)
-
     if args.auto:
         ### for Autonomous Waypoints (COMMENT THIS OUT : Do not use thiss until its time to test)
         try:
@@ -965,18 +954,24 @@ if __name__ == "__main__":
 
     else: # level 1 code
         while start:
-            operate.update_keyboard()
-            operate.take_pic()
-            drive(aruco_true_pos)
-            drive_meas = operate.control()
-            operate.update_slam(drive_meas)
-            operate.robot_pose = operate.ekf.robot.state[:3,0]
-            # print(operate.robot_pose)
-            operate.record_data()
-            operate.save_image()
-            operate.detect_target()
-            # visualise
-            operate.draw(canvas)
-            pygame.display.update()
+            try:
+                operate.update_keyboard()
+                operate.take_pic()
+                drive(aruco_true_pos)
+                drive_meas = operate.control()
+                operate.update_slam(drive_meas)
+                operate.robot_pose = operate.ekf.robot.state[:3,0]
+                # print(operate.robot_pose)
+                operate.record_data()
+                operate.save_image()
+                operate.detect_target()
+                # visualise
+                operate.draw(canvas)
+                pygame.display.update()
+            except KeyboardInterrupt:
+                operate.command['motion'] = [0,0]
+                drive_meas = operate.control()
+                print("Done")
+                raise
         
     
