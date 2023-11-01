@@ -7,6 +7,8 @@ author: Atsushi Sakai(@Atsushi_twi)
 
 See Wikipedia article (https://en.wikipedia.org/wiki/A*_search_algorithm)
 
+Modified by Cian, Bryan and Joel for ECE 4078
+
 """
 
 import math
@@ -241,7 +243,17 @@ def arange(start, stop, step):
 
     return np.linspace(float(start),float(stop),int(steps),endpoint=False)
 
-def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1):
+def clamp_boundaries(point, limit):
+    '''
+    To account for erroneous SLAM, clamp the point within the arena boundaries
+    '''
+    if point > limit:
+        point = limit - 0.3
+    elif point < -limit:
+        point = -limit + 0.3
+    return point
+
+def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1,robot_radius=0.08):
     '''
     Star A-Star path planning
     Inputs: start_x, start_y, goal_x, goal_y, obstacle_list, last_fruit (optional)
@@ -250,15 +262,15 @@ def a_start(start_x,start_y,goal_x,goal_y,obstacle_list,last_fruit=None,radius=1
     '''
     
     print("Running astar...")
+    print(f"Obstacle radius: {radius}, Robot radius: {robot_radius}")
     plt.clf() # so we don't get previous plots overlaid
 
     # start and goal position
-    sx = start_x  # [m]
-    sy = start_y  # [m]
-    gx = goal_x  # [m]
-    gy = goal_y  # [m]
+    sx = clamp_boundaries(start_x, 1.5)  # [m]
+    sy = clamp_boundaries(start_y, 1.5)  # [m]
+    gx = clamp_boundaries(goal_x, 1.5)  # [m]
+    gy = clamp_boundaries(goal_y, 1.5)  # [m]
     grid_size = 0.02  # [m]
-    robot_radius = 0.08  # [m]
 
     obstacle_list = (obstacle_list*10).astype(int)
 

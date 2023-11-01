@@ -7,7 +7,7 @@ import cv2
 from scipy.spatial.distance import pdist
 import numpy as np
 from YOLO.detector import Detector
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans #, DBSCAN
 
 # list of target fruits and vegs types
 # Make sure the names are the same as the ones used in your YOLO model
@@ -134,15 +134,15 @@ def merge_estimations(target_pose_dict: dict, threshold: float) -> dict:
             kmeans = KMeans(n_clusters=2, random_state=0, n_init="auto").fit(fruits_temp[fruit]["all_points"])      
             centrepoints = kmeans.cluster_centers_
             target_est[f"{fruit.lower()}_1"] = {}
-            target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][1]
-            target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][0]
-            target_est[f"{fruit.lower()}_1"]["y"] = centrepoints[1][1]
-            target_est[f"{fruit.lower()}_1"]["x"] = centrepoints[1][0]
+            target_est[f"{fruit.lower()}_0"]["y"] = clamp_boundaries(centrepoints[0][1])
+            target_est[f"{fruit.lower()}_0"]["x"] = clamp_boundaries(centrepoints[0][0])
+            target_est[f"{fruit.lower()}_1"]["y"] = clamp_boundaries(centrepoints[1][1])
+            target_est[f"{fruit.lower()}_1"]["x"] = clamp_boundaries(centrepoints[1][0])
         else:
             kmeans = KMeans(n_clusters=1, random_state=0, n_init="auto").fit(fruits_temp[fruit]["all_points"]) 
             centrepoints = kmeans.cluster_centers_
-            target_est[f"{fruit.lower()}_0"]["y"] = centrepoints[0][1]
-            target_est[f"{fruit.lower()}_0"]["x"] = centrepoints[0][0]
+            target_est[f"{fruit.lower()}_0"]["y"] = clamp_boundaries(centrepoints[0][1])
+            target_est[f"{fruit.lower()}_0"]["x"] = clamp_boundaries(centrepoints[0][0])
             
     return target_est
 
@@ -153,10 +153,20 @@ def parse_slam_map(fname : str) -> dict:
         for (i, tag) in enumerate(usr_dict["taglist"]):
             if tag > 0 and tag < 11:
                 aruco_dict[f"aruco{tag}_0"] = {
-                    "x": usr_dict["map"][0][i],
-                    "y": usr_dict["map"][1][i]
+                    "x": clamp_boundaries(usr_dict["map"][0][i]),
+                    "y": clamp_boundaries(usr_dict["map"][1][i])
                 }
     return aruco_dict
+
+def clamp_boundaries(point, limit=1.5):
+    '''
+    To account for erroneous SLAM, clamp the point within the arena boundaries
+    '''
+    if point > limit:
+        point = limit - 0.1
+    elif point < -limit:
+        point = -limit + 0.1
+    return point
 
 # main loop
 if __name__ == "__main__":
@@ -217,11 +227,11 @@ if __name__ == "__main__":
         aruco_dict = parse_slam_map(f'{script_dir}/lab_output/slam.txt')
         os.rename(f'{script_dir}/lab_output/slam.txt', f'{script_dir}/lab_output/slam_run{args.run}_411.txt')
     except FileNotFoundError:
-        print("WARNING: Could not find slam.txt - File will not be renamed and truemap will not be created!!!\nMost likely you either forgot to save slam map or have already ran TargetPoseEst.py")
+        print("\n\nWARNING: Could not find slam.txt - TRUEMAP WILL NOT BE CREATED AND SLAM WILL NOT BE RENAMED!!!\nMost likely you either forgot to save slam map or have already ran TargetPoseEst.py")
     else:
         print("Renamed slam file")
 
-    aruco_dict.update(target_est)
-    with open("TrueMap.txt", "w") as outfile: 
-        json.dump(aruco_dict, outfile)
-    print("Created TrueMap.txt")
+        aruco_dict.update(target_est)
+        with open(f"TrueMap{args.run}.txt", "w") as outfile: 
+            json.dump(aruco_dict, outfile)
+        print(f"Created TrueMap{args.run}.txt")

@@ -101,14 +101,15 @@ class DatasetPlayer:
 
 # for SLAM (M2), save the map
 class OutputWriter:
-    def __init__(self, folder_name="output/"):
+    def __init__(self, folder_name="output/",auto=False):
         if not folder_name.endswith("/"):
             folder_name = folder_name + "/"
         self.folder = folder_name
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
         
-        self.img_f = open(folder_name+"images.txt", 'w')   
+        if not auto:
+            self.img_f = open(folder_name+"images.txt", 'w')
         # self.map_f_path = folder_name+"slam.txt"
 
         self.image_count = 0
@@ -137,7 +138,26 @@ class OutputWriter:
         self.img_f.flush()
         cv2.imwrite(img_fname, image)
         return f'pred_{self.image_count}.png'
-
+    
+    def delete_prediction(self):
+        if self.image_count < 1:
+            return
+        
+        self.img_f.close()
+        
+        # remove it from the dict
+        with open(self.folder+"images.txt", 'r') as f:
+            predict_lines = f.readlines()
+            predict_lines = predict_lines[:-1]
+        
+        # refresh the file
+        self.img_f = open(self.folder+"images.txt", 'w')
+        [self.img_f.write(line) for line in predict_lines]
+        self.img_f.flush()
+        
+        # delete the image prediction
+        os.remove(f"{self.folder}pred_{self.image_count-1}.png")
+        self.image_count -= 1
 
 if __name__ == '__main__':
     # For testing

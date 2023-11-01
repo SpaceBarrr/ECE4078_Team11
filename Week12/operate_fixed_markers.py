@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import cv2
+import ast
 import numpy as np
 
 # import utility functions
@@ -16,7 +17,7 @@ import shutil                       # python package for file operations
 
 # import SLAM components you developed in M2
 sys.path.insert(0, "{}/slam".format(os.getcwd()))
-from slam.ekf import EKF
+from slam.ekf_fixed import EKF
 from slam.robot import Robot
 import slam.aruco_detector as aruco
 
@@ -25,8 +26,9 @@ from YOLO.detector import Detector
 
 
 class Operate:
-    def __init__(self, args):
+    def __init__(self, args, aruco_true_pos):
         self.modifier = 1
+        self.aruco_true_pos = aruco_true_pos
         
         self.folder = 'pibot_dataset/'
         if not os.path.exists(self.folder):
@@ -42,7 +44,7 @@ class Operate:
             self.pibot = PenguinPi(args.ip, args.port)
 
         # initialise SLAM parameters
-        self.ekf = self.init_ekf(args.calib_dir, args.ip)
+        self.ekf = self.init_ekf(args.calib_dir, args.ip, self.aruco_true_pos)
         self.aruco_det = aruco.aruco_detector(
             self.ekf.robot, marker_length=0.07)  # size of the ARUCO markers
 
@@ -153,7 +155,7 @@ class Operate:
             self.notification = f'{f_} is saved'
 
     # wheel and camera calibration for SLAM
-    def init_ekf(self, datadir, ip):
+    def init_ekf(self, datadir, ip, aruco_true_pos):
         fileK = "{}intrinsic.txt".format(datadir)
         camera_matrix = np.loadtxt(fileK, delimiter=',')
         fileD = "{}distCoeffs.txt".format(datadir)
@@ -165,7 +167,7 @@ class Operate:
         fileB = "{}baseline.txt".format(datadir)
         baseline = np.loadtxt(fileB, delimiter=',')
         robot = Robot(baseline, scale, camera_matrix, dist_coeffs)
-        return EKF(robot)
+        return EKF(robot, aruco_true_pos)
 
     # save SLAM map
     def record_data(self):
@@ -243,8 +245,6 @@ class Operate:
     # keyboard teleoperation, replace with your M1 codes if preferred        
     def update_keyboard(self):
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONUP:
-                print(pygame.mouse.get_pos())
             if event.type == pygame.KEYDOWN:
                 # drive forward
                 if event.key == pygame.K_UP:
@@ -292,24 +292,24 @@ class Operate:
                     self.double_reset_comfirm = 0
                     self.ekf.reset()
             # run SLAM
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                n_observed_markers = len(self.ekf.taglist)
-                if n_observed_markers == 0:
-                    if not self.ekf_on:
-                        self.notification = 'SLAM is running'
-                        self.ekf_on = True
-                    else:
-                        self.notification = '> 2 landmarks is required for pausing'
-                elif n_observed_markers < 3:
-                    self.notification = '> 2 landmarks is required for pausing'
-                else:
-                    if not self.ekf_on:
-                        self.request_recover_robot = True
-                    self.ekf_on = not self.ekf_on
-                    if self.ekf_on:
-                        self.notification = 'SLAM is running'
-                    else:
-                        self.notification = 'SLAM is paused'
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            #     n_observed_markers = len(self.ekf.taglist)
+            #     if n_observed_markers == 0:
+            #         if not self.ekf_on:
+            #             self.notification = 'SLAM is running'
+            #             self.ekf_on = True
+            #         else:
+            #             self.notification = '> 2 landmarks is required for pausing'
+            #     elif n_observed_markers < 3:
+            #         self.notification = '> 2 landmarks is required for pausing'
+            #     else:
+            #         if not self.ekf_on:
+            #             self.request_recover_robot = True
+            #         self.ekf_on = not self.ekf_on
+            #         if self.ekf_on:
+            #             self.notification = 'SLAM is running'
+            #         else:
+            #             self.notification = 'SLAM is paused'
             # run object detector
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 self.command['inference'] = True
@@ -325,6 +325,42 @@ class Operate:
             pygame.quit()
             sys.exit()
 
+def parse_slam_map(fname : str) -> dict:
+    with open(fname, 'r') as f:
+        usr_dict = ast.literal_eval(f.read())
+        aruco_dict = {}
+        for (i, tag) in enumerate(usr_dict["taglist"]):
+            if tag > 0 and tag < 11:
+                aruco_dict[f"aruco{tag}_0"] = {
+                    "x": usr_dict["map"][0][i],
+                    "y": usr_dict["map"][1][i]
+                }
+    return aruco_dict
+
+def read_true_map(gt_dict):
+    """Read the ground truth map and output the pose of the ArUco markers
+
+    @param fname: filename of the map
+    @return:
+        1) locations of ArUco markers in order, i.e. pos[9, :] = position of the aruco10_0 marker
+    """
+    aruco_true_pos = np.empty([10, 2])
+
+    # remove unique id of targets of the same type
+    for key in gt_dict:
+        x = np.round(gt_dict[key]['x'], 4)
+        y = np.round(gt_dict[key]['y'], 4)
+
+        if key.startswith('aruco'):
+            if key.startswith('aruco10') or key.startswith('aruco_10'):
+                aruco_true_pos[9][0] = x
+                aruco_true_pos[9][1] = y
+            else:
+                marker_id = int(key[5]) - 1
+                aruco_true_pos[marker_id][0] = x
+                aruco_true_pos[marker_id][1] = y
+
+    return aruco_true_pos
 
 if __name__ == "__main__":
     import argparse
@@ -337,6 +373,11 @@ if __name__ == "__main__":
     parser.add_argument("--play_data", action='store_true')
     parser.add_argument("--yolo_model", default='YOLO/model/yolov8_model.pt')
     args, _ = parser.parse_known_args()
+    
+    slam_map = "lab_output/slam.txt"
+    if not os.path.isfile(slam_map):
+        print(f"\n\nGIVEN SLAM MAP NOT FOUND!\n{slam_map}\n")
+        raise FileNotFoundError
 
     pygame.font.init()
     TITLE_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 35)
@@ -369,7 +410,12 @@ if __name__ == "__main__":
             pygame.display.update()
             counter += 2
 
-    operate = Operate(args)
+    aruco_dict = parse_slam_map(slam_map)
+    aruco_pos = read_true_map(aruco_dict)
+    
+    operate = Operate(args, aruco_pos)
+    
+    operate.ekf_on = True
 
     while start:
         operate.update_keyboard()
